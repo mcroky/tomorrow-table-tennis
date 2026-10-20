@@ -1,5 +1,8 @@
 'use strict';
 window.ClubLocales={
+  "전체화면 해제":["Exit fullscreen","全画面表示を終了","退出全屏"],
+  "전체화면":["Fullscreen","全画面表示","全屏"],
+  "전체화면을 열지 못했습니다. 브라우저의 전체화면 기능을 이용해주세요.":["Could not enter fullscreen. Please use your browser’s fullscreen option.","全画面表示にできませんでした。ブラウザの全画面表示機能をご利用ください。","无法进入全屏。请使用浏览器的全屏功能。"],
   "연습과 첫 지역에서 이동과 타이밍을 도와줍니다.": ["Movement and timing assistance in practice and the first region.","練習と最初のエリアで移動とタイミングを補助します。","在练习和第一区域辅助移动与挥拍时机。"],
   "탁구 첫걸음": ["Your first rally","卓球の第一歩","乒乓球第一步"],
   "튜토리얼 다시 보기": ["Replay tutorial","チュートリアルをもう一度","重看教程"],

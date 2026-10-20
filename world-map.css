@@ -698,3 +698,18 @@ html[data-input=touch] body[data-surface=court] .feedback-strip .impact-label{pa
 html[data-input=touch] body[data-surface=court] .feedback-strip .impact-label b{font-size:18px;line-height:22px;letter-spacing:.025em}
 html[data-input=touch] body[data-surface=court] .feedback-strip .impact-label span{display:block;font-size:10px;line-height:13px;margin-top:1px;padding:0;white-space:normal;overflow-wrap:anywhere}
 @media(max-height:520px) and (min-width:600px){html[data-input=touch] body[data-surface=court] #arena{grid-template-rows:auto minmax(44px,auto) minmax(0,1fr) 17px}}
+
+/* Desktop play dedicates the viewport to the match and its controls. */
+@media(min-width:761px){
+ html[data-input=keyboard] body[data-surface=court] .shell{max-width:none;width:100%;padding:6px 10px;gap:4px}
+ html[data-input=keyboard] body[data-surface=court] .shell>header,
+ html[data-input=keyboard] body[data-surface=court] .account-bar{display:none}
+ html[data-input=keyboard] body[data-surface=court] .career-head>div:first-child,
+ html[data-input=keyboard] body[data-surface=court] .career-xp,
+ html[data-input=keyboard] body[data-surface=court] .career-wallet{display:none}
+ html[data-input=keyboard] body[data-surface=court] .career{padding:3px 8px}
+ html[data-input=keyboard] body[data-surface=court] .career-nav{margin-left:auto}
+ html[data-input=keyboard] body[data-surface=court] #arena{gap:4px}
+}
+#courtFullscreen{border:1px solid #b8c9b1;border-radius:7px;background:#e2ebd8;color:#304c3c;white-space:nowrap}
+:fullscreen{background:#ebece3}

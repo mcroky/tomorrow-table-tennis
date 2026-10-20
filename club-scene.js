@@ -1705,6 +1705,10 @@ document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>setView(b.data
  document.querySelectorAll('[data-stroke]').forEach(b=>b.onclick=()=>setStrokeStyle(b.dataset.stroke));
  document.querySelectorAll('[data-serve]').forEach(b=>b.onclick=()=>setServeLength(b.dataset.serve));
 document.querySelectorAll('[data-hold]').forEach(b=>{b.onpointerdown=e=>{e.preventDefault();state.keys[b.dataset.hold]=true;b.setPointerCapture(e.pointerId)};b.onpointerup=b.onpointercancel=()=>state.keys[b.dataset.hold]=false;});
+const fullscreenButton=document.createElement('button');fullscreenButton.type='button';fullscreenButton.id='courtFullscreen';fullscreenButton.hidden=!document.fullscreenEnabled;fullscreenButton.setAttribute('aria-pressed','false');
+function updateFullscreenButton(){const active=!!document.fullscreenElement;fullscreenButton.textContent=tr(active?'전체화면 해제':'전체화면');fullscreenButton.setAttribute('aria-pressed',String(active));}
+fullscreenButton.onclick=async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await document.documentElement.requestFullscreen();}catch{message(tr('전체화면을 열지 못했습니다. 브라우저의 전체화면 기능을 이용해주세요.'));}};
+document.querySelector('.camera-group').append(fullscreenButton);document.addEventListener('fullscreenchange',updateFullscreenButton);updateFullscreenButton();
 $('play').onclick=start;$('swing').onclick=()=>swing(false);$('mobileSwing').onclick=()=>swing(false);$('smash').onclick=$('mobileSmash').onclick=()=>swing(true);$('reset').onclick=()=>setView(state.view);
 const touchBallMarker=document.createElement('span');touchBallMarker.className='touch-ball-marker';touchBallMarker.hidden=true;touchBallMarker.setAttribute('aria-hidden','true');touchBallMarker.innerHTML='<i></i>';$('stage').append(touchBallMarker);
 let ballAssist=true,previousBallScreen=null;try{ballAssist=localStorage.getItem('ttk-touch-ball-guide')!=='off';}catch{}
