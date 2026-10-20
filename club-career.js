@@ -441,7 +441,7 @@ el('forfeitMatch').onclick=requestForfeit;el('forfeitCancel').onclick=()=>el('fo
 el('forfeitDialog').addEventListener('close',()=>{const resume=forfeitResume;forfeitResume=null;if(resume&&data.activeMatch)resume();});
 window.addEventListener('beforeunload',event=>{if(data.activeMatch){event.preventDefault();event.returnValue='';}});
 el('mapCenter').onclick=()=>{selected=data.activeMatch?.node??data.mapNode;render();focusRegion(nodes[data.mapNode].tier);};
-function changeZoom(delta){fitMode=false;focusTier=null;updateRegionNav();zoom=Math.max(.1,Math.min(1.2,Math.round((zoom+delta)*100)/100));resizeMap();centerMap();}
+function changeZoom(delta){const v=el('worldViewport'),board=el('worldBoard'),view=v.getBoundingClientRect(),before=board.getBoundingClientRect(),x=(view.left+v.clientWidth/2-before.left)/zoom,y=(view.top+v.clientHeight/2-before.top)/zoom;fitMode=false;focusTier=null;updateRegionNav();zoom=Math.max(.1,Math.min(1.2,Math.round((zoom+delta)*100)/100));resizeMap();const after=board.getBoundingClientRect();v.scrollLeft+=after.left+x*zoom-view.left-v.clientWidth/2;v.scrollTop+=after.top+y*zoom-view.top-v.clientHeight/2;}
 el('mapOut').onclick=()=>changeZoom(-.1);el('mapIn').onclick=()=>changeZoom(.1);
 const viewport=el('worldViewport');
 viewport.onpointerdown=e=>{if(e.button!==0||e.target.closest('button'))return;focusTier=null;updateRegionNav();mapDrag={x:e.clientX,y:e.clientY,left:viewport.scrollLeft,top:viewport.scrollTop};viewport.setPointerCapture(e.pointerId);viewport.classList.add('dragging');};
