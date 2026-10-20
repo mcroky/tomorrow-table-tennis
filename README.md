@@ -1,0 +1,55 @@
+# 내일은 탁구왕
+3D 탁구 경기와 40개 거점 육성 캠페인. GitHub Pages 정적 사이트 + Supabase Auth / PostgreSQL 계정 저장.
+
+## 공개 게임
+- 사이트: https://mcroky.github.io/tomorrow-table-tennis/
+- 소스: https://github.com/mcroky/tomorrow-table-tennis
+- 메인 페이지: index.html (camera-study.html과 같은 게임)
+- 로그인: 이메일 입력 없이 아이디 + 비밀번호. 아이디는 영문으로 시작하는 3~20자의 영문/숫자/밑줄, 대소문자 구분 없음.
+
+## 개발 실행
+Node.js로 정적 서버를 실행하거나 로컬 HTML을 열어 개발합니다. Supabase 설정이 존재하면 로그인 후 시작합니다.
+설정이 비어 있는 localhost / file 개발 환경에서만 기존 로컬 모드를 사용할 수 있습니다.
+GitHub Pages 환경은 로그인 설정이 없으면 게임을 시작하지 않습니다.
+
+## 계정 구성
+club-config.js에는 프로젝트 URL과 **공개용 publishable 키만** 들어갑니다.
+비밀번호는 Supabase Auth가 검증하며 게임 DB나 소스에 저장하지 않습니다.
+아이디는 내부적으로 `아이디@players.ttk.invalid` 형태의 Auth 식별자로 매핑됩니다. 실제 이메일을 요구하거나 발송하지 않습니다.
+**출시 후 usernameDomain은 변경하지 마세요.** 변경하면 기존 아이디가 다른 Auth 식별자가 됩니다.
+Supabase Auth의 Email provider는 사용하고, Confirm email은 꺼야 합니다.
+프로젝트의 Allow new users to sign up을 켜고, 비밀번호 최소 길이는 10자 이상을 권장합니다.
+Auth의 기본 가입·로그인 요청 제한을 사용합니다. 공개 운영량이 늘면 Supabase CAPTCHA를 추가할 수 있습니다.
+이메일이 없으므로 이메일 기반 비밀번호 자동 복구는 제공하지 않습니다. 비밀번호 분실 시 운영자 지원이 필요합니다.
+
+## 저장 DB
+`supabase/migrations/`의 SQL을 파일명 순서대로 적용합니다.
+- ttk_game_saves: 본인 UUID의 저장 데이터만 SELECT 가능(RLS).
+- 직접 INSERT/UPDATE 권한은 제공하지 않습니다.
+- ttk_save_progress RPC가 auth.uid()로 소유자를 결정하고 revision을 비교해 저장합니다.
+- 다른 기기가 먼저 저장했다면 HTTP 409 충돌을 반환하고 이어갈 기록 선택을 요청합니다.
+- 네트워크 오류 시 계정별 기기 기록을 보관하고 재접속 때 다시 저장합니다.
+- 장비·강화·경험치·상금·별·진행 중 경기·분석을 한 저장 데이터로 관리합니다.
+인증된 사용자가 실행하는 SECURITY DEFINER RPC는 의도된 쓰기 경로입니다. 고정 search_path, auth.uid(), 직접 쓰기 권한 차단으로 범위를 제한합니다. Supabase Advisor의 [해당 RPC 경고](https://supabase.com/docs/guides/database/database-linter?lint=0029_authenticated_security_definer_function_executable)는 이 설계를 표시합니다.
+현재는 클라이언트에서 경기·보상을 계산하므로 온라인 경쟁용 부정행위 방지 서버는 구현하지 않았습니다.
+
+## 기존 로컬 선수 이전
+기존 기록이 있는 원래 브라우저의 camera-study.html에서 로그인한 다음 '기존 선수 가져오기'를 선택합니다.
+'클라우드 저장됨' 표시를 확인한 후 Pages 사이트에서 같은 아이디로 로그인하면 이어서 플레이할 수 있습니다.
+계정별 기록을 분리하며, 기존 로컬 기록은 자동 삭제하지 않습니다.
+
+## GitHub Pages 배포
+`node scripts/build-pages.cjs`로 dist/를 생성합니다.
+배포 파일은 명시적 허용 목록으로 복사합니다. .artifacts, SQL, 예전 프로토타입, 개발 기록은 배포하지 않습니다.
+GitHub 저장소 Settings → Pages에서 Source를 GitHub Actions로 설정합니다.
+main 브랜치에 push하면 .github/workflows/pages.yml이 dist/만 배포합니다.
+Supabase SDK 2.118.0은 vendor/에 고정해 외부 CDN 없이 로드합니다(MIT 라이선스 동봉).
+공개 설정 키로 service_role / sb_secret_ 키를 사용하면 안 됩니다.
+
+## 조작
+WASD/방향키 이동, SPACE 스윙/내 서브 시작, Shift+SPACE 스매시.
+J/K/L 코스, Z 드라이브/X 커트, C 짧은 서브/V 깊은 서브, 1~4 시점 전환.
+
+## 현재 범위
+1인 캠페인, AI 라이벌 재대결, 훈련 보상, 3성 도전, 상점·착장·장비 강화, 캐릭터 설정, 경기 분석.
+온라인 PvP는 미구현입니다.

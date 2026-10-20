@@ -1,0 +1,35 @@
+(() => {
+'use strict';
+const tr=window.ClubI18n.t;
+const skins=['#f3d6bd','#e7bd9e','#ddb18d','#bf8b65','#956445','#68432f'],hairColors=['#3d3832','#63452f','#a17845','#283842'];
+const defaults=()=>({name:tr('새싹 선수'),skin:'#ddb18d',face:'oval',hairStyle:'part',hairColor:'#3d3832'});
+function clean(raw={}){raw=raw&&typeof raw==='object'?raw:{};return {name:typeof raw.name==='string'?raw.name.trim().slice(0,12)||tr('새싹 선수'):tr('새싹 선수'),skin:skins.includes(raw.skin)?raw.skin:'#ddb18d',face:['oval','round','angular'].includes(raw.face)?raw.face:'oval',hairStyle:['part','crop','pony'].includes(raw.hairStyle)?raw.hairStyle:'part',hairColor:hairColors.includes(raw.hairColor)?raw.hairColor:'#3d3832'};}
+class Editor{
+ constructor({getProfile,getEquipment,onSave}){
+  this.getProfile=getProfile;this.getEquipment=getEquipment;this.onSave=onSave;this.renderer=null;this.angle=.28;this.closeup=false;this.frame=0;this.fitting=null;
+  const dialog=document.createElement('dialog');dialog.className='avatar-dialog';dialog.setAttribute('aria-labelledby','avatarTitle');dialog.innerHTML=tr('<form method="dialog" id="avatarForm"><div class="avatar-dialog-head"><div><small>MY PLAYER</small><h2 id="avatarTitle">나의 선수</h2></div><button type="button" id="avatarClose" aria-label="캐릭터 화면 닫기">닫기 ×</button></div><div class="avatar-editor-grid"><div class="avatar-preview-wrap"><canvas id="avatarPreview" aria-label="장착한 옷과 장비를 보여주는 3D 선수"></canvas><div class="avatar-view-tools"><button type="button" id="avatarFull">전신</button><button type="button" id="avatarFace">얼굴 확대</button></div><label class="avatar-rotation">회전 <input id="avatarAngle" type="range" min="-180" max="180" value="16"></label><small>드래그로 돌려서 착장을 확인하세요</small></div><div class="avatar-settings"><p id="avatarIntro"></p><label>선수 이름<input id="avatarName" maxlength="12" autocomplete="off"></label><label>피부색<select id="avatarSkin">')+skins.map((c,i)=>'<option value="'+c+tr('">피부색 ')+(i+1)+'</option>').join('')+tr('</select></label><label>얼굴<select id="avatarShape"><option value="oval">갸름한 얼굴</option><option value="round">둥근 얼굴</option><option value="angular">각진 얼굴</option></select></label><label>헤어<select id="avatarHair"><option value="part">가르마</option><option value="crop">짧은 머리</option><option value="pony">묶은 머리</option></select></label><label>머리색<select id="avatarHairColor">')+hairColors.map((c,i)=>'<option value="'+c+'">'+[tr('다크 브라운'),tr('브라운'),tr('라이트 브라운'),tr('블루 블랙')][i]+'</option>').join('')+tr('</select></label><div id="avatarEquipment" class="avatar-equipment"></div><div id="avatarFitting" class="avatar-fitting" hidden></div><p class="avatar-save-note">외모는 무료로 변경할 수 있으며 자동 저장됩니다.<br>의상과 장비는 상점에서 구매·장착하세요.</p><button type="submit" class="avatar-confirm" id="avatarConfirm">저장하기</button></div></div></form>');
+  document.body.appendChild(dialog);window.ClubI18n.mountPicker(dialog.querySelector('.avatar-dialog-head'));this.dialog=dialog;this.canvas=dialog.querySelector('canvas');const q=id=>dialog.querySelector('#'+id);this.q=q;
+  q('avatarClose').onclick=()=>dialog.close();
+  dialog.addEventListener('cancel',e=>{if(this.initial)e.preventDefault();});
+  dialog.addEventListener('close',()=>{if(this.frame)cancelAnimationFrame(this.frame);if(this.fitting?.onClose)this.fitting.onClose();});
+  q('avatarForm').onsubmit=e=>{e.preventDefault();if(this.fitting){this.fitting.onAction();this.refreshFitting();return;}this.onSave(this.read());this.initial=false;dialog.close();};
+  ['avatarName','avatarSkin','avatarShape','avatarHair','avatarHairColor'].forEach(id=>q(id).oninput=()=>this.draw());
+  q('avatarAngle').oninput=()=>{this.angle=Number(q('avatarAngle').value)*Math.PI/180;this.draw();};
+  q('avatarFull').onclick=()=>{this.closeup=false;this.draw();};q('avatarFace').onclick=()=>{this.closeup=true;this.draw();};
+  let drag=null;this.canvas.onpointerdown=e=>{drag=e.clientX;this.canvas.setPointerCapture(e.pointerId);};this.canvas.onpointermove=e=>{if(drag===null)return;this.angle+=(e.clientX-drag)*.012;drag=e.clientX;q('avatarAngle').value=String(Math.atan2(Math.sin(this.angle),Math.cos(this.angle))*180/Math.PI);this.draw();};this.canvas.onpointerup=this.canvas.onpointercancel=()=>drag=null;
+  window.addEventListener('resize',()=>{if(dialog.open)this.draw();});
+ }
+ read(){return clean({name:this.q('avatarName').value,skin:this.q('avatarSkin').value,face:this.q('avatarShape').value,hairStyle:this.q('avatarHair').value,hairColor:this.q('avatarHairColor').value});}
+ refreshFitting(){if(!this.fitting)return;const state=this.fitting.getState();this.q('avatarFitting').innerHTML=state.html;this.q('avatarEquipment').replaceChildren(...Object.entries(this.fitting.getEquipment()).map(([slot,item])=>{const row=document.createElement('div'),label=document.createElement('small');label.textContent=window.ClubEquipment.slots[slot];row.append(label,document.createTextNode(item.name));return row;}));this.q('avatarConfirm').textContent=state.action;this.q('avatarConfirm').disabled=state.disabled;this.draw();}
+ openFitting(options){this.open(false);this.fitting=options;this.dialog.classList.add('fitting-mode');this.q('avatarTitle').textContent=tr('구매 전 착장 미리보기');this.q('avatarIntro').textContent=tr('현재 장비 한 부위만 바꿔 입은 모습입니다. 확인 후 구매·장착하세요.');this.q('avatarFitting').hidden=false;this.refreshFitting();}
+ open(initial=false){
+  if(!this.renderer)return;this.fitting=null;this.q('avatarFitting').hidden=true;this.dialog.classList.remove('fitting-mode');this.initial=initial;const p=this.getProfile();this.q('avatarName').value=p.name;this.q('avatarSkin').value=p.skin;this.q('avatarShape').value=p.face;this.q('avatarHair').value=p.hairStyle;this.q('avatarHairColor').value=p.hairColor;
+  this.q('avatarConfirm').disabled=false;this.q('avatarTitle').textContent=initial?tr('나의 선수 만들기'):tr('나의 선수와 착장');this.q('avatarIntro').textContent=initial?tr('얼굴과 피부색, 헤어를 정하고 여정을 시작하세요.'):tr('전신과 얼굴을 확대하고 돌려볼 수 있어요.');this.q('avatarClose').hidden=initial;this.q('avatarConfirm').textContent=initial?tr('이 선수로 시작'):tr('외모 저장');
+  this.q('avatarEquipment').replaceChildren(...Object.entries(this.getEquipment()).map(([slot,item])=>{const row=document.createElement('div');const label=document.createElement('small');label.textContent=window.ClubEquipment.slots[slot];row.append(label,document.createTextNode(item.name));return row;}));
+  let titles=this.dialog.querySelector('.earned-titles');if(!titles){titles=document.createElement('p');titles.className='earned-titles';this.q('avatarIntro').after(titles);}const earned=window.ClubCareer?.titles?.()||[];titles.textContent=tr('보유 칭호')+' · '+(earned.length?earned.join(' · '):tr('아직 획득한 칭호가 없어요.'));
+  if(!this.dialog.open)this.dialog.showModal();this.draw();
+ }
+ draw(){if(!this.dialog.open||!this.renderer)return;if(this.frame)cancelAnimationFrame(this.frame);this.frame=requestAnimationFrame(()=>{this.frame=0;if(this.dialog.open)this.renderer(this.canvas,this.read(),this.angle,this.closeup,this.fitting?this.fitting.getEquipment():null);});}
+}
+window.ClubAvatar={defaults,clean,Editor};
+})();
