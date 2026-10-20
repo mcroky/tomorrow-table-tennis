@@ -598,3 +598,21 @@ html[data-input=touch] body[data-surface=court] .feedback-strip{height:44px;min-
 .ball-guide-option{display:flex;align-items:center;gap:8px;padding:0 0 12px;font-size:12px;color:#46664d}
 .ball-guide-option input{accent-color:#4b7654;width:18px;height:18px}
 .touch-hit-buttons button:disabled{opacity:.5;filter:saturate(.55);box-shadow:none;transform:none}
+.world-tools #feedbackOpen{color:#456b58;background:#e7eddf}
+.feedback-dialog{width:min(520px,calc(100vw - 24px));max-height:calc(100dvh - 24px);box-sizing:border-box;overflow:auto;padding:22px;border:1px solid #c5d0bd;border-radius:20px;background:#faf9ed;color:#294b40;box-shadow:0 18px 70px #16352e44}
+.feedback-dialog::backdrop{background:#18382c70;backdrop-filter:blur(3px)}
+.feedback-dialog header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+.feedback-dialog h2{font-size:22px;margin:0}
+.feedback-dialog header button{flex-shrink:0}
+.feedback-dialog form{display:grid;gap:12px}
+.feedback-dialog p{margin:0;line-height:1.6;font-size:13px}
+.feedback-dialog label{display:grid;gap:7px;font-size:13px;font-weight:700}
+.feedback-dialog select,.feedback-dialog textarea{width:100%;box-sizing:border-box;padding:12px;border:1px solid #bbcbb7;border-radius:10px;background:#fffef8;color:#25473b;font:inherit;font-size:16px}
+.feedback-dialog textarea{resize:vertical;min-height:140px;max-height:40dvh;line-height:1.6}
+.feedback-dialog small{text-align:right;color:#73846d}
+.feedback-dialog .feedback-privacy{font-size:12px;color:#677d66}
+.feedback-dialog .feedback-status{font-weight:650;min-height:1.6em}
+.feedback-dialog .feedback-submit{min-height:46px;background:#365f4b;color:#fff9e7;border-color:#365f4b;font-weight:700}
+.feedback-dialog button:disabled{opacity:.6;cursor:wait}
+.feedback-dialog :focus-visible{outline:3px solid #daab59;outline-offset:3px}
+@media(max-width:520px){.feedback-dialog{padding:17px}.feedback-dialog h2{font-size:20px}.world-tools{flex-wrap:wrap}}

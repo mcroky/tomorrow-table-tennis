@@ -145,6 +145,11 @@ account.getLeaderboard=async()=>{
  if(result.error)throw result.error;return {...result.data,savePending:!!pending||blocked};
 };
 account.queueSave=queueSave;
+account.submitFeedback=async({id,category,message,language})=>{
+ if(!client||!user||!booted||blocked)throw Error('LOGIN_REQUIRED');
+ const result=await client.rpc('ttk_submit_feedback',{p_id:id,p_category:category,p_message:message,p_language:language}).abortSignal(AbortSignal.timeout(15000));
+ if(result.error)throw result.error;if(!result.data?.received)throw Error('INVALID_RESPONSE');return result.data;
+};
 account.updateLock=value=>{if(locked===!!value)return;locked=!!value;byId('accountLogout').disabled=locked;byId('cloudSync').disabled=locked;};
 byId('cloudSync').onclick=async()=>{if(locked)return;if(blocked){location.reload();return;}await flush();};
 byId('accountLogout').onclick=async()=>{if(locked||!client)return;byId('accountLogout').disabled=true;await flush();intentionalLogout=true;const result=await client.auth.signOut({scope:'local'});if(result.error){intentionalLogout=false;byId('accountLogout').disabled=false;status(tr('로그아웃하지 못했어요. 다시 시도해주세요.'));return;}location.reload();};

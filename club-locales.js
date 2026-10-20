@@ -1,5 +1,21 @@
 'use strict';
 window.ClubLocales={
+  "의견 보내기": ["Send feedback","ご意見を送る","发送反馈"],
+  "개선사항 보내기": ["Share your feedback","改善のご意見","提交改进建议"],
+  "더 재미있는 탁구 게임을 위해 의견을 들려주세요.": ["Help us make table tennis more fun. Share your thoughts!","もっと楽しい卓球ゲームにするため、ご意見をお聞かせください。","欢迎提出建议，让乒乓球游戏更有趣！"],
+  "의견 종류": ["Category","種類","类别"],
+  "개선 제안": ["Suggestion","改善提案","改进建议"],
+  "버그 제보": ["Bug report","不具合報告","问题反馈"],
+  "기타 의견": ["Other feedback","その他のご意見","其他意见"],
+  "내용": ["Message","内容","内容"],
+  "불편했던 점이나 원하는 기능을 구체적으로 적어주세요.": ["Describe the problem or the feature you would like.","不便だった点や欲しい機能を具体的にご記入ください。","请具体描述遇到的问题或希望增加的功能。"],
+  "선수 이름과 의견 내용이 운영자에게 전달됩니다. 비밀번호나 개인정보는 적지 마세요.": ["Your player name and message will be sent to the developer. Do not include passwords or personal information.","選手名と内容が運営者に送信されます。パスワードや個人情報は記入しないでください。","玩家名称和反馈内容将发送给运营者。请勿填写密码或个人隐私。"],
+  "보내기": ["Send","送信","发送"],
+  "내용을 10자 이상 입력해주세요.": ["Please enter at least 10 characters.","10文字以上で入力してください。","请输入至少10个字符。"],
+  "의견을 보내는 중…": ["Sending feedback…","送信中…","正在发送反馈…"],
+  "의견을 접수했어요. 감사합니다!": ["Feedback received. Thank you!","ご意見を受け付けました。ありがとうございます！","反馈已收到，谢谢！"],
+  "잠시 후 다시 보내주세요. 의견은 10분에 3번, 하루에 5번 보낼 수 있어요.": ["Please try later. You can send feedback 3 times per 10 minutes and 5 times per day.","しばらくしてから再度お試しください。10分に3回、1日に5回まで送信できます。","请稍后再试。每10分钟最多3次，每天最多5次。"],
+  "전송하지 못했어요. 입력한 내용은 유지됩니다. 잠시 뒤 다시 시도해주세요.": ["Could not send. Your message is still here. Please try again shortly.","送信できませんでした。入力内容は残っています。しばらくしてから再度お試しください。","发送失败，输入内容已保留，请稍后重试。"],
   "2 선수 뒤": [
     "Behind player",
     "選手の後ろ",

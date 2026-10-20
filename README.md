@@ -77,6 +77,14 @@ DB 접근 정책은 [Supabase RLS](https://supabase.com/docs/guides/database/pos
 Chrome 터치 에뮬레이션에서 360×640, 390×844, 840×360, 844×390, 태블릿 768×1024, 1024×768 레이아웃과 동시 터치 입력을 확인했습니다. 실제 iOS/Android 기기 점검은 별도입니다.
 
 ## 모바일 시야·조작 보정
+
 모바일 라켓 시점은 좌우 이동에 맞춰 시선을 탁구대 중심 쪽으로 보정하고, 시점 높이를 조금 올렸습니다. 팔 두께도 줄여 시야 가림을 완화합니다.
 조이스틱 중심에는 방사형 데드존과 점진적인 속도 구간을 적용했습니다. 득점 대기·세리머니·경기 일시정지 중에는 타격 버튼을 비활성화합니다.
 모바일 공 위치 강조는 실제 공 좌표에 얇은 테두리와 짧은 이동 잔상을 표시하며, 공의 물리 크기·충돌·타격 판정을 바꾸지 않습니다. 음량·조작 안내에서 끌 수 있습니다.
+
+## 개선사항 접수와 메일 알림
+월드맵의 **의견 보내기**에서 개선 제안·버그·기타 의견을 보냅니다. 선수 이름, 언어, 내용(10~2,000자)만 전달합니다. 실패하면 내용을 유지하며, 같은 제출의 재시도는 접수 UUID로 중복을 방지합니다.
+인증한 계정만 접수할 수 있고 10분에 3건/24시간에 5건, 전체 24시간에 80건으로 제한합니다. 본문 및 발송 기록은 비공개 `ttk_private.feedback`에 저장하며 플레이어가 조회하거나 직접 수정할 수 없습니다.
+수신 주소·Resend 발송 키·발신 주소는 Supabase Vault의 `ttk_feedback_to`, `ttk_feedback_resend_key`, `ttk_feedback_from`에만 저장합니다. 실제 값은 저장소, 정적 배포, 클라이언트 API 응답에 넣지 않습니다. Vault 설정은 운영자가 대시보드에서 관리합니다.
+DB Cron이 1분마다 서버의 `feedback-delivery` Edge Function을 깨워 접수함을 처리합니다. 메일 키와 수신 주소는 Edge Function에서만 읽으며 pg_net 대기열에는 넣지 않습니다. `ttk_feedback_worker`는 서버 작업 트리거 전용으로만 사용합니다. 설정·큐 읽기·결과 갱신 RPC는 service_role 전용입니다. 실패 시 최대 5회, 23시간 안에 동일한 Resend idempotency key로 재시도합니다. `accepted`는 발송 API 접수 성공이며 수신함 도착을 의미하지 않습니다. 영구 실패는 `failed`로 남겨 운영자가 확인할 수 있습니다. 수신자가 Resend 계정 소유자일 때 기본 발신 주소를 사용할 수 있고, 그 외에는 인증한 발신 도메인이 필요합니다.
+전달 방식: [Supabase pg_net](https://supabase.com/docs/guides/database/extensions/pg_net), [Resend 중복 방지](https://resend.com/docs/dashboard/emails/idempotency-keys).
