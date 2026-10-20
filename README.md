@@ -53,3 +53,13 @@ J/K/L 코스, Z 드라이브/X 커트, C 짧은 서브/V 깊은 서브, 1~4 시�
 ## 현재 범위
 1인 캠페인, AI 라이벌 재대결, 훈련 보상, 3성 도전, 상점·착장·장비 강화, 캐릭터 설정, 경기 분석.
 온라인 PvP는 미구현입니다.
+
+## 유저 랭킹
+월드맵의 랭킹 버튼에서 상위 50명과 내 순위를 확인합니다.
+클리어 거점 → 별 → 레벨 → 승리 수 순서이며 동일한 기록은 공동 순위입니다.
+공개되는 정보는 선수 이름, 진행도, 별, 레벨과 승패 요약입니다. 이메일·로그인 아이디·장비·전체 저장 데이터는 랭킹 API에 포함하지 않습니다.
+저장 트리거가 ttk_leaderboard 요약을 갱신하며, 클라이언트의 직접 랭킹 쓰기는 차단합니다.
+기존 개발 확인 계정은 별도 제외 표시로 숨겼으며 실제 사용자 기록은 유지합니다.
+현재 캠페인 기록은 클라이언트에서 계산하므로 이 랭킹은 캐주얼 진행도 비교용입니다. 공정한 경쟁용 보상/온라인 PvP에는 서버 경기 판정이 추가로 필요합니다.
+DB 접근 정책은 [Supabase RLS](https://supabase.com/docs/guides/database/postgres/row-level-security), 자동 갱신은 [트리거](https://supabase.com/docs/guides/database/postgres/triggers)를 사용합니다.
+운영 권고: Advisor의 [유출 비밀번호 차단](https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection)은 현재 비활성 상태입니다.

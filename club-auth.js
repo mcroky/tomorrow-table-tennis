@@ -139,6 +139,11 @@ account.prepare=async()=>{
   }).catch(()=>{form();showError(tr('저장된 계정에 연결하지 못했어요. 다시 로그인해주세요.'));});
  });
 };
+account.getLeaderboard=async()=>{
+ if(!client||!user||!booted)throw Error('LOGIN_REQUIRED');
+ const result=await client.rpc('ttk_get_leaderboard').abortSignal(AbortSignal.timeout(12000));
+ if(result.error)throw result.error;return {...result.data,savePending:!!pending||blocked};
+};
 account.queueSave=queueSave;
 account.updateLock=value=>{if(locked===!!value)return;locked=!!value;byId('accountLogout').disabled=locked;byId('cloudSync').disabled=locked;};
 byId('cloudSync').onclick=async()=>{if(locked)return;if(blocked){location.reload();return;}await flush();};
