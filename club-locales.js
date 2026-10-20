@@ -1,5 +1,8 @@
 'use strict';
 window.ClubLocales={
+  "대각선 이동": ["Diagonal movement","斜め移動","斜向移动"],
+  "방향 보정 없이 이동": ["Move without direction assistance","方向補正なしで移動","关闭方向辅助"],
+  "좌우 이동의 작은 흔들림은 보정하고, 확실히 비스듬하게 밀면 대각선으로 이동합니다.": ["Small sideways wobbles are filtered. Drag clearly at an angle to move diagonally.","左右移動中の小さなぶれは補正し、はっきり斜めにドラッグすると斜めに移動します。","左右移动时会过滤轻微抖动，明确斜向拖动即可斜向移动。"],
   "대각선 자유 이동": ["Free movement with diagonals","斜め方向も自由に移動","允许自由斜向移动"],
   "좌우 이동": ["Left / right","左右移動","左右移动"],
   "앞뒤 이동": ["Forward / back","前後移動","前后移动"],
