@@ -55,9 +55,11 @@ class ClubAudio {
    if(!this.ctx){
     const AC=window.AudioContext||window.webkitAudioContext;if(!AC){this.failed=true;return;}
     this.ctx=new AC({latencyHint:'interactive'});const c=this.ctx;
-    this.master=c.createGain();this.master.gain.value=this.muted?0:this.volume*.75;
+    this.master=c.createGain();this.master.gain.value=this.muted?0:this.volume*2.25;
     const limiter=c.createDynamicsCompressor();limiter.threshold.value=-12;limiter.knee.value=5;limiter.ratio.value=5;limiter.attack.value=.001;limiter.release.value=.08;
-    this.analyser=c.createAnalyser();this.analyser.fftSize=1024;this.master.connect(limiter);limiter.connect(this.analyser);this.analyser.connect(c.destination);
+    // A final soft ceiling prevents amplified overlapping hits from clipping.
+    const ceiling=c.createWaveShaper(),curve=new Float32Array(4096);for(let i=0;i<curve.length;i++){const x=i*2/(curve.length-1)-1,a=Math.abs(x);curve[i]=Math.sign(x)*(a<=.86?a:.86+.13*Math.tanh((a-.86)/.13));}ceiling.curve=curve;ceiling.oversample='2x';
+    this.analyser=c.createAnalyser();this.analyser.fftSize=1024;this.master.connect(limiter);limiter.connect(ceiling);ceiling.connect(this.analyser);this.analyser.connect(c.destination);
     this.room=c.createConvolver();const length=Math.floor(c.sampleRate*.28),ir=c.createBuffer(2,length,c.sampleRate);let seed=311;
     for(let ch=0;ch<2;ch++){const d=ir.getChannelData(ch);for(let i=0;i<length;i++){seed=(1664525*seed+1013904223)>>>0;const t=i/c.sampleRate;d[i]=t<.012?0:(seed/2147483648-1)*Math.exp(-t*28)*.12;}}
     this.room.buffer=ir;const wet=c.createGain();wet.gain.value=.16;this.room.connect(wet);wet.connect(this.master);
@@ -68,7 +70,7 @@ class ClubAudio {
  }
  setVolume(value){this.volume=Math.max(0,Math.min(1,Number(value)));this.sync();}
  setMuted(value){this.muted=!!value;this.sync();}
- sync(){if(this.master)this.master.gain.setTargetAtTime(this.muted?0:this.volume*.75,this.ctx.currentTime,.012);try{localStorage.setItem('ttk-audio-v1',JSON.stringify({volume:this.volume,muted:this.muted}));}catch{}}
+ sync(){if(this.master)this.master.gain.setTargetAtTime(this.muted?0:this.volume*2.25,this.ctx.currentTime,.012);try{localStorage.setItem('ttk-audio-v1',JSON.stringify({volume:this.volume,muted:this.muted}));}catch{}}
  play(kind,{pan=0,gain=1,distance=0,whenMs=null}={}){
   if(!this.ctx||this.ctx.state!=='running'||!this.buffers[kind])return;
   const c=this.ctx,source=c.createBufferSource(),level=c.createGain(),panner=c.createStereoPanner(),send=c.createGain(),index=this.events.length%4;

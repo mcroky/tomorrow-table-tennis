@@ -119,3 +119,8 @@ PC·모바일 모두 일반 스윙의 이른 입력을 짧게 예약하고 약�
 - Practice and early career opponents move slower, react later, hit slower returns and leave more space. The reduction tapers across the career; boss patterns and rematch scaling remain.
 - Ordinary swings accept earlier input and recover slightly late input; severe timing mistakes can still go out, and assisted timing cannot award critical hits.
 - Opponents can hit real wide returns after a rally develops, with a higher error rate when their footing is poor. Points still use ball landing rules.
+
+## Beginner practice and default camera
+- Practice uses slow, mostly body-directed flat returns, generous normal-swing input timing, and a visible swing-button cue. Career opponents retain spin and course patterns.
+- The default is a closer follow view, with viewport fitting and ball-occlusion transparency. The hidden-canvas initialization path uses a finite fallback aspect ratio.
+- The shared audio output gain was raised by 9.54 dB before dynamics processing, with a final soft ceiling. Hit-time music ducking is stronger for quiet edge contacts. Existing mute and user volume preferences remain supported.

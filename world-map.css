@@ -596,6 +596,7 @@ html[data-input=touch] body[data-surface=court] .feedback-strip{height:44px;min-
 .touch-ball-marker[data-chance=true]{border-color:#ffdc77;box-shadow:0 0 0 1px #6b4c2cbb,0 0 7px #ffd36e88}
 .touch-ball-marker>i{position:absolute;left:50%;top:50%;width:var(--tail-length,0px);height:2px;transform-origin:0 50%;transform:rotate(var(--tail-angle,0rad));background:linear-gradient(90deg,#fff9c4b0,transparent);border-radius:2px;pointer-events:none}
 #stage>.hud,#stage>.scoreboard,#stage>.bottom-hud{z-index:2}
+#swing.timing-ready,#mobileSwing.timing-ready{box-shadow:0 0 0 3px #9bdc88,0 0 20px #b9ef9066;border-color:#5a9251;background:#dcefc9;color:#254c32}
 .ball-guide-option{display:flex;align-items:center;gap:8px;padding:0 0 12px;font-size:12px;color:#46664d}
 .ball-guide-option input{accent-color:#4b7654;width:18px;height:18px}
 .touch-hit-buttons button:disabled{opacity:.5;filter:saturate(.55);box-shadow:none;transform:none}

@@ -1,5 +1,6 @@
 'use strict';
 window.ClubLocales={
+  "입문 연습 · 스윙 버튼에 불이 들어오면 눌러보세요.": ["Beginner practice · Press swing when the button lights up.","初心者練習 · スイングボタンが光ったら押してみましょう。","入门练习 · 挥拍按钮亮起时按下试试。"],
   "배경음 켜짐": ["Music on","BGM オン","音乐已开启"],
   "배경음 꺼짐": ["Music off","BGM オフ","音乐已关闭"],
   "배경음 음량": ["Music volume","BGM 音量","音乐音量"],
