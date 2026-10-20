@@ -4,8 +4,8 @@
 // then play cached buffers; no network streams or per-frame music synthesis.
 const sound=window.ClubSound=new window.ClubAudio(),tr=window.ClubI18n.t;
 const tracks=new Map(),voices=new Set();
-let volume=.38,muted=false,active=null,request=0,unlocked=false,unlocking=null,duckBus=null;
-try{const saved=JSON.parse(localStorage.getItem('ttk-music-v1')||'{}');volume=Number.isFinite(saved.volume)?Math.max(0,Math.min(1,saved.volume)):.38;muted=!!saved.muted;}catch{}
+let volume=.50,muted=false,active=null,request=0,unlocked=false,unlocking=null,duckBus=null;
+try{const saved=JSON.parse(localStorage.getItem('ttk-music-v1')||'{}');volume=Number.isFinite(saved.volume)?Math.max(0,Math.min(1,saved.volume)):.50;muted=!!saved.muted;}catch{}
 const midi=n=>440*2**((n-69)/12);
 async function compose(mode){
  const Offline=window.OfflineAudioContext||window.webkitOfflineAudioContext;
@@ -65,7 +65,7 @@ async function compose(mode){
 }
 function track(mode){if(!tracks.has(mode))tracks.set(mode,compose(mode).catch(error=>{tracks.delete(mode);throw error;}));return tracks.get(mode);}
 function desired(){return document.body.dataset.surface==='court'?'match':'lobby';}
-function level(){return muted||document.hidden?0:volume*.60;}
+function level(){return muted||document.hidden?0:volume;}
 function retire(voice,seconds=.65){
  if(!voice)return;const now=sound.ctx.currentTime;voice.gain.gain.cancelScheduledValues(now);voice.gain.gain.setValueAtTime(voice.gain.gain.value,now);voice.gain.gain.linearRampToValueAtTime(0,now+seconds);try{voice.source.stop(now+seconds+.03);}catch{}if(active===voice)active=null;
 }
