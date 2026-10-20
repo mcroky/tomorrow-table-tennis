@@ -476,3 +476,6 @@ body[data-surface=court] .spin-read{padding:3px 8px;font-size:11px;line-height:1
 .world-player[data-legendary=true]:before{content:'';position:absolute;inset:15px -22px -8px;border-radius:50%;background:radial-gradient(ellipse,#f8d47860,transparent 68%);animation:legendary-breathe 4.2s ease-in-out infinite;pointer-events:none;z-index:-1}
 @keyframes legendary-breathe{0%,100%{opacity:.12}50%{opacity:.85}}
 @media(prefers-reduced-motion:reduce){.shop-item[data-grade=legendary]:after,.world-player[data-legendary=true]:before{animation:none;opacity:.4}}
+/* Keep the playfield focused on the table on wide desktop windows. */
+body[data-surface=court] .shell{max-width:1320px}
+body[data-surface=court] #arena>.stage{width:100%;align-self:center;max-width:calc(60dvh * 16 / 9);box-shadow:0 8px 24px #263d241a}
