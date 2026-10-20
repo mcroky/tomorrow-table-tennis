@@ -584,3 +584,10 @@ html[data-input=touch] body[data-surface=court] .feedback-strip{height:44px;min-
  html[data-input=touch] body[data-surface=court] .feedback-strip{height:30px;min-height:30px}
  html[data-input=touch] body[data-surface=court] .feedback-strip .impact-label span{display:none}
 }
+@media(max-width:760px){
+ html[data-input=touch] body[data-surface=court] .shot-controls [data-course]{font-size:0;min-width:0;overflow:hidden}
+ html[data-input=touch] body[data-surface=court] .shot-controls [data-course]:before{font-size:19px;line-height:1;display:inline-block}
+ html[data-input=touch] body[data-surface=court] .shot-controls [data-course="-1"]:before{content:'↖'}
+ html[data-input=touch] body[data-surface=court] .shot-controls [data-course="0"]:before{content:'↑'}
+ html[data-input=touch] body[data-surface=court] .shot-controls [data-course="1"]:before{content:'↗'}
+}
