@@ -354,7 +354,6 @@ function opponentConfig(){
  const beginner=Math.max(0,1-n.id/25),ease=rank?.25:.35+.65*beginner;
  base.speed*=1-.28*ease;base.reaction*=1+.50*ease;base.power*=1-.26*ease;base.placement*=1-.30*ease;
  base.ease=ease;base.mistakes=.035+.10*ease;
- base.beginnerAssist=!rank&&n.tier===0;
  opponentCache.set(key,base);return base;
 }
 

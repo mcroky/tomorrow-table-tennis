@@ -296,7 +296,7 @@ function reachableSide(receiver,relative){return(receiver.locked||receiver.selec
 
 const sound=window.ClubSound||new window.ClubAudio();
 let practiceAssist=true;try{practiceAssist=localStorage.getItem('ttk-practice-assist-v1')!=='off';}catch{}
-const practiceHelp=()=> (practiceAssist||tutorial.active)&&(!state.careerMatch||!!career.opponent().beginnerAssist);
+const practiceHelp=()=>!state.careerMatch&&(practiceAssist||tutorial.active);
 const fx={contactClock:null,contactVisible:true,renderLead:16,announcement:null,age:10,slowFor:0,hold:.65,hitstop:0,shake:0,flash:0,power:0,point:null,rays:[],trail:[],swingTrail:[],lastContact:null,contacts:[],rally:0};
 const BALL_RADIUS=.021,FACE_X=.079,FACE_Y=.100,FACE_DEPTH=.014;
 function eulerVector(p,rx=0,ry=0,rz=0){
@@ -633,7 +633,7 @@ function poseTransition(pose,receiver){
 }
 function processQueuedSwing(){
  const q=state.queuedSwing;if(!q)return;
- if(state.elapsed>q.expires||state.celebration.active||state.pointWait>0){state.queuedSwing=null;return;}
+ if(state.careerMatch||state.elapsed>q.expires||state.celebration.active||state.pointWait>0){state.queuedSwing=null;return;}
  const eta=ball.vz>.05?(state.pz-.45-ball.z)/ball.vz:Infinity;
  if(q.practice&&(!state.playing||state.hit||state.serve))return;
  const power=q.power&&(!q.practice||predictFlight(.26).y>1.16);
@@ -1454,12 +1454,12 @@ function swing(power=false,buffered=false,assisted=false){
  if(state.serve){if(state.serve.player&&state.serve.phase==='ready')beginServeToss();return;}
  if(practiceHelp()&&!buffered&&state.playing){state.queuedSwing={power:!!power,expires:state.elapsed+3,assisted:true,practice:true};message(tr(power?'스매시 준비! 높은 공을 기다려요.':'스윙 준비! 공이 가까워지면 맞춰 칩니다.'));return;}
  if(state.swing>0&&(!buffered||state.swing>.12)){
-  if(state.swing<=(power?.34:.45))state.queuedSwing={power:!!power,expires:state.elapsed+(power?.24:.34),assisted:!power};return;
+  if(!state.careerMatch&&state.swing<=(power?.34:.45))state.queuedSwing={power:!!power,expires:state.elapsed+(power?.24:.34),assisted:!power};return;
  }
  // The same modest normal-shot input buffer applies to every input device.
  // It schedules a real racket swing; contact still requires a swept face hit.
  const incomingEta=ball.vz>.05?(state.pz-.45-ball.z)/ball.vz:Infinity;
- if(!power&&!buffered&&state.playing&&!state.hit&&incomingEta>.42&&incomingEta<=(state.careerMatch?.84:1.10)){state.queuedSwing={power:false,expires:state.elapsed+(state.careerMatch?.64:.90),assisted:true};return;}
+ if(!state.careerMatch&&!power&&!buffered&&state.playing&&!state.hit&&incomingEta>.42&&incomingEta<=(state.careerMatch?.84:1.10)){state.queuedSwing={power:false,expires:state.elapsed+(state.careerMatch?.64:.90),assisted:true};return;}
  const inputX=(state.keys.KeyD||state.keys.ArrowRight?1:0)-(state.keys.KeyA||state.keys.ArrowLeft?1:0)+(state.touchMove?.x||0);
  if(inputX*state.velocity[0]<-.25)updateDirectionChange(0,inputX);
  const previous=strikeRig(true),rec=state.playerStroke,turn=state.playerMotion.turn,depthTransfer=rec.rallyRecovery?.mode==='retreat'?rec.rallyRecovery:null,fromRetreat=rec.rallyRecovery?.mode==='retreat';state.queuedSwing=null;rec.rallyRecovery=null;
@@ -1485,7 +1485,7 @@ function swing(power=false,buffered=false,assisted=false){
   aimStroke(true);
   // A slightly late normal press can use a shorter stroke. Keep its original
   // timing error so the adjustment never grants a free perfect/critical hit.
-  if(!power&&incomingEta>.04&&incomingEta<.29){const originalTiming=rec.inputTiming;rec.duration=Math.max(.40,Math.min(rec.duration,incomingEta/rec.contactPhase));rec.assistedTiming=true;aimStroke(true);rec.inputTiming=Math.max(originalTiming,rec.inputTiming);}
+  if(!state.careerMatch&&!power&&incomingEta>.04&&incomingEta<.29){const originalTiming=rec.inputTiming;rec.duration=Math.max(.40,Math.min(rec.duration,incomingEta/rec.contactPhase));rec.assistedTiming=true;aimStroke(true);rec.inputTiming=Math.max(originalTiming,rec.inputTiming);}
  }else message(rec.smash?tr('스매시 준비! 높은 공 연습에서 타이밍을 맞춰보세요.'):(rec.locked==='backhand'?tr('백핸드'):tr('포핸드'))+tr(' 준비 스윙.'),tr('WARM UP'));
 }
 function planBossReturn(kind,chance){
@@ -1679,7 +1679,7 @@ function update(dt){
   }
  }
  const current=[ball.x,ball.y,ball.z];
- if(ball.vz>0&&!state.hit&&(!ball.rallyShot||ball.rallyShot.landed)){const contact=sweptFace(previous,current,priorPlayer,strikeRig(true));if(contact){impact(true,contact,priorCountdown,state.swing);return;}}
+ if(ball.vz>0&&!state.hit&&(!state.careerMatch||priorCountdown>0||state.swing>0)&&(!ball.rallyShot||ball.rallyShot.landed)){const contact=sweptFace(previous,current,priorPlayer,strikeRig(true));if(contact){impact(true,contact,priorCountdown,state.swing);return;}}
  if(ball.vz<0&&!ball.finisher&&!state.enemyHit&&state.enemySwing>0&&(!ball.rallyShot||ball.rallyShot.landed)){const contact=sweptFace(previous,current,priorEnemy,strikeRig(false));if(contact){impact(false,contact,priorEnemyCountdown,state.enemySwing);return;}}
  if(fx.power&&fx.age<.8){const last=fx.trail[fx.trail.length-1];if(!last||Math.hypot(...sub(current,last.p))>.025)fx.trail.push({p:current,age:0});}
  if(ball.vz<0&&!state.enemyHit&&ball.z<state.enemyZ+(ball.finisher?.10:-.18)){
@@ -1806,11 +1806,12 @@ $('highFeed').onclick=()=>{if(state.careerMatch||tutorial.active)return;state.hi
 addEventListener('pointerdown',()=>sound.unlock(),{once:true});
 addEventListener('keydown',()=>sound.unlock(),{once:true});
 syncAudioUI();
-const assistLabel=document.createElement('label'),assistInput=document.createElement('input');assistLabel.className='practice-assist-option';assistLabel.title=tr('연습과 첫 지역에서 이동과 타이밍을 도와줍니다.');assistInput.type='checkbox';assistInput.id='practiceAssist';assistInput.checked=practiceAssist;assistLabel.append(assistInput,document.createTextNode(tr('입문 보조 · 공 따라가기와 타이밍 보정')));document.querySelector('.court-settings-panel').prepend(assistLabel);assistInput.onchange=()=>{practiceAssist=assistInput.checked;state.queuedSwing=null;try{localStorage.setItem('ttk-practice-assist-v1',practiceAssist?'on':'off');}catch{}};
+const assistLabel=document.createElement('label'),assistInput=document.createElement('input');assistLabel.className='practice-assist-option';assistLabel.title=tr('연습에서만 이동과 타이밍을 도와줍니다.');assistInput.type='checkbox';assistInput.id='practiceAssist';assistInput.checked=practiceAssist;assistLabel.append(assistInput,document.createTextNode(tr('입문 보조 · 공 따라가기와 타이밍 보정')));document.querySelector('.court-settings-panel').prepend(assistLabel);assistInput.onchange=()=>{practiceAssist=assistInput.checked;state.queuedSwing=null;try{localStorage.setItem('ttk-practice-assist-v1',practiceAssist?'on':'off');}catch{}};
 
 let followPlayerOpacity=1;
 let swingHintReady=false,smashHintReady=false;
 function updatePracticeSwingHint(){
+ const assistDisabled=!!state.careerMatch||tutorial.active,assistChecked=!state.careerMatch&&(practiceAssist||tutorial.active);if(assistInput.disabled!==assistDisabled)assistInput.disabled=assistDisabled;if(assistInput.checked!==assistChecked)assistInput.checked=assistChecked;
  const eta=ball.vz>.1?(state.pz-.45-ball.z)/ball.vz:Infinity;
  const powerLesson=tutorial.active&&tutorial.step===3,available=!state.careerMatch&&state.playing&&state.pointWait<=0&&state.swing<=0&&!state.queuedSwing&&!state.celebration.active;
  const ready=available&&!powerLesson&&(state.serve?.player&&state.serve.phase==='ready'||!state.serve&&!state.hit&&eta>.08&&eta<1.05),powerReady=available&&powerLesson&&!state.serve&&!state.hit&&eta>.28&&eta<.65&&ball.y>1.0;
