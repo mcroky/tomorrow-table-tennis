@@ -1274,13 +1274,21 @@ function cameraGoal(){
   const e=[state.px,height,state.pz+.7],yaw=state.yaw+assist,d=norm([Math.sin(yaw),-state.pitch,-Math.cos(yaw)]);
   return[e,add(e,mul(d,3))];
  }
- const center=[state.view==='follow'?state.px*.35:0,.75,0];
+ if(state.view==='follow'){
+  // Raise and pull back the chase camera so the near player's head clears
+  // the table. Portrait screens and retreating footwork need extra room.
+  const aspect=canvas.clientWidth/Math.max(1,canvas.clientHeight),portrait=clamp((1.15-aspect)/.45,0,1);
+  const center=[state.px*.30,.74,0],pitch=Math.max(.54,state.pitch)+portrait*.045;
+  const distance=Math.max(5.5,state.distance)+portrait*.20+Math.max(0,state.pz-2.18)*.65;
+  return[add(center,[Math.sin(state.yaw)*Math.cos(pitch)*distance,Math.sin(pitch)*distance,Math.cos(state.yaw)*Math.cos(pitch)*distance]),center];
+ }
+ const center=[0,.75,0];
  return[add(center,[Math.sin(state.yaw)*Math.cos(state.pitch)*state.distance,Math.sin(state.pitch)*state.distance,Math.cos(state.yaw)*Math.cos(state.pitch)*state.distance]),center];
 }
 function setView(view){
  state.view=view;state.yaw=0;
  if(view==='pov'){state.pitch=.30;state.distance=4.5;state.povFov=56}
- if(view==='follow'){state.pitch=.44;state.distance=4.8}
+ if(view==='follow'){state.pitch=.62;state.distance=5.9}
  if(view==='side'){state.yaw=1.06;state.pitch=.44;state.distance=4.9}
  if(view==='top'){state.yaw=.18;state.pitch=1.12;state.distance=4.6}
  document.querySelectorAll('[data-view]').forEach(b=>{b.classList.toggle('active',b.dataset.view===view);b.setAttribute('aria-pressed',b.dataset.view===view)});
@@ -1614,7 +1622,7 @@ let dragging=false,pointerX=0,pointerY=0,travel=0;
 canvas.addEventListener('pointerdown',e=>{dragging=true;pointerX=e.clientX;pointerY=e.clientY;travel=0;canvas.setPointerCapture(e.pointerId)});
 canvas.addEventListener('pointermove',e=>{if(!dragging)return;const dx=e.clientX-pointerX,dy=e.clientY-pointerY;travel+=Math.abs(dx)+Math.abs(dy);pointerX=e.clientX;pointerY=e.clientY;state.yaw-=dx*.006;state.pitch=clamp(state.pitch+dy*.004,state.view==='pov'?-.1:.12,state.view==='pov'?.8:1.43)});
 canvas.addEventListener('pointerup',()=>{dragging=false;if(travel<5)swing()});canvas.addEventListener('pointercancel',()=>dragging=false);
-canvas.addEventListener('wheel',e=>{e.preventDefault();if(state.view==='pov')state.povFov=clamp(state.povFov+e.deltaY*.02,36,72);else state.distance=clamp(state.distance+e.deltaY*.003,2.8,5.5)},{passive:false});
+canvas.addEventListener('wheel',e=>{e.preventDefault();if(state.view==='pov')state.povFov=clamp(state.povFov+e.deltaY*.02,36,72);else state.distance=clamp(state.distance+e.deltaY*.003,state.view==='follow'?5.5:2.8,state.view==='follow'?7.6:5.5)},{passive:false});
 document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>setView(b.dataset.view));
  document.querySelectorAll('[data-course]').forEach(b=>b.onclick=()=>setCourse(b.dataset.course));
  document.querySelectorAll('[data-stroke]').forEach(b=>b.onclick=()=>setStrokeStyle(b.dataset.stroke));
