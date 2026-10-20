@@ -603,6 +603,10 @@ html[data-input=touch] body[data-surface=court] .feedback-strip{height:44px;min-
 .touch-move-zone .touch-stick{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%)}
 .touch-zone-hint{position:absolute;bottom:0;left:0;right:0;text-align:center;font-size:10px;color:#426246;pointer-events:none;text-shadow:0 1px 2px #fff9e7}
 .touch-move-zone.active .touch-zone-hint{opacity:0}
+.touch-move-zone.active[data-axis] .touch-zone-hint{opacity:1;font-weight:700}
+.touch-move-zone[data-axis=x] .stick-arrow.up,.touch-move-zone[data-axis=x] .stick-arrow.down,.touch-move-zone[data-axis=z] .stick-arrow.left,.touch-move-zone[data-axis=z] .stick-arrow.right{opacity:.2}
+.touch-axis-help{margin:-6px 0 14px;font-size:11px;line-height:1.6;color:#61785e}
+html[data-input=keyboard] .touch-axis-help,html[data-input=keyboard] .touch-only-option{display:none}
 .touch-sensitivity{display:flex;align-items:center;gap:10px;padding:0 0 14px;font-size:12px;color:#46664d}
 .touch-sensitivity input{flex:1;min-width:60px;accent-color:#4b7654}.touch-sensitivity output{min-width:38px;text-align:right}
 html[data-input=keyboard] .touch-sensitivity{display:none}

@@ -1651,10 +1651,14 @@ const touchMedia=matchMedia('(pointer: coarse)');
 function detectTouch(){document.documentElement.dataset.input=touchMedia.matches||navigator.maxTouchPoints>0?'touch':'keyboard';}
 detectTouch();touchMedia.addEventListener('change',detectTouch);
 const stick=$('touchStick'),knob=$('touchStickKnob');let stickPointer=null;
-let stickOrigin=null,stickSensitivity=100;
+let stickOrigin=null,stickSensitivity=100,stickAxis=null,stickFreeMove=false;
 try{const saved=Number(localStorage.getItem('ttk-stick-sensitivity'));if(saved>=70&&saved<=140)stickSensitivity=saved;}catch{}
+try{stickFreeMove=localStorage.getItem('ttk-stick-free-move')==='on';}catch{}
 const moveZone=document.createElement('div');moveZone.className='touch-move-zone';moveZone.setAttribute('aria-label',tr('왼쪽 영역 어디서나 드래그해서 이동'));stick.before(moveZone);moveZone.append(stick);
 const moveHint=document.createElement('small');moveHint.className='touch-zone-hint';moveHint.textContent=tr('드래그해서 이동');moveZone.append(moveHint);
+const freeMoveOption=document.createElement('label');freeMoveOption.className='ball-guide-option touch-only-option';const freeMoveInput=document.createElement('input');freeMoveInput.type='checkbox';freeMoveInput.checked=stickFreeMove;freeMoveOption.append(freeMoveInput,document.createTextNode(tr('대각선 자유 이동')));ballGuideOption.after(freeMoveOption);
+const axisHelp=document.createElement('p');axisHelp.className='touch-axis-help';axisHelp.textContent=tr('기본은 좌우·앞뒤를 따로 이동합니다. 방향을 바꾸려면 손을 떼고 다시 밀어주세요.');freeMoveOption.after(axisHelp);
+freeMoveInput.onchange=()=>{stickFreeMove=freeMoveInput.checked;releaseTouch();try{localStorage.setItem('ttk-stick-free-move',stickFreeMove?'on':'off');}catch{}};
 const sensitivityOption=document.createElement('label');sensitivityOption.className='touch-sensitivity';const sensitivityName=document.createElement('span');sensitivityName.textContent=tr('조이스틱 감도');const sensitivityInput=document.createElement('input');sensitivityInput.type='range';sensitivityInput.min='70';sensitivityInput.max='140';sensitivityInput.step='10';sensitivityInput.value=String(stickSensitivity);const sensitivityValue=document.createElement('output');sensitivityValue.textContent=stickSensitivity+'%';sensitivityOption.append(sensitivityName,sensitivityInput,sensitivityValue);ballGuideOption.after(sensitivityOption);
 sensitivityInput.oninput=()=>{stickSensitivity=Number(sensitivityInput.value);sensitivityValue.textContent=stickSensitivity+'%';try{localStorage.setItem('ttk-stick-sensitivity',String(stickSensitivity));}catch{}};
 const touchDeck=document.querySelector('.touch-deck'),courtControls=document.querySelector('.court-controls');
@@ -1665,20 +1669,25 @@ function positionTouchDeck(){
  $('stage').dataset.touchOverlay=String(overlay);
 }
 positionTouchDeck();addEventListener('resize',positionTouchDeck);touchMedia.addEventListener('change',positionTouchDeck);
-function releaseTouch(){stickPointer=null;stickOrigin=null;state.touchMove={x:0,z:0};knob.style.transform='translate(-50%,-50%)';stick.style.left='50%';stick.style.top='50%';stick.classList.remove('active');moveZone.classList.remove('active');document.querySelectorAll('.touch-hit-buttons button').forEach(b=>b.classList.remove('pressed'));}
+function releaseTouch(){stickPointer=null;stickOrigin=null;stickAxis=null;delete moveZone.dataset.axis;moveHint.textContent=tr('드래그해서 이동');state.touchMove={x:0,z:0};knob.style.transform='translate(-50%,-50%)';stick.style.left='50%';stick.style.top='50%';stick.classList.remove('active');moveZone.classList.remove('active');document.querySelectorAll('.touch-hit-buttons button').forEach(b=>b.classList.remove('pressed'));}
 function moveStick(e){
  if(e.pointerId!==stickPointer||!stickOrigin)return;
- const rawX=e.clientX-stickOrigin.x,rawZ=e.clientY-stickOrigin.y,visualRadius=stick.clientWidth*.34,visualLength=Math.hypot(rawX,rawZ),visualScale=Math.min(1,visualRadius/Math.max(visualLength,.001));
- knob.style.transform='translate(calc(-50% + '+rawX*visualScale+'px),calc(-50% + '+rawZ*visualScale+'px))';
- // A small vertical wobble during a lateral slide should not move the player
- // towards or away from the table. Deliberate diagonal movement remains analog.
- const dx=rawX*smooth(clamp((Math.abs(rawX)/Math.max(1,Math.abs(rawZ))-.15)/.20,0,1)),dz=rawZ*smooth(clamp((Math.abs(rawZ)/Math.max(1,Math.abs(rawX))-.20)/.24,0,1)),length=Math.hypot(dx,dz),radius=42*100/stickSensitivity,magnitude=Math.min(1,length/radius);
+ const rawX=e.clientX-stickOrigin.x,rawZ=e.clientY-stickOrigin.y;
+ // Pick one axis per thumb gesture. Crossing the centre or drifting vertically
+ // during a left/right reversal must never turn it into depth movement.
+ if(!stickFreeMove&&!stickAxis){
+  if(Math.abs(rawZ)>=16&&Math.abs(rawZ)>Math.abs(rawX)*1.8)stickAxis='z';
+  else if(Math.abs(rawX)>=6)stickAxis='x';
+  if(stickAxis){moveZone.dataset.axis=stickAxis;moveHint.textContent=tr(stickAxis==='x'?'좌우 이동':'앞뒤 이동');}
+ }
+ const dx=stickFreeMove?rawX:stickAxis==='x'?rawX:0,dz=stickFreeMove?rawZ:stickAxis==='z'?rawZ:0,length=Math.hypot(dx,dz),radius=42*100/stickSensitivity,magnitude=Math.min(1,length/radius),visualRadius=stick.clientWidth*.34,visualScale=Math.min(1,visualRadius/Math.max(length,.001));
+ knob.style.transform='translate(calc(-50% + '+dx*visualScale+'px),calc(-50% + '+dz*visualScale+'px))';
  const strength=magnitude<.10?0:Math.pow((magnitude-.10)/.90,.85);
  state.touchMove={x:length?dx/length*strength:0,z:length?dz/length*strength:0};
 }
 moveZone.onpointerdown=e=>{
  if(stickPointer!==null||career.isMap()||document.querySelector('dialog[open]'))return;
- e.preventDefault();sound.unlock();stickPointer=e.pointerId;stickOrigin={x:e.clientX,y:e.clientY};const r=moveZone.getBoundingClientRect(),edge=stick.clientWidth*.38;
+ e.preventDefault();sound.unlock();stickPointer=e.pointerId;stickAxis=null;stickOrigin={x:e.clientX,y:e.clientY};const r=moveZone.getBoundingClientRect(),edge=stick.clientWidth*.38;
  stick.style.left=clamp(e.clientX-r.left,edge,r.width-edge)+'px';stick.style.top=clamp(e.clientY-r.top,edge,r.height-edge)+'px';
  moveZone.setPointerCapture(e.pointerId);stick.classList.add('active');moveZone.classList.add('active');moveStick(e);
 };

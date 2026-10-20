@@ -1,5 +1,9 @@
 'use strict';
 window.ClubLocales={
+  "대각선 자유 이동": ["Free movement with diagonals","斜め方向も自由に移動","允许自由斜向移动"],
+  "좌우 이동": ["Left / right","左右移動","左右移动"],
+  "앞뒤 이동": ["Forward / back","前後移動","前后移动"],
+  "기본은 좌우·앞뒤를 따로 이동합니다. 방향을 바꾸려면 손을 떼고 다시 밀어주세요.": ["Movement locks to left/right or forward/back. Lift your thumb and drag again to change the axis.","標準では左右と前後を別々に操作します。指を離してから、動かしたい方向へ再度ドラッグしてください。","默认将左右和前后移动分开。切换方向时，请松开手指后重新拖动。"],
   "왼쪽 영역 어디서나 드래그해서 이동": ["Drag anywhere in the left area to move","左側のエリアをドラッグして移動","在左侧区域任意位置拖动即可移动"],
   "드래그해서 이동": ["Drag to move","ドラッグして移動","拖动移动"],
   "조이스틱 감도": ["Joystick sensitivity","スティック感度","摇杆灵敏度"],
