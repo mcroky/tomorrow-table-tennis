@@ -151,7 +151,7 @@ function selectVenue(tier){
 const state={strokeStyle:'drive',serveLength:'short',serve:null,course:0,lastShot:null,previewFooting:null,queuedSwing:null,celebration:{active:false,age:0,duration:1.5,power:false,from:null},highFeed:false,playerStroke:{mix:0,selected:'forehand',locked:null,predictedX:0},enemyStroke:{mix:0,selected:'forehand',locked:null,predictedX:0},elapsed:0,velocity:[0,0],playerMotion:{phase:0,blend:0,lateral:0},enemyMotion:{phase:0,blend:0,lateral:0},enemyPrepared:false,enemyHit:false,view:'pov',povFov:56,yaw:0,pitch:.45,distance:4.5,px:0,pz:2.18,enemyX:.06,enemyZ:-2,enemyDefense:{phase:'ready',age:0,amount:0,stretch:0,recoil:0,lean:0,vx:0,targetX:0,targetY:1.1,bodyTarget:0,direction:1,pressure:0,delay:0,outcome:null,events:[]},swing:0,enemySwing:0,playing:false,pointWait:0,score:[0,0],keys:{},drag:false,moved:false,hit:false};
 const career=window.ClubCareer;
 const growth=()=>career.bonuses();
-const opponentLevel=()=>state.careerMatch?career.opponent():{speed:.46,reaction:2.1,power:.55,placement:.18,ease:1,mistakes:.24};
+const opponentLevel=()=>state.careerMatch?career.opponent():tutorial.active?{speed:.46,reaction:2.1,power:.55,placement:.18,ease:1,mistakes:.24}:{speed:.58,reaction:1.85,power:.68,placement:.35,ease:.85,mistakes:.10};
 let eye=[.12,1.57,2.95],target=[0,.77,-.3],ball={x:0,y:1,z:1.7,vx:0,vy:0,vz:0},lastTime=0;
 
 // Character geometry uses local frames, so the racket, wrist and body rotate together.
@@ -1526,17 +1526,17 @@ function returnBall(toNear,{kind='hit',sweet=0,u=0,footing=null,course=0,timingR
  const opponent=opponentLevel(),ease=toNear?(opponent.ease||0):0,plan=toNear?planBossReturn(kind,chance):null;
  if(plan){plan.aimX*=1-ease*.25;plan.timeScale*=1+ease*.12;plan.endZ=Math.max(.78,plan.endZ);}
  const practiceReturn=toNear&&!state.careerMatch;
- const aimX=practiceReturn?clamp(state.px*.75+.08+(Math.random()-.5)*.06,-.55,.55):plan?plan.aimX:toNear?(chance?clamp(state.px*.65+(Math.random()-.5)*.14,-.48,.48):(Math.random()-.5)*.8*opponentLevel().placement):course*.52,spread=(footing?(footing.spread+clamp(sweet-.42,0,1)*.065):0)*(plan?.spreadScale||1)*(practiceReturn?.35:1);
+ const aimX=practiceReturn?clamp(state.px*(tutorial.active?.75:.55)+.08+(Math.random()-.5)*(tutorial.active?.06:.26),-.55,.55):plan?plan.aimX:toNear?(chance?clamp(state.px*.65+(Math.random()-.5)*.14,-.48,.48):(Math.random()-.5)*.8*opponentLevel().placement):course*.52,spread=(footing?(footing.spread+clamp(sweet-.42,0,1)*.065):0)*(plan?.spreadScale||1)*(practiceReturn?.35:1);
  const error=(Math.random()+Math.random()-1)*spread;
  const mistime=!toNear?timingRisk:0,early=timingOffset>=0,missSide=Math.sign(course)||Math.sign(u)||1;
  // Timing errors alter the flight itself. A good contact keeps the existing safe landing range.
  const sideways=!early?missSide*Math.pow(mistime,1.4)*1.02:missSide*mistime*.12;
  // Inexperience and poor footing can produce a real wide ball, never a gifted point.
- const opponentFault=toNear&&fx.rally>=3&&Math.random()<(opponent.mistakes||0)*(.65+(1-(footing?.score??1))*.85+state.enemyDefense.stretch*.25);
+ const opponentFault=toNear&&fx.rally>=(practiceReturn&&!tutorial.active?5:3)&&Math.random()<(opponent.mistakes||0)*(.65+(1-(footing?.score??1))*.85+state.enemyDefense.stretch*.25);
  const endX=opponentFault?(Math.sign(aimX+error)||1)*(.86+Math.random()*.16):clamp(aimX+error+sideways,toNear?(chance?-.56:-.65):-.71-mistime*1.05,toNear?(chance?.56:.65):.71+mistime*1.05);
  const endZ=(practiceReturn?1.10:plan?plan.endZ:chance?1.16:toNear?(cut?.52+ease*.28:drive?1.12:.92):exposed?-1.02:cut?-.50:drive?-1.12:-.95)-(early?Math.pow(mistime,1.4)*.94:mistime*.17);
  const baseTime=finishing?.40:exposed?1.15:chance?1.22+state.enemyDefense.stretch*.06:kind==='edge'?.98:weak?.88:cut?.68:drive?.64:kind==='center'?.72:smash?(critical?.43:.50):(critical?.66:.76);
- const requestedPower=(1-mistime*.22)*(1-(response?.popup||0)*.10)*(footing?.power??1)*(toNear?opponent.power:growth().power*(smash?growth().smashPower:1)*(kind==='block'?growth().blockPower:1)),rawTime=exposed?1.15:chance?clamp(baseTime/requestedPower,1.18,1.36):cut?clamp(baseTime/Math.sqrt(requestedPower),.60,.82+ease*.30):baseTime/requestedPower*(plan?.timeScale||1),t=practiceReturn?Math.min(rawTime,chance?1.36:1.16):rawTime,power=baseTime/t;
+ const requestedPower=(1-mistime*.22)*(1-(response?.popup||0)*.10)*(footing?.power??1)*(toNear?opponent.power:growth().power*(smash?growth().smashPower:1)*(kind==='block'?growth().blockPower:1)),rawTime=exposed?1.15:chance?clamp(baseTime/requestedPower,1.18,1.36):cut?clamp(baseTime/Math.sqrt(requestedPower),.60,.82+ease*.30):baseTime/requestedPower*(plan?.timeScale||1),t=practiceReturn?Math.min(rawTime,chance?(tutorial.active?1.36:1.28):(tutorial.active?1.16:1.04)):rawTime,power=baseTime/t;
  ball.spin=chance||exposed?'lob':smash?'flat':cut?'cut':drive?'drive':'flat';ball.shotStyle=ball.spin;
  ball.rallyShot={hitter:!toNear,landed:false,bounces:0,timingRisk:mistime};
  ball.vx=(endX-ball.x)/t;ball.vz=(endZ-ball.z)/t;ball.vy=(.79-ball.y+2.9*t*t)/t-(chance||exposed?0:response?.netDip||0);
