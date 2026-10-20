@@ -3,7 +3,7 @@ const fs=require('fs'),path=require('path'),crypto=require('crypto');
 const root=path.resolve(__dirname,'..'),out=path.join(root,'dist');
 fs.mkdirSync(out,{recursive:true});
 const names=['favicon.svg','index.html','camera-study.html','world-map.css','club-config.js','club-auth.js','club-auth.css','club-boot.js',
-'club-locales.js','club-i18n.js','club-audio.js','club-bosses.js','club-equipment.js','club-avatar.js','club-match-stats.js','club-career.js','club-leaderboard.js','club-feedback.js','club-venues.js','club-scene.js','club-presence.js'];
+'club-locales.js','club-i18n.js','club-audio.js','club-music.js','club-bosses.js','club-equipment.js','club-avatar.js','club-match-stats.js','club-career.js','club-leaderboard.js','club-feedback.js','club-venues.js','club-scene.js','club-presence.js'];
 const config=fs.readFileSync(path.join(root,'club-config.js'),'utf8');
 if(/sb_secret_|service_role/.test(config.replace(/\/\/[^\n]*/g,'')))throw Error('Private Supabase key must never be deployed');
 for(const name of names){const source=fs.readFileSync(path.join(root,name),'utf8');if(/\bre_[A-Za-z0-9_-]{20,}\b|\bsb_secret_[A-Za-z0-9_-]+/.test(source))throw Error('Private provider key found in public asset: '+name);fs.copyFileSync(path.join(root,name),path.join(out,name));}

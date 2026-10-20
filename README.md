@@ -110,3 +110,12 @@ PC·모바일 모두 일반 스윙의 이른 입력을 짧게 예약하고 약�
 - '내 선수로 도전하기'로 로그인 화면에 돌아갑니다. 월드맵, 육성, 장비, 랭킹은 기존 계정 기능입니다.
 - 비회원 접속은 현재 계정 기반 운영자 접속 인원 집계에 포함되지 않습니다.
 
+## Background music
+- Original synthesized lobby (92 BPM) and match (144 BPM) arrangements, rendered once to cached loop buffers outside the game frame loop.
+- Shared audio context, crossfades between surfaces, independent saved music volume/mute, and brief ducking for hits and point sounds.
+- Playback begins after a user gesture. Music stops in hidden tabs and resumes on return.
+
+## Gentler rally balance
+- Practice and early career opponents move slower, react later, hit slower returns and leave more space. The reduction tapers across the career; boss patterns and rematch scaling remain.
+- Ordinary swings accept earlier input and recover slightly late input; severe timing mistakes can still go out, and assisted timing cannot award critical hits.
+- Opponents can hit real wide returns after a rally develops, with a higher error rate when their footing is poor. Points still use ball landing rules.

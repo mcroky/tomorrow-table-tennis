@@ -78,7 +78,7 @@ class ClubAudio {
   const wallNow=performance.now(),audioNow=c.currentTime;let latency=Math.max(0,(c.baseLatency||0)+(c.outputLatency||0));
   try{if(typeof c.getOutputTimestamp==='function'){const stamp=c.getOutputTimestamp();if(stamp.contextTime>0&&stamp.performanceTime>0){const measured=(stamp.performanceTime-wallNow)/1000+audioNow-stamp.contextTime;if(Number.isFinite(measured)&&measured>=0&&measured<.25)latency=measured;}}}catch{}
   const startAt=whenMs===null?audioNow:Math.max(audioNow+.002,audioNow+(whenMs-wallNow)/1000-latency);
-  const presentationMs=wallNow+(latency+startAt-audioNow)*1000;source.start(startAt);
+  const presentationMs=wallNow+(latency+startAt-audioNow)*1000;source.start(startAt);this.duckMusic?.(kind);
   this.events.push({kind,time:startAt,presentationMs,pan:panner.pan.value,gain:level.gain.value,muted:this.muted});if(this.events.length>96)this.events.shift();
   source.onended=()=>{source.disconnect();level.disconnect();panner.disconnect();send.disconnect();};
   return{audioTime:startAt,presentationMs,latency};

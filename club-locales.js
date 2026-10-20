@@ -1,5 +1,8 @@
 'use strict';
 window.ClubLocales={
+  "배경음 켜짐": ["Music on","BGM オン","音乐已开启"],
+  "배경음 꺼짐": ["Music off","BGM オフ","音乐已关闭"],
+  "배경음 음량": ["Music volume","BGM 音量","音乐音量"],
   "시작은, 동네의 낡은 탁구대 하나.": ["It began with an old table in the neighborhood.","始まりは、街角の古い卓球台。","故事，从街角的一张旧球台开始。"],
   "처음 쥔 라켓은 손에 어색했고, 공은 자꾸 탁구대 밖으로 날아갔습니다. 그래도 한 번 제대로 맞았을 때의 그 소리는 잊을 수 없었죠.": ["The racket felt strange, and the ball kept flying off the table. But the sound of that first clean hit was unforgettable.","初めてのラケットは手になじまず、球は台の外へ飛んでばかり。それでも、初めて芯で捉えた音は忘れられませんでした。","第一次握拍时很生疏，球总是飞出台外。但第一次击中甜区的清脆声响，让人难以忘怀。"],
   "동네 고수에게 지고, 얄미운 라이벌에게 또 져도, 다음 날이면 다시 라켓을 잡았습니다. 어제 못 받던 공을 오늘은 받아내기 위해.": ["Even after losing to the local expert and that smug rival, you picked up the racket again the next day. Today, you would return the shot you missed yesterday.","街の名手にも、憎らしいライバルにも負けました。それでも翌日にはまたラケットを握る。昨日返せなかった球を、今日は返すために。","输给街坊高手，又输给得意洋洋的对手，第二天依然拿起球拍。只为在今天，接住昨天没能接住的球。"],
