@@ -450,10 +450,13 @@ window.addEventListener('beforeunload',event=>{if(data.activeMatch){event.preven
 el('mapCenter').onclick=()=>{selected=data.activeMatch?.node??data.mapNode;render();focusRegion(nodes[data.mapNode].tier);};
 function changeZoom(delta){const v=el('worldViewport'),board=el('worldBoard'),view=v.getBoundingClientRect(),before=board.getBoundingClientRect(),x=(view.left+v.clientWidth/2-before.left)/zoom,y=(view.top+v.clientHeight/2-before.top)/zoom;fitMode=false;focusTier=null;updateRegionNav();zoom=Math.max(.1,Math.min(1.2,Math.round((zoom+delta)*100)/100));resizeMap();const after=board.getBoundingClientRect();v.scrollLeft+=after.left+x*zoom-view.left-v.clientWidth/2;v.scrollTop+=after.top+y*zoom-view.top-v.clientHeight/2;}
 el('mapOut').onclick=()=>changeZoom(-.1);el('mapIn').onclick=()=>changeZoom(.1);
-// Constrain the court width to its actual remaining height, independently of menus.
+// Fit the actual canvas inside a centered slot; menus keep their own layout.
 const courtStage=el('stage');
-const courtSizeObserver=new ResizeObserver(entries=>{const height=entries[0].contentRect.height;if(height<=0)return;const width=Math.floor(height*16/9)+'px';if(courtStage.style.maxWidth!==width)courtStage.style.maxWidth=width;});
-courtSizeObserver.observe(courtStage);
+let courtFrame=el('courtFrame');
+if(!courtFrame){courtFrame=document.createElement('div');courtFrame.id='courtFrame';courtFrame.className='court-frame-slot';courtStage.before(courtFrame);courtFrame.append(courtStage);}
+if(!window.ClubAssetMap){const styles=document.querySelector('link[href*="world-map.css"]');if(styles)styles.href='./world-map.css?v=centered-court-20261020';}
+const courtSizeObserver=new ResizeObserver(entries=>{const {width,height}=entries[0].contentRect;if(width<=0||height<=0)return;const w=Math.floor(Math.min(width,height*16/9)),h=Math.floor(w*9/16);courtStage.style.width=w+'px';courtStage.style.height=h+'px';courtStage.style.maxWidth='none';});
+courtSizeObserver.observe(courtFrame);
 const viewport=el('worldViewport');
 viewport.onpointerdown=e=>{if(e.button!==0||e.target.closest('button'))return;focusTier=null;updateRegionNav();mapDrag={x:e.clientX,y:e.clientY,left:viewport.scrollLeft,top:viewport.scrollTop};viewport.setPointerCapture(e.pointerId);viewport.classList.add('dragging');};
 viewport.onpointermove=e=>{if(!mapDrag)return;viewport.scrollLeft=mapDrag.left-(e.clientX-mapDrag.x);viewport.scrollTop=mapDrag.top-(e.clientY-mapDrag.y);};

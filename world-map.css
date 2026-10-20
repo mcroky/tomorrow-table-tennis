@@ -483,3 +483,7 @@ body[data-surface=court] #arena>.stage{width:100%;align-self:center;max-width:ca
 .world-viewport[data-fitted=true]{overflow:hidden;cursor:default}
 .world-viewport[data-fitted=true] #worldSpace{overflow:hidden}
 .world-viewport[data-fitted=true] .map-compass{display:none}
+/* The court has a dedicated slot so its width cannot pull the layout to one side. */
+body[data-surface=court] .shell{max-width:1120px;margin-left:auto;margin-right:auto}
+body[data-surface=court] #arena>.court-frame-slot{flex:1 1 0;min-height:0;min-width:0;width:100%;display:flex;align-items:center;justify-content:center}
+body[data-surface=court] .court-frame-slot>.stage{flex:0 0 auto;min-height:0;max-height:100%;max-width:100%;margin:0}
