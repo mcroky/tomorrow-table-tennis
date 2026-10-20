@@ -1,6 +1,6 @@
 (() => {
 'use strict';
-const tr=window.ClubI18n.t;
+const tr=window.ClubI18n.t,guest=!!window.ClubAccount?.guest;
 const KEY=window.ClubAccount?.storageKey||'tomorrow-table-tennis-career-v1',W=1900,H=1060,overviewBounds={x:35,y:90,width:1800,height:880};
 const regions=[tr('동네 탁구'),tr('동호회 거리'),tr('시·군 대회'),tr('전국 아마추어'),tr('실업 리그'),tr('국가대표 선발전'),tr('세계선수권'),tr('올림픽')];
 const places=[
@@ -79,7 +79,7 @@ function normalize(raw){
  const journey=raw.journey;if(journey&&Number.isInteger(journey.from)&&journey.to===journey.from+1&&nodes[journey.to]&&d.cleared.includes(journey.from)&&journey.to===d.mapNode)d.journey={from:journey.from,to:journey.to};
  return d;
 }
-try{const text=localStorage.getItem(KEY);if(text){const raw=JSON.parse(text);data=normalize(raw);if(raw.version<3){try{localStorage.setItem(KEY+'-v'+raw.version+'-backup',text);}catch(error){}saveMessage=tr('기존 성장·능력치 이관 완료 · 이전 경기 상금 정산');}}}
+try{const text=guest?null:localStorage.getItem(KEY);if(text){const raw=JSON.parse(text);data=normalize(raw);if(raw.version<3){try{localStorage.setItem(KEY+'-v'+raw.version+'-backup',text);}catch(error){}saveMessage=tr('기존 성장·능력치 이관 완료 · 이전 경기 상금 정산');}}}
 catch(error){storageOK=false;saveMessage=tr('저장 내용을 읽지 못했어요 · 현재 실행에서 유지');}
 selected=data.activeMatch?.node??frontier();
 const root=document.getElementById('career'),hub=document.getElementById('worldHub'),arena=document.getElementById('arena'),el=id=>document.getElementById(id);
@@ -356,7 +356,7 @@ function opponentConfig(){
 }
 
 function rootButton(selector){return hub.querySelector(selector);}
-function save(){cachedLoadout=null;cachedBonuses=null;try{localStorage.setItem(KEY,JSON.stringify(data));storageOK=true;saveMessage=tr('자동 저장됨 · 같은 브라우저에서 이어하기');}catch(error){storageOK=false;saveMessage=tr('자동 저장 불가 · 현재 실행에서만 유지');}render();window.ClubAccount?.queueSave(data);}
+function save(){cachedLoadout=null;cachedBonuses=null;if(guest){render();return;}try{localStorage.setItem(KEY,JSON.stringify(data));storageOK=true;saveMessage=tr('자동 저장됨 · 같은 브라우저에서 이어하기');}catch(error){storageOK=false;saveMessage=tr('자동 저장 불가 · 현재 실행에서만 유지');}render();window.ClubAccount?.queueSave(data);}
 function reward(id,won,first,score){const n=nodes[id];return won?Math.round((110+n.tier*35+n.step*8+(n.boss?60:0))*(first?1.6:.70)):45+n.tier*15+Math.min(score,10)*3;}
 function prize(id,win,first,score){const n=nodes[id];return win?Math.round((300+n.tier*180+n.step*50+(n.boss?350:0))*(first?1.5:.65)):90+n.tier*50+Math.min(score,10)*8;}
 function beginMatch(){
@@ -365,6 +365,7 @@ function beginMatch(){
 }
 function enterCourt(){finishMapJourney();closeDrawer(false);hub.hidden=true;arena.hidden=false;document.body.dataset.surface='court';document.querySelector('.court-settings')?.removeAttribute('open');window.scrollTo({top:0,behavior:'instant'});}
 function showMap(){
+ if(guest){window.ClubAccount.requestLogin();return false;}
  if(data.activeMatch)return false;
  if(mapHandler)mapHandler();hub.hidden=false;arena.hidden=true;document.body.dataset.surface='map';render();
  const result=pendingResult;pendingResult=false;closeDrawer(false);requestAnimationFrame(()=>{
@@ -372,7 +373,7 @@ function showMap(){
   if(data.journey){if(!journeyActive)playMapJourney(complete);}else complete();
  });
 }
-function launch(next=false){if(!startHandler||data.activeMatch&&hub.hidden)return;if(!data.customized&&!data.activeMatch){avatarEditor.open(true);return;}finishMapJourney();if(next&&!data.activeMatch)selected=frontier();const match=beginMatch();if(!match)return;enterCourt();render();startHandler(match);}
+function launch(next=false){if(guest){window.ClubAccount.requestLogin();return;}if(!startHandler||data.activeMatch&&hub.hidden)return;if(!data.customized&&!data.activeMatch){avatarEditor.open(true);return;}finishMapJourney();if(next&&!data.activeMatch)selected=frontier();const match=beginMatch();if(!match)return;enterCourt();render();startHandler(match);}
 function forfeitCost(){return Math.min(data.xp,Math.max(1,Math.ceil(need(data.level)*.20)));}
 function requestForfeit(){
  if(!data.activeMatch||el('forfeitDialog').open)return;
@@ -449,7 +450,7 @@ hub.querySelectorAll('[data-stat]').forEach(button=>button.onclick=()=>{if(data.
 hub.querySelectorAll('[data-skill]').forEach(button=>button.onclick=()=>{const s=skills.find(s=>s.id===button.dataset.skill);if(data.activeMatch||skillPoints()<=0||data.level<s.level||data.skills[s.id]>=3||s.requires&&data.skills[s.requires]<2)return;data.skills[s.id]++;save();});
 el('careerStart').onclick=()=>launch();el('campaignContinue').onclick=()=>launch(true);el('worldHome').onclick=showMap;
 el('lastMatchReview').onclick=()=>{if(data.activeMatch||!data.lastResult?.analysis)return;showMap();openDrawer('stage');requestAnimationFrame(()=>el('matchReport').scrollIntoView({block:'start',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'}));};
-el('shopHome').onclick=()=>{if(data.activeMatch)return;showMap();openDrawer('shop');};
+el('shopHome').onclick=()=>{if(guest){window.ClubAccount.requestLogin();return;}if(data.activeMatch)return;showMap();openDrawer('shop');};
 el('practiceHome').onclick=()=>{if(!practiceHandler||data.activeMatch)return;enterCourt();practiceHandler();};
 el('forfeitMatch').onclick=requestForfeit;el('forfeitCancel').onclick=()=>el('forfeitDialog').close();el('forfeitConfirm').onclick=forfeitMatch;
 el('forfeitDialog').addEventListener('close',()=>{const resume=forfeitResume;forfeitResume=null;if(resume&&data.activeMatch)resume();});
@@ -471,12 +472,13 @@ viewport.onpointerup=viewport.onpointercancel=()=>{mapDrag=null;viewport.classLi
 const avatarEditor=new window.ClubAvatar.Editor({getProfile:profile,getEquipment:appearance,onSave:look=>{data.profile=look;data.customized=true;save();if(data.journey&&!journeyActive&&!hub.hidden)requestAnimationFrame(()=>playMapJourney());}});
 window.ClubCareer={
  bonuses,appearance,profile,gearBonuses,recordPoint,showMap,isMap:()=>!hub.hidden,
- bindPreview(handler){avatarEditor.renderer=handler;if(!data.customized)requestAnimationFrame(()=>avatarEditor.open(true));},
+ bindPreview(handler){avatarEditor.renderer=handler;if(!guest&&!data.customized)requestAnimationFrame(()=>avatarEditor.open(true));},
  bindStart(handler){startHandler=handler;render();if(data.activeMatch)requestAnimationFrame(()=>launch());},
  bindSuspend(handler){suspendHandler=handler;},
  hasActiveMatch:()=>!!data.activeMatch,
  bindMap(handler){mapHandler=handler;},
  bindPractice(handler){practiceHandler=handler;},
+ startGuestPractice(){if(!guest||!practiceHandler)return;enterCourt();practiceHandler();el('worldHome').textContent=tr('내 선수로 도전하기');},
  opponent:opponentConfig,
  recordTraining,recordMatchEvent,
  titles:earnedTitles,

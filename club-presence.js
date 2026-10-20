@@ -1,5 +1,6 @@
 (() => {
 'use strict';
+if(window.ClubAccount?.guest)return;
 const tr=window.ClubI18n.t,node=(tag,text,className)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=tr(String(text));if(className)n.className=className;return n;};
 const opener=node('button','운영자','operator-open');opener.type='button';opener.hidden=true;opener.setAttribute('aria-haspopup','dialog');opener.setAttribute('aria-controls','operatorDialog');document.getElementById('feedbackOpen').after(opener);
 const dialog=node('dialog',undefined,'operator-dialog');dialog.id='operatorDialog';dialog.setAttribute('aria-labelledby','operatorTitle');

@@ -1,4 +1,8 @@
 body[data-auth="locked"] #career,body[data-auth="locked"] #worldHub,body[data-auth="locked"] #arena{display:none!important}
+.guest-start{display:block;width:100%;margin-top:22px;padding:18px;border:0;border-radius:12px;background:#d47751;color:#fffbed;font-size:20px;font-weight:750;cursor:pointer;box-shadow:0 5px 16px #ad65442a}
+body[data-guest=true] .career-head>div:first-child,body[data-guest=true] .career-xp,body[data-guest=true] #careerWallet,body[data-guest=true] #careerSave,body[data-guest=true] #shopHome,body[data-guest=true] #campaignContinue,body[data-guest=true] #lastMatchReview{display:none!important}
+body[data-guest=true] .career-head{justify-content:flex-end}
+body[data-guest=true] #worldHome{background:#365d43;color:#fff8df}
 .auth-gate[hidden],.account-bar[hidden]{display:none}
 .auth-gate{min-height:65vh;display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:center;max-width:980px;margin:40px auto}
 .account-intro small{letter-spacing:3px;color:#8b9a7e;font-size:11px}.account-intro h2{font-size:42px;letter-spacing:-2px;margin:12px 0;color:#315744}.account-intro p{color:#74836b;font-size:14px}.account-art{height:230px;border-radius:40px;background:linear-gradient(145deg,#d6e4cc,#a5c6b3);display:flex;align-items:center;justify-content:center;font-size:95px;position:relative;box-shadow:inset 0 0 0 1px #ffffff90;margin-top:30px}.account-art span{position:absolute;bottom:20px;font-size:12px;letter-spacing:8px;color:#4a7059}

@@ -5,7 +5,7 @@ const byId=id=>document.getElementById(id);
 const serialize=value=>JSON.stringify(value,(_key,item)=>item&&typeof item==='object'&&!Array.isArray(item)?Object.fromEntries(Object.keys(item).sort().map(key=>[key,item[key]])):item);
 const canonical=raw=>{try{return serialize(JSON.parse(raw));}catch{return raw;}};
 let client=null,user=null,revision=0,pending=null,timer=0,retry=0,inflight=null,blocked=false,booted=false,locked=false,intentionalLogout=false,continueBoot=null;
-const account={storageKey:legacyKey,ready:false};
+const account={storageKey:legacyKey,ready:false,guest:false};
 const gate=document.createElement('section');gate.id='authGate';gate.className='auth-gate';gate.hidden=true;document.getElementById('career').before(gate);
 const bar=document.createElement('section');bar.className='account-bar';bar.hidden=true;bar.innerHTML='<span id="accountName"></span><span id="cloudStatus" role="status"></span><button type="button" id="cloudSync">'+tr('지금 동기화')+'</button><button type="button" id="accountLogout">'+tr('로그아웃')+'</button>';document.getElementById('career').before(bar);
 function status(text){byId('cloudStatus').textContent=text;}
@@ -31,6 +31,7 @@ function sdk(){
 function form(mode='login'){
  lockGate();const signup=mode==='signup';
  gate.innerHTML='<div class="account-intro"><small>ROAD TO OLYMPICS</small><h2>'+tr('내일은 탁구왕')+'</h2><p>'+tr('나만의 선수와 함께, 동네에서 세계 무대까지.')+'</p><div class="account-art" aria-hidden="true">🏓<span>01 → 40</span></div></div><div class="account-panel"><nav><button type="button" data-auth-mode="login" aria-pressed="'+!signup+'">'+tr('로그인')+'</button><button type="button" data-auth-mode="signup" aria-pressed="'+signup+'">'+tr('회원가입')+'</button></nav><h3>'+(signup?tr('새 선수 계정 만들기'):tr('나의 선수로 돌아오기'))+'</h3><p>'+tr('이메일 없이 아이디와 비밀번호로 시작하세요.')+'</p><form id="accountForm"><label>'+tr('아이디')+'<input id="accountUsername" name="username" autocomplete="username" minlength="3" maxlength="20" spellcheck="false" autocapitalize="none" required></label><small>'+tr('영문으로 시작하는 3~20자 · 영문, 숫자, 밑줄 · 대소문자 구분 없음')+'</small><label>'+tr('비밀번호')+'<input id="accountPassword" name="password" type="password" autocomplete="'+(signup?'new-password':'current-password')+'" '+(signup?'minlength="10"':'')+' maxlength="128" required></label>'+(signup?'<label>'+tr('비밀번호 확인')+'<input id="accountPasswordAgain" type="password" autocomplete="new-password" minlength="10" maxlength="128" required></label><small>'+tr('비밀번호는 10자 이상입니다. 이메일을 사용하지 않아 분실 시 자동 복구할 수 없습니다.')+'</small>':'')+'<p id="accountError" class="account-error" role="alert"></p><button type="submit" id="accountSubmit">'+(signup?tr('계정 만들고 시작'):tr('로그인'))+'</button></form><small>'+tr('계정마다 선수 성장과 장비를 클라우드에 저장합니다.')+'</small></div>';
+ const intro=gate.querySelector('.account-intro'),practice=document.createElement('button');practice.type='button';practice.className='guest-start';practice.textContent=tr('바로 연습하기');practice.onclick=enterGuest;intro.append(practice);const note=document.createElement('p');note.textContent=tr('가입 없이 탁구를 즐겨보세요. 성장과 장비는 로그인 후 저장됩니다.');intro.append(note);
  gate.querySelectorAll('[data-auth-mode]').forEach(b=>b.onclick=()=>form(b.dataset.authMode));
  byId('accountForm').onsubmit=async event=>{
   event.preventDefault();const username=byId('accountUsername').value.trim().toLowerCase(),password=byId('accountPassword').value;
@@ -49,6 +50,14 @@ function form(mode='login'){
   }catch(error){showError(safeError(error));button.disabled=false;navigation.forEach(b=>b.disabled=false);}
  };
 }
+function enterGuest(){
+ if(account.guest)return;account.guest=true;account.ready=true;account.storageKey=null;booted=true;
+ gate.hidden=true;delete document.body.dataset.auth;document.body.dataset.guest='true';bar.hidden=false;
+ byId('accountName').textContent=tr('비회원 연습');status(tr('연습 기록은 저장되지 않습니다.'));
+ byId('cloudSync').hidden=true;byId('accountLogout').textContent=tr('내 선수로 도전하기');
+ if(continueBoot){continueBoot();continueBoot=null;}
+}
+account.requestLogin=()=>{if(account.guest)location.reload();};
 function summary(raw){
  const d=parse(raw);return d?'Lv. '+(Number(d.level)||1)+' · '+tr('클리어')+' '+(Array.isArray(d.cleared)?d.cleared.length:0)+' · '+tr('상금 ')+(Number(d.money)||0).toLocaleString():'—';
 }
@@ -134,9 +143,10 @@ account.prepare=async()=>{
  return new Promise(resolve=>{
   continueBoot=resolve;
   client.auth.getSession().then(async result=>{
+   if(account.guest)return;
    if(result.error)throw result.error;
    if(result.data?.session?.user)await enter(result.data.session.user);else form();
-  }).catch(()=>{form();showError(tr('저장된 계정에 연결하지 못했어요. 다시 로그인해주세요.'));});
+  }).catch(()=>{if(account.guest)return;form();showError(tr('저장된 계정에 연결하지 못했어요. 다시 로그인해주세요.'));});
  });
 };
 account.getLeaderboard=async()=>{
@@ -162,7 +172,7 @@ account.submitFeedback=async({id,category,message,language})=>{
 };
 account.updateLock=value=>{if(locked===!!value)return;locked=!!value;byId('accountLogout').disabled=locked;byId('cloudSync').disabled=locked;};
 byId('cloudSync').onclick=async()=>{if(locked)return;if(blocked){location.reload();return;}await flush();};
-byId('accountLogout').onclick=async()=>{if(locked||!client)return;byId('accountLogout').disabled=true;await flush();intentionalLogout=true;const result=await client.auth.signOut({scope:'local'});if(result.error){intentionalLogout=false;byId('accountLogout').disabled=false;status(tr('로그아웃하지 못했어요. 다시 시도해주세요.'));return;}location.reload();};
+byId('accountLogout').onclick=async()=>{if(account.guest){account.requestLogin();return;}if(locked||!client)return;byId('accountLogout').disabled=true;await flush();intentionalLogout=true;const result=await client.auth.signOut({scope:'local'});if(result.error){intentionalLogout=false;byId('accountLogout').disabled=false;status(tr('로그아웃하지 못했어요. 다시 시도해주세요.'));return;}location.reload();};
 window.addEventListener('online',()=>{if(pending&&!blocked)flush();});
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&pending)flush();});
 window.ClubAccount=account;

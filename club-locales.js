@@ -1,5 +1,10 @@
 'use strict';
 window.ClubLocales={
+  "바로 연습하기": ["Play practice now","今すぐ練習する","立即练习"],
+  "가입 없이 탁구를 즐겨보세요. 성장과 장비는 로그인 후 저장됩니다.": ["Try table tennis without signing up. Sign in to save your progress and equipment.","登録なしで卓球を体験。成長と装備はログイン後に保存されます。","无需注册即可体验乒乓球。登录后可保存成长与装备。"],
+  "비회원 연습": ["Guest practice","ゲスト練習","游客练习"],
+  "연습 기록은 저장되지 않습니다.": ["Practice progress is not saved.","練習記録は保存されません。","练习记录不会保存。"],
+  "내 선수로 도전하기": ["Start my player journey","自分の選手で挑戦","开启球员之旅"],
   "대각선 이동": ["Diagonal movement","斜め移動","斜向移动"],
   "방향 보정 없이 이동": ["Move without direction assistance","方向補正なしで移動","关闭方向辅助"],
   "좌우 이동의 작은 흔들림은 보정하고, 확실히 비스듬하게 밀면 대각선으로 이동합니다.": ["Small sideways wobbles are filtered. Drag clearly at an angle to move diagonally.","左右移動中の小さなぶれは補正し、はっきり斜めにドラッグすると斜めに移動します。","左右移动时会过滤轻微抖动，明确斜向拖动即可斜向移动。"],
