@@ -14,7 +14,7 @@ window.ClubLocales={
   "SPACE를 눌러 서브하세요.": ["Press SPACE to serve.","SPACEでサーブしよう。","按空格键发球。"],
   "버튼이 밝아지면 스윙! 공을 실제로 맞히면 다음 단계로 넘어가요.": ["Swing when the button lights up! Hit the ball to move on.","ボタンが光ったらスイング！球に当たれば次のステップへ。","按钮亮起时挥拍！击中球后进入下一步。"],
   "스매시 버튼이 밝아지면 눌러 높은 공을 내려치세요.": ["Press Smash when it lights up to strike the high ball.","スマッシュボタンが光ったら押して、高い球を打ち下ろそう。","扣杀按钮亮起时按下，向下击打高球。"],
-  "스매시 버튼이 밝아지면 Shift + SPACE로 높은 공을 내려치세요.": ["When Smash lights up, press Shift + SPACE to hit the high ball.","スマッシュボタンが光ったらShift + SPACEで高い球を打とう。","扣杀按钮亮起时，按Shift + 空格键击打高球。"],
+  "스매시 버튼이 밝아지면 Shift로 높은 공을 내려치세요.": ["When Smash lights up, press Shift to hit the high ball.","スマッシュボタンが光ったらShiftで高い球を打とう。","扣杀按钮亮起时，按Shift击打高球。"],
   "서브, 스윙, 스매시를 모두 해냈어요. 놓쳐도 괜찮으니 계속 도전해보세요.": ["You served, rallied and smashed! Keep trying; missing is part of learning.","サーブ、スイング、スマッシュをクリア！失敗しても大丈夫。続けてみよう。","你学会了发球、挥拍和扣杀！失误也没关系，继续挑战吧。"],
   "계속 연습하기": ["Keep practicing","練習を続ける","继续练习"],
   "건너뛰기": ["Skip","スキップ","跳过"],
@@ -470,10 +470,10 @@ window.ClubLocales={
     "ハイボール練習を開始しました。ラリーを始めましょう。",
     "已开启高球练习，开始回合吧！"
   ],
-  "높이 튀는 공에 Shift + SPACE로 스매시!": [
-    "Smash the high bounce with Shift + SPACE!",
-    "高く弾んだ球をShift + SPACEでスマッシュ！",
-    "高球弹起后按Shift + SPACE扣杀！"
+  "높이 튀는 공에 Shift로 스매시!": [
+    "Smash the high bounce with Shift!",
+    "高く弾んだ球をShiftでスマッシュ！",
+    "高球弹起后按Shift扣杀！"
   ],
   "능력치": [
     "Stats",
@@ -885,10 +885,10 @@ window.ClubLocales={
     "相手が拳を握って悔しがっています。痛快な一打！",
     "对手攥紧拳头，懊恼不已。痛快的一击！"
   ],
-  "상대가 중심을 잃어 공이 높게 떴어요! 바운드 뒤 Shift + SPACE!": [
-    "The opponent lost balance and popped it up! Smash after the bounce with Shift + SPACE!",
-    "相手がバランスを崩して球が浮きました！バウンド後にShift + SPACE！",
-    "对手失去平衡，球高高弹起！落台后按Shift + SPACE扣杀！"
+  "상대가 중심을 잃어 공이 높게 떴어요! 바운드 뒤 Shift!": [
+    "The opponent lost balance and popped it up! Smash after the bounce with Shift!",
+    "相手がバランスを崩して球が浮きました！バウンド後にShift！",
+    "对手失去平衡，球高高弹起！落台后按Shift扣杀！"
   ],
   "상대가 중심을 잡고 블록했어요. 다음 코스를 노려보세요.": [
     "The opponent recovered and blocked. Aim for another spot.",
@@ -1025,10 +1025,10 @@ window.ClubLocales={
     "スマッシュ・クリティカル・得点",
     "扣杀·暴击·得分"
   ],
-  "스매시 ⇧ SPACE": [
-    "Smash ⇧ SPACE",
-    "スマッシュ ⇧ SPACE",
-    "扣杀 ⇧ SPACE"
+  "스매시 SHIFT": [
+    "Smash SHIFT",
+    "スマッシュ SHIFT",
+    "扣杀 SHIFT"
   ],
   "스매시 위력": [
     "Smash power",
@@ -2080,10 +2080,10 @@ window.ClubLocales={
     "P / スキル +",
     "P / 技能 +"
   ],
-  "WASD / 방향키 이동 · SPACE 자동 포핸드·백핸드 · J/K/L 코스 · Shift + SPACE 스매시 · 1–4 시점 전환": [
-    "WASD / arrows: move · SPACE: auto forehand/backhand · J/K/L: placement · Shift + SPACE: smash · 1–4: camera",
-    "WASD / 矢印：移動・SPACE：フォア/バック自動・J/K/L：コース・Shift + SPACE：スマッシュ・1–4：視点",
-    "WASD / 方向键：移动·SPACE：自动正反手·J/K/L：落点·Shift + SPACE：扣杀·1–4：视角"
+  "WASD / 방향키 이동 · SPACE 자동 포핸드·백핸드 · J/K/L 코스 · Shift 스매시 · 1–4 시점 전환": [
+    "WASD / arrows: move · SPACE: auto forehand/backhand · J/K/L: placement · Shift: smash · 1–4: camera",
+    "WASD / 矢印：移動・SPACE：フォア/バック自動・J/K/L：コース・Shift：スマッシュ・1–4：視点",
+    "WASD / 方向键：移动·SPACE：自动正反手·J/K/L：落点·Shift：扣杀·1–4：视角"
   ],
   "XP · 현재": [
     "XP · Current",
@@ -2925,10 +2925,10 @@ window.ClubLocales={
     "レット · もう一度サーブしてください。",
     "擦网发球 · 重新发球"
   ],
-  "WASD / 방향키 이동 · SPACE 자동 포핸드·백핸드 · J/K/L 코스 · Z 드라이브 / X 커트 · C/V 서브 길이 · Shift + SPACE 스매시 · 1–4 시점 전환": [
-    "WASD / Arrows: move · SPACE: swing · J/K/L: placement · Z: drive / X: chop · C/V: serve length · Shift + SPACE: smash · 1–4: camera",
-    "WASD / 矢印:移動 · SPACE:スイング · J/K/L:コース · Z:ドライブ / X:ツッツキ · C/V:サーブの長さ · Shift + SPACE:スマッシュ · 1–4:視点",
-    "WASD / 方向键移动 · SPACE挥拍 · J/K/L落点 · Z上旋 / X搓球 · C/V发球长短 · Shift + SPACE扣杀 · 1–4视角"
+  "WASD / 방향키 이동 · SPACE 자동 포핸드·백핸드 · J/K/L 코스 · Z 드라이브 / X 커트 · C/V 서브 길이 · Shift 스매시 · 1–4 시점 전환": [
+    "WASD / Arrows: move · SPACE: swing · J/K/L: placement · Z: drive / X: chop · C/V: serve length · Shift: smash · 1–4: camera",
+    "WASD / 矢印:移動 · SPACE:スイング · J/K/L:コース · Z:ドライブ / X:ツッツキ · C/V:サーブの長さ · Shift:スマッシュ · 1–4:視点",
+    "WASD / 方向键移动 · SPACE挥拍 · J/K/L落点 · Z上旋 / X搓球 · C/V发球长短 · Shift扣杀 · 1–4视角"
   ],
   "오는 공의 구질을 보고 리턴하세요.": [
     "Read the incoming spin before returning.",
@@ -3090,10 +3090,10 @@ window.ClubLocales={
     "移動中の打球が多いです。片足を踏み込み、腰を回しましょう。",
     "移动中击球较多。踩稳一只脚，再转腰发力。"
   ],
-  "상대가 높이 띄운 공을 놓쳤어요. 바운드 뒤 Shift + SPACE로 마무리해보세요.": [
-    "Use high returns as a chance. Press Shift + SPACE after the bounce.",
-    "高い返球を活かしましょう。バウンド後にShift + SPACEで決めてみてください。",
-    "把握对手的高球，落台后按Shift + SPACE扣杀。"
+  "상대가 높이 띄운 공을 놓쳤어요. 바운드 뒤 Shift로 마무리해보세요.": [
+    "Use high returns as a chance. Press Shift after the bounce.",
+    "高い返球を活かしましょう。バウンド後にShiftで決めてみてください。",
+    "把握对手的高球，落台后按Shift扣杀。"
   ],
   "짧은 커트로 상대를 앞으로 부른 뒤 깊은 드라이브를 노려보세요.": [
     "Draw the opponent forward with a short chop, then aim a deep drive.",

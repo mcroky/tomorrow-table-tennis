@@ -42,7 +42,7 @@ const emptyTraining=()=>({sweet:0,placement:0,lastSide:0,finish:0,claimed:[]});
 
 const int=(v,lo,hi)=>Number.isFinite(v)?Math.max(lo,Math.min(hi,Math.floor(v))):lo,need=l=>80+(l-1)*45;
 const fresh=()=>({version:3,profile:window.ClubAvatar.defaults(),customized:false,level:1,xp:0,money:0,owned:Object.values(baseGear()),equipped:baseGear(),upgrades:{},stats:{power:0,speed:0,defense:0,attack:0,control:0},skills:Object.fromEntries(skills.map(s=>[s.id,0])),wins:0,losses:0,tierWins:regions.map(()=>0),rivalWins:regions.map(()=>0),stageMedals:Array(40).fill(0),training:emptyTraining(),cleared:[],mapNode:0,journey:null,activeMatch:null,lastResult:null});
-let data=fresh(),storageOK=true,saveMessage=tr('자동 저장 준비'),startHandler=null,mapHandler=null,practiceHandler=null,suspendHandler=null,forfeitResume=null,selected=0,tab='stage',zoom=.7,mapDrag=null,fitMode=true,focusTier=null,drawerOpen=false,drawerOpener=null,pendingResult=false,journeyFrame=0,journeyToken=0,journeyActive=false,playerPoint=null,arrivalTimer=0;
+let data=fresh(),storageOK=true,saveMessage=tr('자동 저장 준비'),startHandler=null,mapHandler=null,practiceHandler=null,suspendHandler=null,forfeitResume=null,selected=0,tab='stage',zoom=.65,mapDrag=null,fitMode=true,focusTier=null,drawerOpen=false,drawerOpener=null,pendingResult=false,journeyFrame=0,journeyToken=0,journeyActive=false,playerPoint=null,arrivalTimer=0;
 function frontier(d=data){let i=0;while(i<nodes.length&&d.cleared.includes(i))i++;return Math.min(i,39);}
 function unlocked(id,d=data){return id===0||d.cleared.includes(id-1);}
 function normalize(raw){
@@ -417,7 +417,7 @@ function resizeMap(){
 }
 function fitMap(){if(hub.hidden)return;fitMode=true;focusTier=null;updateRegionNav();sizeViewport();const v=el('worldViewport');zoom=Math.max(.08,Math.min((v.clientWidth-24)/overviewBounds.width,(v.clientHeight-24)/overviewBounds.height,1));resizeMap();v.scrollTo({left:0,top:0,behavior:'instant'});}
 function compactMap(){return innerWidth<=760||(innerWidth<=1100&&matchMedia('(pointer: coarse)').matches&&!matchMedia('(any-hover: hover) and (any-pointer: fine)').matches);}
-function defaultMapView(){if(compactMap())focusRegion(nodes[data.mapNode].tier);else fitMap();}
+function defaultMapView(){if(hub.hidden)return;fitMode=false;focusTier=null;zoom=.65;updateRegionNav();sizeViewport();resizeMap();const n=nodes[data.mapNode],v=el('worldViewport');v.scrollTo({left:n.x*zoom-v.clientWidth/2,top:n.y*zoom-v.clientHeight/2,behavior:'instant'});}
 function updateRegionNav(){
  el('mapFit').setAttribute('aria-pressed',String(fitMode));
  hub.querySelectorAll('[data-region]').forEach(button=>{const tier=Number(button.dataset.region);button.setAttribute('aria-pressed',String(!fitMode&&focusTier===tier));button.dataset.locked=String(tier>Math.floor(frontier()/5));el('chapterProgress-'+tier).textContent=(tier>Math.floor(frontier()/5)?'🔒 · ':'')+data.cleared.filter(id=>nodes[id]?.tier===tier).length+' / 5';});
