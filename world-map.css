@@ -591,3 +591,10 @@ html[data-input=touch] body[data-surface=court] .feedback-strip{height:44px;min-
  html[data-input=touch] body[data-surface=court] .shot-controls [data-course="0"]:before{content:'↑'}
  html[data-input=touch] body[data-surface=court] .shot-controls [data-course="1"]:before{content:'↗'}
 }
+.touch-ball-marker{position:absolute;left:0;top:0;width:10px;height:10px;z-index:1;border:1.5px solid #fffce5;border-radius:50%;box-shadow:0 0 0 1px #27493dc9,0 0 5px #fff5bc66;background:radial-gradient(circle,#fff9dbba 0 23%,transparent 30%);pointer-events:none;will-change:transform}
+.touch-ball-marker[data-chance=true]{border-color:#ffdc77;box-shadow:0 0 0 1px #6b4c2cbb,0 0 7px #ffd36e88}
+.touch-ball-marker>i{position:absolute;left:50%;top:50%;width:var(--tail-length,0px);height:2px;transform-origin:0 50%;transform:rotate(var(--tail-angle,0rad));background:linear-gradient(90deg,#fff9c4b0,transparent);border-radius:2px;pointer-events:none}
+#stage>.hud,#stage>.scoreboard,#stage>.bottom-hud{z-index:2}
+.ball-guide-option{display:flex;align-items:center;gap:8px;padding:0 0 12px;font-size:12px;color:#46664d}
+.ball-guide-option input{accent-color:#4b7654;width:18px;height:18px}
+.touch-hit-buttons button:disabled{opacity:.5;filter:saturate(.55);box-shadow:none;transform:none}

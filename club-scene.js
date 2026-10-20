@@ -1258,7 +1258,8 @@ function avatar(x,z,facing,shirt,countdown,isPlayer,profileOverride=null,equipme
 }
 function povHands(){
  const rig=strikeRig(true),hand=rig.hand,root=rig.shoulder,elbow=rig.elbow,wear=career.appearance(),skin=career.profile().skin;
- taper(root,elbow,.063,.045,skin);softSphere(...elbow,.044,.047,.042,skin,6,12);taper(elbow,hand,.041,.027,skin);
+ const slim=document.documentElement.dataset.input==='touch'?.78:1;
+ taper(root,elbow,.063*slim,.045*slim,skin);softSphere(...elbow,.044*slim,.047*slim,.042*slim,skin,6,12);taper(elbow,hand,.041*slim,.027,skin);
  taper(add(hand,mul(sub(elbow,hand),.12)),add(hand,mul(sub(elbow,hand),.24)),.032,.034,'#eee5d1',10);
  withFrame(rig.origin,rig.r,rig.u,rig.n,()=>grippedRacket(skin,wear.racket.color,wear.racket));
  if(rig.pose.celebration>.01){
@@ -1269,7 +1270,8 @@ function povHands(){
 }
 function cameraGoal(){
  if(state.view==='pov'){
-  const e=[state.px,1.55,state.pz+.7],d=norm([Math.sin(state.yaw),-state.pitch,-Math.cos(state.yaw)]);
+  const touch=document.documentElement.dataset.input==='touch',height=touch?1.64:1.55,assist=touch?clamp(Math.atan2(-state.px,state.pz+1.1),-.30,.30):0;
+  const e=[state.px,height,state.pz+.7],yaw=state.yaw+assist,d=norm([Math.sin(yaw),-state.pitch,-Math.cos(yaw)]);
   return[e,add(e,mul(d,3))];
  }
  const center=[state.view==='follow'?state.px*.35:0,.75,0];
@@ -1619,12 +1621,22 @@ document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>setView(b.data
  document.querySelectorAll('[data-serve]').forEach(b=>b.onclick=()=>setServeLength(b.dataset.serve));
 document.querySelectorAll('[data-hold]').forEach(b=>{b.onpointerdown=e=>{e.preventDefault();state.keys[b.dataset.hold]=true;b.setPointerCapture(e.pointerId)};b.onpointerup=b.onpointercancel=()=>state.keys[b.dataset.hold]=false;});
 $('play').onclick=start;$('swing').onclick=()=>swing(false);$('mobileSwing').onclick=()=>swing(false);$('smash').onclick=$('mobileSmash').onclick=()=>swing(true);$('reset').onclick=()=>setView(state.view);
+const touchBallMarker=document.createElement('span');touchBallMarker.className='touch-ball-marker';touchBallMarker.hidden=true;touchBallMarker.setAttribute('aria-hidden','true');touchBallMarker.innerHTML='<i></i>';$('stage').append(touchBallMarker);
+let ballAssist=true,previousBallScreen=null;try{ballAssist=localStorage.getItem('ttk-touch-ball-guide')!=='off';}catch{}
+const ballGuideOption=document.createElement('label');ballGuideOption.className='ball-guide-option';const ballGuideCheckbox=document.createElement('input');ballGuideCheckbox.type='checkbox';ballGuideCheckbox.checked=ballAssist;ballGuideOption.append(ballGuideCheckbox,document.createTextNode(tr('모바일 공 위치 강조')));document.querySelector('.court-settings-panel').prepend(ballGuideOption);ballGuideCheckbox.onchange=()=>{ballAssist=ballGuideCheckbox.checked;try{localStorage.setItem('ttk-touch-ball-guide',ballAssist?'on':'off');}catch{}};
+function updateTouchBallGuide(vp){
+ if(document.documentElement.dataset.input!=='touch'||!ballAssist||!state.playing||state.pointWait>0||state.celebration.active){touchBallMarker.hidden=true;previousBallScreen=null;return;}
+ const clipW=vp[3]*ball.x+vp[7]*ball.y+vp[11]*ball.z+vp[15],px=vp[0]*ball.x+vp[4]*ball.y+vp[8]*ball.z+vp[12],py=vp[1]*ball.x+vp[5]*ball.y+vp[9]*ball.z+vp[13];
+ if(clipW<=.05||Math.abs(px/clipW)>1||Math.abs(py/clipW)>1){touchBallMarker.hidden=true;previousBallScreen=null;return;}
+ const x=(px/clipW*.5+.5)*canvas.clientWidth,y=(.5-py/clipW*.5)*canvas.clientHeight,dx=(previousBallScreen?.x??x)-x,dy=(previousBallScreen?.y??y)-y;
+ touchBallMarker.hidden=false;touchBallMarker.style.transform='translate3d('+(x-5)+'px,'+(y-5)+'px,0)';touchBallMarker.style.setProperty('--tail-length',Math.min(20,Math.hypot(dx,dy)*1.2)+'px');touchBallMarker.style.setProperty('--tail-angle',Math.atan2(dy,dx)+'rad');touchBallMarker.dataset.chance=String(!!ball.smashChance);previousBallScreen={x,y};
+}
 const touchMedia=matchMedia('(pointer: coarse)');
 function detectTouch(){document.documentElement.dataset.input=touchMedia.matches||navigator.maxTouchPoints>0?'touch':'keyboard';}
 detectTouch();touchMedia.addEventListener('change',detectTouch);
 const stick=$('touchStick'),knob=$('touchStickKnob');let stickPointer=null;
 function releaseTouch(){stickPointer=null;state.touchMove={x:0,z:0};knob.style.transform='translate(-50%,-50%)';stick.classList.remove('active');document.querySelectorAll('.touch-hit-buttons button').forEach(b=>b.classList.remove('pressed'));}
-function moveStick(e){if(e.pointerId!==stickPointer)return;const r=stick.getBoundingClientRect(),radius=r.width*.33,dx=e.clientX-r.left-r.width/2,dz=e.clientY-r.top-r.height/2,length=Math.hypot(dx,dz),scale=Math.min(1,radius/Math.max(length,.001)),x=dx*scale,z=dz*scale;state.touchMove={x:Math.abs(x/radius)<.12?0:x/radius,z:Math.abs(z/radius)<.12?0:z/radius};knob.style.transform='translate(calc(-50% + '+x+'px),calc(-50% + '+z+'px))';}
+function moveStick(e){if(e.pointerId!==stickPointer)return;const r=stick.getBoundingClientRect(),radius=r.width*.33,dx=e.clientX-r.left-r.width/2,dz=e.clientY-r.top-r.height/2,length=Math.hypot(dx,dz),scale=Math.min(1,radius/Math.max(length,.001)),x=dx*scale,z=dz*scale;const magnitude=Math.min(1,length/radius),strength=magnitude<.14?0:(magnitude-.14)/.86;state.touchMove={x:length?dx/length*strength:0,z:length?dz/length*strength:0};knob.style.transform='translate(calc(-50% + '+x+'px),calc(-50% + '+z+'px))';}
 stick.onpointerdown=e=>{if(stickPointer!==null||career.isMap()||document.querySelector('dialog[open]'))return;e.preventDefault();sound.unlock();stickPointer=e.pointerId;stick.setPointerCapture(e.pointerId);stick.classList.add('active');moveStick(e);};
 stick.onpointermove=e=>{if(e.pointerId===stickPointer){e.preventDefault();moveStick(e);}};
 stick.onpointerup=stick.onpointercancel=stick.onlostpointercapture=e=>{if(e.pointerId===stickPointer)releaseTouch();};
@@ -1671,11 +1683,12 @@ function frame(time){
  const vibration=fx.shake,age=fx.age,side=fx.lastContact?.shot==='backhand'?-1:1;
  const rattle=!!fx.contactClock?.rattle;
  const shake=[Math.cos(age*(rattle?190:93))*vibration*side,Math.cos(age*(rattle?225:117))*vibration*(rattle?.35:.65),0];
- gl.uniformMatrix4fv(uVP,false,mm(perspective(((state.view==='pov'?state.povFov:49)-fx.shake*22)*Math.PI/180,w/h),lookAt(add(eye,shake),add(target,mul(shake,.15)))));
+ const frameVP=mm(perspective(((state.view==='pov'?state.povFov:49)-fx.shake*22)*Math.PI/180,w/h),lookAt(add(eye,shake),add(target,mul(shake,.15))));gl.uniformMatrix4fv(uVP,false,frameVP);updateTouchBallGuide(frameVP);
  drawMesh(venueMesh);drawMesh(staticMesh);geo=[];auraGeo=[];
  avatar(state.enemyX,state.enemyZ,1,opponentLevel().shirt||'#528f85',state.enemySwing,false);
  if(state.view==='pov')povHands();else avatar(state.px,state.pz,-1,'#df7253',state.swing,true);
  if(state.pointWait<=0){shadow(ball.x,ball.z,.055,.045);gearBall(ball.x,ball.y,ball.z,.021,career.appearance().ball);}
+ const touchUnavailable=state.pointWait>0||state.celebration.active||state.careerMatch&&!state.playing;for(const id of ['mobileSwing','mobileSmash']){if($(id).disabled!==touchUnavailable)$(id).disabled=touchUnavailable;}
  const touchLabel=$('mobileSwing').querySelector('span'),nextTouchLabel=state.serve?.player?tr('서브'):tr('스윙');if(touchLabel.textContent!==nextTouchLabel)touchLabel.textContent=nextTouchLabel;
  drawCourseGuide();drawImpact();updateFootingUI(time);
  gl.bindBuffer(gl.ARRAY_BUFFER,dynamicMesh.buffer);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(geo),gl.DYNAMIC_DRAW);dynamicMesh.count=geo.length/10;drawMesh(dynamicMesh);if(auraGeo.length){uploadMesh(auraMesh,auraGeo);drawAura(auraMesh,eye);}

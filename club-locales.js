@@ -3629,5 +3629,10 @@ window.ClubLocales={
     "Your serve · Tap Swing",
     "自分のサーブ · スイングボタンで開始",
     "我方发球 · 点击挥拍开始"
+  ],
+  "모바일 공 위치 강조": [
+    "Highlight ball on mobile",
+    "モバイルのボール位置を強調",
+    "移动端球位置高亮"
   ]
 };
