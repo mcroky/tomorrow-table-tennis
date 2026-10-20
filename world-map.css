@@ -597,6 +597,13 @@ html[data-input=touch] body[data-surface=court] .feedback-strip{height:44px;min-
 .touch-ball-marker>i{position:absolute;left:50%;top:50%;width:var(--tail-length,0px);height:2px;transform-origin:0 50%;transform:rotate(var(--tail-angle,0rad));background:linear-gradient(90deg,#fff9c4b0,transparent);border-radius:2px;pointer-events:none}
 #stage>.hud,#stage>.scoreboard,#stage>.bottom-hud{z-index:2}
 #swing.timing-ready,#mobileSwing.timing-ready{box-shadow:0 0 0 3px #9bdc88,0 0 20px #b9ef9066;border-color:#5a9251;background:#dcefc9;color:#254c32}
+#smash.timing-ready,#mobileSmash.timing-ready{box-shadow:0 0 0 3px #f3c761,0 0 22px #f3c76177;border-color:#d9942a;background:#ffe3a3;color:#7b4817}
+.practice-tutorial[hidden]{display:none!important}
+.practice-tutorial button{min-height:40px!important;min-width:52px}.tutorial-replay,.practice-assist-option{min-height:40px}
+.toolbar:has(.practice-tutorial:not([hidden])){flex-wrap:wrap!important}
+.practice-tutorial{order:3;flex:1 0 100%;display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:9px;background:#e2edda;border:1px solid #b4cba4;color:#345b3e;box-sizing:border-box}
+.practice-tutorial>div{flex:1;min-width:0}.practice-tutorial b{font-size:13px;line-height:1.5}.practice-tutorial p{font-size:11px;line-height:1.6;margin:2px 0 0;overflow-wrap:anywhere}.tutorial-count{font-size:12px;font-weight:750;white-space:nowrap}.practice-tutorial button,.tutorial-replay{border:1px solid #b2c6a2;border-radius:7px;background:#f8faef;color:#4b6a45;padding:8px 10px;font-size:11px;cursor:pointer}.practice-tutorial button{flex-shrink:0}.tutorial-replay{margin:5px 0 10px}.practice-assist-option{display:flex;align-items:center;gap:7px;font-size:12px;color:#486246;padding:8px 0}.practice-assist-option input{accent-color:#537849}
+@media(max-width:760px){.practice-tutorial{gap:7px;padding:7px 8px}.practice-tutorial b{font-size:11px}.practice-tutorial p{font-size:10px;line-height:1.45}.practice-tutorial button{padding:6px;font-size:10px}.tutorial-count{font-size:10px}}
 .ball-guide-option{display:flex;align-items:center;gap:8px;padding:0 0 12px;font-size:12px;color:#46664d}
 .ball-guide-option input{accent-color:#4b7654;width:18px;height:18px}
 .touch-hit-buttons button:disabled{opacity:.5;filter:saturate(.55);box-shadow:none;transform:none}

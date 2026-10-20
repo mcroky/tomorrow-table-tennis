@@ -295,6 +295,8 @@ function reachableSide(receiver,relative){return(receiver.locked||receiver.selec
 
 
 const sound=window.ClubSound||new window.ClubAudio();
+let practiceAssist=true;try{practiceAssist=localStorage.getItem('ttk-practice-assist-v1')!=='off';}catch{}
+const practiceHelp=()=> (practiceAssist||tutorial.active)&&(!state.careerMatch||!!career.opponent().beginnerAssist);
 const fx={contactClock:null,contactVisible:true,renderLead:16,announcement:null,age:10,slowFor:0,hold:.65,hitstop:0,shake:0,flash:0,power:0,point:null,rays:[],trail:[],swingTrail:[],lastContact:null,contacts:[],rally:0};
 const BALL_RADIUS=.021,FACE_X=.079,FACE_Y=.100,FACE_DEPTH=.014;
 function eulerVector(p,rx=0,ry=0,rz=0){
@@ -633,7 +635,9 @@ function processQueuedSwing(){
  const q=state.queuedSwing;if(!q)return;
  if(state.elapsed>q.expires||state.celebration.active||state.pointWait>0){state.queuedSwing=null;return;}
  const eta=ball.vz>.05?(state.pz-.45-ball.z)/ball.vz:Infinity;
- if(state.swing<=.12&&(!state.playing||(eta>=.015&&eta<=.36))){state.queuedSwing=null;swing(q.power,true,!!q.assisted);}
+ if(q.practice&&(!state.playing||state.hit||state.serve))return;
+ const power=q.power&&(!q.practice||predictFlight(.26).y>1.16);
+ if(state.swing<=.12&&(!state.playing||(eta>=.015&&eta<=.36))){state.queuedSwing=null;swing(power,true,!!q.assisted);}
 }
 
 // Resolve the wrist and arm capsules against an expanded chest in the chest's own frame.
@@ -817,7 +821,7 @@ function showIncoming(style,warning=false){
  output.textContent=warning?tr('리턴이 높이 떴어요 · 상대 스매시 주의'):style==='cut'?tr('하회전 · 앞으로 들어가 커트, 안정된 자세에서는 드라이브'):style==='drive'?tr('상회전 · 드라이브로 맞받거나 안정된 자세로 커트'):style==='lob'?tr('높은 공 · 바운드 후 스매시 기회'):tr('오는 공의 구질을 보고 리턴하세요.');
 }
 function chooseEnemyStyle(){
- if(!state.careerMatch)return 'flat';
+ if(!state.careerMatch||practiceHelp())return 'flat';
  const boss=opponentLevel().boss,index=fx.rally+state.score[0]+state.score[1];
  if(boss?.id==='defender')return index%3===0?'drive':'cut';
  if(boss?.id==='tactician')return index%2===0?'cut':'drive';
@@ -890,6 +894,7 @@ function impact(player,contact,beforeCountdown,afterCountdown){
  if(player&&state.careerMatch)career.recordTraining({quality:timingRisk>.25||response.mode==='underlift'||response.mode==='popup'?'mistimed':record.quality,course,kind});
  if(player){state.lastShot=record;const output=$('shotResult');if(output)output.textContent=tr('마지막 타구: ')+courseName(course)+' · '+(smash?tr('스매시'):strokeName(flight.style))+' · '+footing.label+tr(' · 힘 ')+Math.round(flight.power*100)+'%'+(timingRisk>.25?' · '+(timingOffset>=0?tr('스윙이 빨랐어요'):tr('스윙이 늦었어요')):'');}
  fx.lastContact=record;fx.contacts.push(record);if(fx.contacts.length>40)fx.contacts.shift();
+ if(player)tutorial.contact({power:!!rec.smash&&active,high:ball.y>1.16,active});
  fx.age=0;fx.hold=finisher?.95:.65;fx.slowFor=finisher?.20:0;fx.hitstop=finisher?.085:perfect?.057:smash?.040:edge?.007:centered?.030:.018;fx.shake=finisher?.045:perfect?.033:smash?.022:edge?.0028:centered?.010:.006;fx.flash=finisher?.23:perfect?.17:smash?.09:edge?.009:centered?.045:.025;fx.power=smash||perfect?1:0;fx.point=[...surface];
  if(player){fx.shake*=mix(.72,1.08,footing.score);fx.flash*=mix(.75,1.05,footing.score);}else{fx.shake*=mix(.55,.90,footing.score);fx.flash*=mix(.55,.90,footing.score);fx.hitstop*=mix(.65,1,footing.score);}
  fx.rays=Array.from({length:finisher?20:perfect?14:smash?10:edge?3:centered?8:5},(_,i)=>({angle:i*2*Math.PI/(finisher?20:perfect?14:smash?10:edge?3:centered?8:5),length:(finisher?.30:perfect?.20:.11)*(1+(i%3)*.17)}));
@@ -1320,7 +1325,7 @@ function feed(opening=false){
  state.pointWait=0;state.hit=false;state.enemyPrepared=false;state.enemyHit=false;fx.rally=0;fx.trail=[];
  // The opening practice ball waits for the player's serve input. Auto-feeding
  // on entry used to award a point before a newcomer had time to get ready.
- if(opening||state.careerMatch&&!high){prepareServe();return;}
+ if(opening||tutorial.active&&tutorial.step===1||state.careerMatch&&!high){prepareServe();return;}
  showIncoming(high?'lob':'flat');
  $('serveStatus').textContent=tr('연습 랠리 · 자동 투구');
  message(high?tr('높이 튀는 공에 Shift + SPACE로 스매시!'):tr('공을 몸 앞까지 기다렸다가 SPACE로 스윙하세요.'));
@@ -1336,7 +1341,7 @@ function prepareServe(){
 function beginServeToss(){
  const serve=state.serve;if(!serve||serve.phase!=='ready')return;
  const player=serve.player,rec=player?state.playerStroke:state.enemyStroke,key=player?'swing':'enemySwing';
- serve.phase='toss';serve.age=0;serve.style=player?state.serveLength:(state.score[0]+state.score[1])%3===0?'deep':'short';serve.course=player?state.course:(Math.random()<.5?-1:1);
+ serve.phase='toss';serve.age=0;serve.style=player?state.serveLength:practiceHelp()?'deep':(state.score[0]+state.score[1])%3===0?'deep':'short';serve.course=player?state.course:practiceHelp()?0:(Math.random()<.5?-1:1);
  rec.locked=null;lockStroke(rec,player?state.px:state.enemyX,player?state.pz:state.enemyZ,player?-1:1);
  rec.transition=null;rec.turnShot=null;rec.approachStrike=null;rec.advanceShot=null;rec.rallyRecovery=null;rec.smash=false;rec.defense=false;rec.shotStyle='cut';rec.duration=.80;rec.contactPhase=.38;rec.aim=[0,0,0];rec.whoosh=false;rec.planted=false;state[key]=1;
 }
@@ -1361,15 +1366,18 @@ function updateServe(dt){
  return true;
 }
 function start(){
+ if(tutorial.active&&tutorial.step===4){tutorial.finish();return;}
+ if(tutorial.active){tutorial.togglePlay();return;}
  sound.unlock();
  if(state.matchFinished){state.playing=false;state.matchFinished=false;state.careerMatch=false;state.pointWait=0;}
  const resume=!!state.careerMatch;
  state.playing=!state.playing;
  $('play').textContent=state.playing?(resume?tr('경기 일시정지'):tr('연습 멈추기')):(resume?tr('경기 재개'):tr('자유 연습 시작'));
- if(state.playing){if(!resume){state.score=[0,0];state.px=0;state.pz=2.18;state.enemyX=.06;state.enemyZ=-2;state.swing=state.enemySwing=0;state.playerStroke.locked=state.enemyStroke.locked=null;state.playerStroke.groundFeet=state.enemyStroke.groundFeet=null;state.playerMotion.turn=state.enemyMotion.turn=null;state.playerMotion.face=state.enemyMotion.face=null;$('score').textContent='0 : 0';document.querySelector('.scoreboard .opponent span').textContent=tr('연습 상대');document.querySelector('.location b').textContent=tr('오늘도, 한 게임.');$('highFeed').disabled=false;selectVenue(0);feed(true);}else message(tr('경기를 이어갑니다. 오는 공을 확인하세요.'),tr('RALLY'));}
+ if(state.playing){if(!resume){state.score=[0,0];state.px=0;state.pz=2.18;state.enemyX=.06;state.enemyZ=-2;state.swing=state.enemySwing=0;state.playerStroke.locked=state.enemyStroke.locked=null;state.playerStroke.groundFeet=state.enemyStroke.groundFeet=null;state.playerMotion.turn=state.enemyMotion.turn=null;state.playerMotion.face=state.enemyMotion.face=null;$('score').textContent='0 : 0';document.querySelector('.scoreboard .opponent span').textContent=tr('연습 상대');document.querySelector('.location b').textContent=tr('오늘도, 한 게임.');$('highFeed').disabled=tutorial.active;selectVenue(0);feed(true);}else message(tr('경기를 이어갑니다. 오는 공을 확인하세요.'),tr('RALLY'));}
  else{state.keys={};state.queuedSwing=null;message(resume?tr('성장 경기를 일시정지했어요. 재개하면 이어집니다.'):tr('자유 연습 중에는 경험치를 받지 않아요. 성장 경기로 도전해보세요.'),tr('PAUSED'));}
 }
 function startCareerMatch(match){
+ tutorial.cancel();tutorial.replay.disabled=true;
  if(state.careerMatch&&state.playing&&!state.matchFinished)return;
  selectVenue(match.tier);
  sound.unlock();state.careerMatch=true;state.matchFinished=false;state.playing=true;state.score=[...match.score];state.keys={};
@@ -1392,21 +1400,59 @@ function finishCareerPoint(){
  message((result.won?tr('경기 승리!'):tr('경기 종료.'))+(result.mode==='rival'?' · '+tr('라이벌 재대결')+' '+result.rank+tr('단계')+(result.firstRivalClear?' · '+tr('단계 돌파!'):''):'')+tr(' 경험치 +')+result.xp+tr(' · 상금 +')+result.coins.toLocaleString('ko-KR')+tr('원')+(result.levels?tr(' · 레벨업! 능력치 +')+result.levels*3+tr('P / 스킬 +')+result.levels+'SP':'')+(result.promoted?tr(' · 새 지역 개방!'):'')+(result.medals?.bonusXp?tr(' · 3성 완성! 추가 보상 획득'):''),tr('MATCH COMPLETE'));
  $('impactLabel').querySelector('span').textContent+=(result.won?tr(' · 경기 승리'):tr(' · 경기 종료'))+' · XP +'+result.xp;
 }
+const tutorial=(()=>{
+ const key='ttk-practice-tutorial-v1',bar=document.createElement('section');bar.className='practice-tutorial';bar.hidden=true;bar.setAttribute('aria-label',tr('탁구 첫걸음'));bar.setAttribute('aria-live','polite');
+ const count=document.createElement('span'),info=document.createElement('div'),title=document.createElement('b'),detail=document.createElement('p'),skip=document.createElement('button');count.className='tutorial-count';info.append(title,detail);skip.type='button';bar.append(count,info,skip);document.querySelector('.toolbar').append(bar);
+ const replay=document.createElement('button');replay.type='button';replay.className='tutorial-replay';replay.textContent=tr('튜토리얼 다시 보기');document.querySelector('.court-settings-panel').prepend(replay);
+ let active=false,step=0,pending=0,nextAt=0,savedHigh=false;
+ const touch=()=>document.documentElement.dataset.input==='touch';
+ function high(value){state.highFeed=!!value;$('highFeed').setAttribute('aria-pressed',String(state.highFeed));$('highFeed').textContent=tr(state.highFeed?'높은 공 연습 중':'높은 공 연습');}
+ function remember(value){try{localStorage.setItem(key,value);}catch{}}
+ function seen(){try{return ['complete','skipped'].includes(localStorage.getItem(key));}catch{return false;}}
+ function render(){
+  bar.hidden=!active;if(!active)return;
+  count.textContent=step===4?'✓':step+' / 3';
+  title.textContent=tr(['','1. 서브로 시작하기','2. 공을 기다렸다가 스윙','3. 높은 공은 스매시!','준비 끝! 이제 자유롭게 연습하세요.'][step]);
+  detail.textContent=tr(step===1?(touch()?'스윙 버튼을 눌러 서브하세요.':'SPACE를 눌러 서브하세요.'):step===2?'버튼이 밝아지면 스윙! 공을 실제로 맞히면 다음 단계로 넘어가요.':step===3?(touch()?'스매시 버튼이 밝아지면 눌러 높은 공을 내려치세요.':'스매시 버튼이 밝아지면 Shift + SPACE로 높은 공을 내려치세요.'):'서브, 스윙, 스매시를 모두 해냈어요. 놓쳐도 괜찮으니 계속 도전해보세요.');
+  skip.textContent=tr(step===4?'계속 연습하기':'건너뛰기');$('highFeed').disabled=true;$('practiceAssist').disabled=true;$('practiceAssist').checked=true;
+ }
+ function reset(){fx.age=10;fx.hitstop=0;fx.slowFor=0;fx.contactClock=null;fx.announcement=null;$('impactLabel').classList.remove('visible');state.pointWait=0;state.celebration.active=false;state.enemyMotion.taunt=null;state.enemyMotion.revenge=null;state.swing=state.enemySwing=0;state.queuedSwing=null;state.keys={};state.velocity=[0,0];state.px=0;state.pz=2.05;state.playerStroke.groundFeet=state.enemyStroke.groundFeet=null;state.playerStroke.locked=state.enemyStroke.locked=null;state.score=[0,0];$('score').textContent='0 : 0';}
+ function enter(next){
+  step=next;pending=0;nextAt=0;reset();
+  if(step===4){remember('complete');state.playing=false;$('play').textContent=tr('자유 연습 시작');message(tr('준비 끝! 이제 자유롭게 연습하세요.'),'GOOD JOB');sound.play('point',{gain:.75});}
+  else{state.playing=true;high(step===3);feed(step===1);$('play').textContent=tr('연습 멈추기');}
+  render();
+ }
+ function cancel(){if(!active)return;active=false;pending=0;bar.hidden=true;$('highFeed').disabled=false;$('practiceAssist').disabled=false;$('practiceAssist').checked=practiceAssist;high(savedHigh);for(const id of ['smash','mobileSmash'])$(id).classList.remove('timing-ready');}
+ function finish(skipped=false){if(!active)return;if(skipped)remember('skipped');cancel();reset();state.playing=true;feed(true);$('play').textContent=tr('연습 멈추기');}
+ function queue(next){if(!active||pending)return;pending=next;nextAt=state.elapsed+.65;}
+ const api={get active(){return active;},get step(){return step;},replay,seen,cancel,finish,
+  togglePlay(){if(!state.playing){enter(pending||step);return;}state.playing=false;state.keys={};state.velocity=[0,0];state.queuedSwing=null;$('play').textContent=tr('자유 연습 시작');},
+  start(){if(state.careerMatch)return;if(!active)savedHigh=state.highFeed;active=true;replay.disabled=false;enter(1);},
+  served(){if(active&&step===1)queue(2);},
+  contact(hit){if(!active||pending)return;if(step===2)queue(hit.active&&!hit.power?3:2);else if(step===3)queue(hit.power&&hit.high?4:3);},
+  retry(){state.queuedSwing=null;state.pointWait=.75;message(tr('놓쳐도 괜찮아요. 같은 공으로 다시 해볼게요.'),'TRY AGAIN');},
+  tick(){if(active&&pending&&state.playing&&state.elapsed>=nextAt)enter(pending);}
+ };
+ skip.onclick=()=>finish(step!==4);replay.onclick=()=>api.start();return api;
+})();
 career.bindStart(startCareerMatch);
 window.addEventListener('club-account-changed',()=>{state.playing=false;state.keys={};state.queuedSwing=null;state.velocity=[0,0];message(tr('계정이 변경됐어요 · 새로고침해주세요.'),'ACCOUNT');});
 career.bindSuspend(()=>{const wasPlaying=state.playing;state.playing=false;state.keys={};state.queuedSwing=null;state.velocity=[0,0];return()=>{if(state.careerMatch&&!state.matchFinished)state.playing=wasPlaying;};});
 career.bindMap(()=>{
+ tutorial.cancel();
  state.playing=false;state.serve=null;state.keys={};state.queuedSwing=null;state.velocity=[0,0];dragging=false;
  if(state.matchFinished||!career.hasActiveMatch()){state.matchFinished=false;state.careerMatch=false;state.pointWait=0;state.celebration.active=false;state.enemyMotion.taunt=null;state.enemyMotion.revenge=null;}
  $('play').textContent=state.careerMatch?tr('경기 재개'):tr('자유 연습 시작');
 });
 career.bindPractice(()=>{
  $('bossTactic').hidden=true;state.enemyAI=null;
- state.careerMatch=false;state.matchFinished=false;state.playing=false;state.pointWait=0;state.keys={};state.velocity=[0,0];state.celebration.active=false;state.swing=0;start();
+ state.careerMatch=false;state.matchFinished=false;state.playing=false;state.pointWait=0;state.keys={};state.velocity=[0,0];state.celebration.active=false;state.swing=0;start();tutorial.replay.disabled=false;if(!tutorial.seen())tutorial.start();
 });
 function swing(power=!!(state.keys.ShiftLeft||state.keys.ShiftRight),buffered=false,assisted=false){
  sound.unlock();if(state.careerMatch&&!state.playing||state.celebration.active||state.pointWait>0)return;
  if(state.serve){if(state.serve.player&&state.serve.phase==='ready')beginServeToss();return;}
+ if(practiceHelp()&&!buffered&&state.playing){state.queuedSwing={power:!!power,expires:state.elapsed+3,assisted:true,practice:true};message(tr(power?'스매시 준비! 높은 공을 기다려요.':'스윙 준비! 공이 가까워지면 맞춰 칩니다.'));return;}
  if(state.swing>0&&(!buffered||state.swing>.12)){
   if(state.swing<=(power?.34:.45))state.queuedSwing={power:!!power,expires:state.elapsed+(power?.24:.34),assisted:!power};return;
  }
@@ -1501,6 +1547,7 @@ function returnBall(toNear,{kind='hit',sweet=0,u=0,footing=null,course=0,timingR
 
 function point(player,reason=''){
  if(state.pointWait>0)return;
+ if(tutorial.active&&!state.careerMatch){tutorial.retry();return;}
  if(state.careerMatch){const last=fx.lastContact,current=last&&last.time>=(state.rallyStarted??0);career.recordMatchEvent({type:'point',won:player,fault:!player&&ball.rallyShot?.hitter===true&&(reason==='out'||reason==='net')?reason:'miss',smashWinner:player&&ball.rallyShot?.hitter===true&&current&&last.player&&last.kind.includes('smash')});}
  state.lastPoint={winner:player?'player':'opponent',reason,time:state.elapsed};state.queuedSwing=null;state.playerStroke.transition=null;if(player)defenseMiss();state.score[player?0:1]++;$('score').textContent=state.score.join(' : ');state.pointWait=player?1.80:1.5;
  if(player&&state.careerMatch&&ball.finisher?.landed)career.recordTraining({finish:true});
@@ -1533,7 +1580,10 @@ function update(dt){
  rememberRigMotion(priorPlayer);rememberRigMotion(priorEnemy);
  state.elapsed+=dt;updateExpressions(dt);
  const celebration=state.celebration;if(celebration.active){celebration.age+=dt;if(celebration.age>=celebration.duration)celebration.active=false;}
- const k=state.celebration.active?{}:state.keys,touch=state.celebration.active?null:state.touchMove,dx=(k.KeyD||k.ArrowRight?1:0)-(k.KeyA||k.ArrowLeft?1:0)+(touch?.x||0),dz=(k.KeyS||k.ArrowDown?1:0)-(k.KeyW||k.ArrowUp?1:0)+(touch?.z||0),len=Math.max(1,Math.hypot(dx,dz)),blend=1-Math.exp(-13*dt);
+ const k=state.celebration.active?{}:state.keys,touch=state.celebration.active?null:state.touchMove;
+ let dx=(k.KeyD||k.ArrowRight?1:0)-(k.KeyA||k.ArrowLeft?1:0)+(touch?.x||0),dz=(k.KeyS||k.ArrowDown?1:0)-(k.KeyW||k.ArrowUp?1:0)+(touch?.z||0);
+ if(practiceHelp()&&Math.hypot(dx,dz)<.08&&state.playing&&!state.serve&&state.pointWait<=0&&!state.celebration.active&&state.swing<=0&&ball.vz>.05){const eta=clamp((state.pz-.45-ball.z)/ball.vz,.06,1.4),pred=predictFlight(eta),targetX=clamp(pred.x-.08,-.72,.72),targetZ=ball.spin==='cut'?1.58:2.05;dx=clamp((targetX-state.px)*4,-.8,.8);dz=clamp((targetZ-state.pz)*4,-.65,.65);}
+ const len=Math.max(1,Math.hypot(dx,dz)),blend=1-Math.exp(-13*dt);
  const phase=state.swing>0?1-state.swing:0,cp=state.playerStroke.contactPhase??.38;
  updateRallyRecovery(dt,dx,dz);
  const release=state.playerStroke.rallyRecovery?.release||0;
@@ -1610,7 +1660,7 @@ function update(dt){
   if(shot&&!shot.landed){
    const receiverHalf=shot.hitter?crossZ<0:crossZ>0;
    if(!onTable||!receiverHalf){point(!shot.hitter,'out');return;}
-   shot.landed=true;shot.bounces=1;if(state.careerMatch&&shot.serveBounce===1)career.recordMatchEvent({type:'serve',player:shot.hitter,length:shot.serveStyle});
+   shot.landed=true;shot.bounces=1;if(shot.serveBounce===1&&shot.hitter)tutorial.served();if(state.careerMatch&&shot.serveBounce===1)career.recordMatchEvent({type:'serve',player:shot.hitter,length:shot.serveStyle});
   }else if(shot?.landed&&onTable){shot.bounces++;point(shot.hitter);return;}
   if(onTable){ball.y=.79;const cut=ball.spin==='cut',drive=ball.spin==='drive';ball.vy=-ball.vy*(cut?.78:drive?.72:.88);ball.vx*=cut?.78:drive?1.10:1;ball.vz*=cut?.78:drive?1.13:1;if(ball.smashChance&&ball.z>0)ball.chanceBounced=true;if(ball.finisher&&ball.z<0)ball.finisher.landed=true;playAt('bounce',[crossX,.77,crossZ],.78);}
  }
@@ -1747,17 +1797,20 @@ $('soundPreview').onclick=async()=>{
  for(const [kind,label,delay] of demo)audioPreviewTimers.push(setTimeout(()=>{sound.play(kind,{gain:.92,pan:0});$('soundStatus').textContent=label;},delay*1000));
  audioPreviewTimers.push(setTimeout(()=>{$('soundPreview').disabled=false;$('soundStatus').textContent=tr('스매시 · 크리티컬 · 득점');audioPreviewTimers.length=0;},5800));
 };
-$('highFeed').onclick=()=>{if(state.careerMatch)return;state.highFeed=!state.highFeed;$('highFeed').setAttribute('aria-pressed',String(state.highFeed));$('highFeed').textContent=state.highFeed?tr('높은 공 연습 중'):tr('높은 공 연습');if(state.playing)feed();else message(state.highFeed?tr('높은 공 연습을 켰어요. 랠리를 시작해보세요.'):tr('일반 랠리 연습으로 돌아왔어요.'));};
+$('highFeed').onclick=()=>{if(state.careerMatch||tutorial.active)return;state.highFeed=!state.highFeed;$('highFeed').setAttribute('aria-pressed',String(state.highFeed));$('highFeed').textContent=state.highFeed?tr('높은 공 연습 중'):tr('높은 공 연습');if(state.playing)feed();else message(state.highFeed?tr('높은 공 연습을 켰어요. 랠리를 시작해보세요.'):tr('일반 랠리 연습으로 돌아왔어요.'));};
 addEventListener('pointerdown',()=>sound.unlock(),{once:true});
 addEventListener('keydown',()=>sound.unlock(),{once:true});
 syncAudioUI();
+const assistLabel=document.createElement('label'),assistInput=document.createElement('input');assistLabel.className='practice-assist-option';assistLabel.title=tr('연습과 첫 지역에서 이동과 타이밍을 도와줍니다.');assistInput.type='checkbox';assistInput.id='practiceAssist';assistInput.checked=practiceAssist;assistLabel.append(assistInput,document.createTextNode(tr('입문 보조 · 공 따라가기와 타이밍 보정')));document.querySelector('.court-settings-panel').prepend(assistLabel);assistInput.onchange=()=>{practiceAssist=assistInput.checked;state.queuedSwing=null;try{localStorage.setItem('ttk-practice-assist-v1',practiceAssist?'on':'off');}catch{}};
 
 let followPlayerOpacity=1;
-let swingHintReady=false;
+let swingHintReady=false,smashHintReady=false;
 function updatePracticeSwingHint(){
  const eta=ball.vz>.1?(state.pz-.45-ball.z)/ball.vz:Infinity;
- const ready=!state.careerMatch&&state.playing&&state.pointWait<=0&&state.swing<=0&&!state.queuedSwing&&!state.celebration.active&&(state.serve?.player&&state.serve.phase==='ready'||!state.serve&&!state.hit&&eta>.08&&eta<1.05);
- if(ready===swingHintReady)return;swingHintReady=ready;for(const id of ['swing','mobileSwing'])$(id).classList.toggle('timing-ready',ready);
+ const powerLesson=tutorial.active&&tutorial.step===3,available=!state.careerMatch&&state.playing&&state.pointWait<=0&&state.swing<=0&&!state.queuedSwing&&!state.celebration.active;
+ const ready=available&&!powerLesson&&(state.serve?.player&&state.serve.phase==='ready'||!state.serve&&!state.hit&&eta>.08&&eta<1.05),powerReady=available&&powerLesson&&!state.serve&&!state.hit&&eta>.28&&eta<.65&&ball.y>1.0;
+ if(ready!==swingHintReady){swingHintReady=ready;for(const id of ['swing','mobileSwing'])$(id).classList.toggle('timing-ready',ready);}
+ if(powerReady!==smashHintReady){smashHintReady=powerReady;for(const id of ['smash','mobileSmash'])$(id).classList.toggle('timing-ready',powerReady);}
 }
 function updateFollowPlayerOpacity(vp,dt){
  let goal=1;
@@ -1772,7 +1825,7 @@ function updateFollowPlayerOpacity(vp,dt){
 function frame(time){
  if(career.isMap()){lastTime=time;requestAnimationFrame(frame);return;}
  const renderStart=performance.now();
- const dt=Math.min((time-lastTime)/1000||.016,.035);lastTime=time;advance(dt);updatePracticeSwingHint();
+ const dt=Math.min((time-lastTime)/1000||.016,.035);lastTime=time;advance(dt);tutorial.tick();updatePracticeSwingHint();
  if(career.isMap()){requestAnimationFrame(frame);return;}
  const dpr=Math.min(devicePixelRatio||1,1.25),w=Math.round(canvas.clientWidth*dpr),h=Math.round(canvas.clientHeight*dpr);
  if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;}
