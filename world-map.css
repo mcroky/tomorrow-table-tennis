@@ -684,3 +684,9 @@ html[data-input=keyboard] .touch-sensitivity{display:none}
 .operator-dialog button{min-height:40px}.operator-dialog :focus-visible{outline:3px solid #daab59;outline-offset:3px}
 @media(max-width:520px){.operator-dialog{padding:16px}.operator-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.operator-stats article{padding:12px}.operator-stats strong{font-size:26px}.operator-player{grid-template-columns:minmax(0,1fr) 65px 75px;gap:6px;padding:10px}.operator-player time{font-size:10px}}
 @media(max-width:520px){.feedback-dialog{padding:17px}.feedback-dialog h2{font-size:20px}.world-tools{flex-wrap:wrap}}
+/* Let the mobile impact caption contribute its full height. */
+html[data-input=touch] body[data-surface=court] .feedback-strip{height:auto;min-height:44px;max-height:none}
+html[data-input=touch] body[data-surface=court] .feedback-strip .impact-label{padding:3px 8px;min-width:0;box-sizing:border-box;transform:none}
+html[data-input=touch] body[data-surface=court] .feedback-strip .impact-label b{font-size:18px;line-height:22px;letter-spacing:.025em}
+html[data-input=touch] body[data-surface=court] .feedback-strip .impact-label span{display:block;font-size:10px;line-height:13px;margin-top:1px;padding:0;white-space:normal;overflow-wrap:anywhere}
+@media(max-height:520px) and (min-width:600px){html[data-input=touch] body[data-surface=court] #arena{grid-template-rows:auto minmax(44px,auto) minmax(0,1fr) 17px}}
