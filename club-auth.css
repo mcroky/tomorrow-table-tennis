@@ -1,5 +1,11 @@
 body[data-auth="locked"] #career,body[data-auth="locked"] #worldHub,body[data-auth="locked"] #arena{display:none!important}
 .guest-start{display:block;width:100%;margin-top:22px;padding:18px;border:0;border-radius:12px;background:#d47751;color:#fffbed;font-size:20px;font-weight:750;cursor:pointer;box-shadow:0 5px 16px #ad65442a}
+.account-story{margin-top:24px;padding:22px 24px;border-radius:18px;border:1px solid #bbcebb;background:linear-gradient(135deg,#e2ecd9,#cadfd1)}
+.account-story h3{font-size:18px;color:#315744;margin:0 0 14px;line-height:1.5;letter-spacing:-.5px}
+.account-intro .account-story p{font-size:13px;line-height:1.85;color:#526c5b;margin:0 0 12px;word-break:keep-all;overflow-wrap:anywhere}
+.account-story strong{display:block;color:#315744;font-size:15px;line-height:1.6;margin-top:16px}
+.account-intro .account-game-summary{font-size:12px;line-height:1.8;color:#62765e;margin:14px 0 0;word-break:keep-all}
+@media(max-width:760px){.account-story{padding:17px 18px;margin-top:18px}.account-story h3{font-size:17px}.account-intro .account-story p{font-size:12px;line-height:1.75;margin-bottom:10px}}
 body[data-guest=true] .career-head>div:first-child,body[data-guest=true] .career-xp,body[data-guest=true] #careerWallet,body[data-guest=true] #careerSave,body[data-guest=true] #shopHome,body[data-guest=true] #campaignContinue,body[data-guest=true] #lastMatchReview{display:none!important}
 body[data-guest=true] .career-head{justify-content:flex-end}
 body[data-guest=true] #worldHome{background:#365d43;color:#fff8df}

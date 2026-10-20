@@ -1304,7 +1304,7 @@ function setView(view){
 }
 function message(text,phase=tr('PRACTICE RALLY')){if(document.documentElement.dataset.input==='touch'){text=text.replace(/Shift \+ SPACE/gi,tr('스매시 버튼')).replace(/\bSPACE\b/g,tr('스윙 버튼'));if(document.documentElement.lang==='ko')text=text.replaceAll('버튼로','버튼으로').replaceAll('버튼를','버튼을');if(innerWidth<=850&&innerHeight>innerWidth){const idle=document.querySelector('.feedback-idle');if(idle)idle.textContent=text;}}$('message').textContent=text;$('phase').textContent=phase;}
 
-function feed(){
+function feed(opening=false){
  state.serve=null;
  state.queuedSwing=null;state.playerStroke.transition=null;state.enemyStroke.transition=null;state.playerStroke.turnShot=null;state.playerStroke.approachStrike=null;state.playerStroke.advanceShot=null;state.playerMotion.lastForwardAt=-100;state.playerStroke.rallyRecovery=null;state.playerStroke.motionSample=null;
  state.celebration.active=false;state.enemyMotion.taunt=null;state.enemyMotion.revenge=null;state.rallyStarted=state.elapsed;if(state.score[0]===0&&state.score[1]===0)state.enemyMotion.revengePending=false;
@@ -1314,7 +1314,9 @@ function feed(){
  const high=state.highFeed,x=(Math.random()-.5)*.28,targetX=(Math.random()-.5)*.72;
  ball={x,y:high?1.5:1.16,z:-1.03,vx:(targetX-x)/(high?1.55:1.05),vy:high?1.7:1.1,vz:high?1.9:2.7};
  state.pointWait=0;state.hit=false;state.enemyPrepared=false;state.enemyHit=false;fx.rally=0;fx.trail=[];
- if(state.careerMatch&&!high){prepareServe();return;}
+ // The opening practice ball waits for the player's serve input. Auto-feeding
+ // on entry used to award a point before a newcomer had time to get ready.
+ if(opening||state.careerMatch&&!high){prepareServe();return;}
  showIncoming(high?'lob':'flat');
  $('serveStatus').textContent=tr('연습 랠리 · 자동 투구');
  message(high?tr('높이 튀는 공에 Shift + SPACE로 스매시!'):tr('공을 몸 앞까지 기다렸다가 SPACE로 스윙하세요.'));
@@ -1360,7 +1362,7 @@ function start(){
  const resume=!!state.careerMatch;
  state.playing=!state.playing;
  $('play').textContent=state.playing?(resume?tr('경기 일시정지'):tr('연습 멈추기')):(resume?tr('경기 재개'):tr('자유 연습 시작'));
- if(state.playing){if(!resume){state.score=[0,0];$('score').textContent='0 : 0';document.querySelector('.scoreboard .opponent span').textContent=tr('연습 상대');document.querySelector('.location b').textContent=tr('오늘도, 한 게임.');$('highFeed').disabled=false;selectVenue(0);feed();}else message(tr('경기를 이어갑니다. 오는 공을 확인하세요.'),tr('RALLY'));}
+ if(state.playing){if(!resume){state.score=[0,0];state.px=0;state.pz=2.18;state.enemyX=.06;state.enemyZ=-2;state.swing=state.enemySwing=0;state.playerStroke.locked=state.enemyStroke.locked=null;state.playerStroke.groundFeet=state.enemyStroke.groundFeet=null;state.playerMotion.turn=state.enemyMotion.turn=null;state.playerMotion.face=state.enemyMotion.face=null;$('score').textContent='0 : 0';document.querySelector('.scoreboard .opponent span').textContent=tr('연습 상대');document.querySelector('.location b').textContent=tr('오늘도, 한 게임.');$('highFeed').disabled=false;selectVenue(0);feed(true);}else message(tr('경기를 이어갑니다. 오는 공을 확인하세요.'),tr('RALLY'));}
  else{state.keys={};state.queuedSwing=null;message(resume?tr('성장 경기를 일시정지했어요. 재개하면 이어집니다.'):tr('자유 연습 중에는 경험치를 받지 않아요. 성장 경기로 도전해보세요.'),tr('PAUSED'));}
 }
 function startCareerMatch(match){

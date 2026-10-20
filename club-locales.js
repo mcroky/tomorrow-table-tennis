@@ -1,5 +1,11 @@
 'use strict';
 window.ClubLocales={
+  "시작은, 동네의 낡은 탁구대 하나.": ["It began with an old table in the neighborhood.","始まりは、街角の古い卓球台。","故事，从街角的一张旧球台开始。"],
+  "처음 쥔 라켓은 손에 어색했고, 공은 자꾸 탁구대 밖으로 날아갔습니다. 그래도 한 번 제대로 맞았을 때의 그 소리는 잊을 수 없었죠.": ["The racket felt strange, and the ball kept flying off the table. But the sound of that first clean hit was unforgettable.","初めてのラケットは手になじまず、球は台の外へ飛んでばかり。それでも、初めて芯で捉えた音は忘れられませんでした。","第一次握拍时很生疏，球总是飞出台外。但第一次击中甜区的清脆声响，让人难以忘怀。"],
+  "동네 고수에게 지고, 얄미운 라이벌에게 또 져도, 다음 날이면 다시 라켓을 잡았습니다. 어제 못 받던 공을 오늘은 받아내기 위해.": ["Even after losing to the local expert and that smug rival, you picked up the racket again the next day. Today, you would return the shot you missed yesterday.","街の名手にも、憎らしいライバルにも負けました。それでも翌日にはまたラケットを握る。昨日返せなかった球を、今日は返すために。","输给街坊高手，又输给得意洋洋的对手，第二天依然拿起球拍。只为在今天，接住昨天没能接住的球。"],
+  "이제 작은 꿈 하나가 생겼습니다. 동네 탁구장을 넘어, 언젠가 올림픽 무대에서 나만의 스매시를 날리는 것.": ["A dream began to grow: to go beyond the neighborhood club and one day unleash your own smash on the Olympic stage.","やがて、小さな夢ができました。街の卓球場を飛び出して、いつかオリンピックの舞台で自分だけのスマッシュを放つこと。","于是，一个梦想悄悄萌芽：走出街坊球馆，有一天在奥运赛场上，打出属于自己的扣杀。"],
+  "오늘은 동네 초보. 내일은 탁구왕.": ["A neighborhood beginner today. Tomorrow's champion.","今日は街の初心者。明日は卓球王。","今天是街坊新手，明天是乒乓王者。"],
+  "직접 움직이고 스윙하는 탁구 성장 게임 · 경기로 레벨을 올리고, 능력치와 장비를 키워 40개 거점에 도전하세요.": ["Move and swing in a table tennis career adventure. Level up through matches, improve your stats and equipment, and challenge 40 stages.","自分で動いてスイングする卓球育成ゲーム。試合でレベルを上げ、能力と装備を育てて40ステージに挑戦しましょう。","亲自移动挥拍的乒乓球养成游戏。通过比赛升级，培养能力、提升装备，挑战40个关卡。"],
   "바로 연습하기": ["Play practice now","今すぐ練習する","立即练习"],
   "가입 없이 탁구를 즐겨보세요. 성장과 장비는 로그인 후 저장됩니다.": ["Try table tennis without signing up. Sign in to save your progress and equipment.","登録なしで卓球を体験。成長と装備はログイン後に保存されます。","无需注册即可体验乒乓球。登录后可保存成长与装备。"],
   "비회원 연습": ["Guest practice","ゲスト練習","游客练习"],
