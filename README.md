@@ -88,3 +88,8 @@ Chrome 터치 에뮬레이션에서 360×640, 390×844, 840×360, 844×390, 태�
 수신 주소·Resend 발송 키·발신 주소는 Supabase Vault의 `ttk_feedback_to`, `ttk_feedback_resend_key`, `ttk_feedback_from`에만 저장합니다. 실제 값은 저장소, 정적 배포, 클라이언트 API 응답에 넣지 않습니다. Vault 설정은 운영자가 대시보드에서 관리합니다.
 DB Cron이 1분마다 서버의 `feedback-delivery` Edge Function을 깨워 접수함을 처리합니다. 메일 키와 수신 주소는 Edge Function에서만 읽으며 pg_net 대기열에는 넣지 않습니다. `ttk_feedback_worker`는 서버 작업 트리거 전용으로만 사용합니다. 설정·큐 읽기·결과 갱신 RPC는 service_role 전용입니다. 실패 시 최대 5회, 23시간 안에 동일한 Resend idempotency key로 재시도합니다. `accepted`는 발송 API 접수 성공이며 수신함 도착을 의미하지 않습니다. 영구 실패는 `failed`로 남겨 운영자가 확인할 수 있습니다. 수신자가 Resend 계정 소유자일 때 기본 발신 주소를 사용할 수 있고, 그 외에는 인증한 발신 도메인이 필요합니다.
 전달 방식: [Supabase pg_net](https://supabase.com/docs/guides/database/extensions/pg_net), [Resend 중복 방지](https://resend.com/docs/dashboard/emails/idempotency-keys).
+
+## 운영자 현황
+기존 `roky` 로그인 계정의 UUID를 비공개 `ttk_private.operators`에 등록합니다. 이름·클라이언트 설정·user_metadata로 권한을 부여하지 않으며, 대시보드 RPC는 매 요청 서버의 운영자 목록과 `auth.uid()`를 대조합니다. 일반 계정은 운영 지표와 접속자 목록을 조회할 수 없습니다.
+운영자는 월드맵의 **운영자** 버튼에서 접속/경기 인원, 최근 24시간 활동 계정, 전체/신규 가입자, 의견 발송 대기/실패 건수와 접속 선수 최대 50명을 확인합니다. 등록된 개발 확인 계정은 인원 지표에서 제외합니다. 이메일·로그인 아이디·IP·메일 발송 설정은 반환하지 않습니다.
+화면이 보이는 로그인 계정이 30초마다 서버에 연결 신호를 보냅니다. 서버가 기록한 최근 90초 내 활동을 접속으로 계산하며 여러 탭/기기에서 같은 계정은 한 명으로 셉니다. 종료·로그아웃·통신 단절은 최대 90초 뒤 반영됩니다. 경기 여부는 클라이언트가 신고하는 참고 정보이며, 활동 통계는 이 기능을 배포한 시점부터 집계합니다. 지표 창을 닫거나 화면이 숨겨지면 조회를 중단합니다.

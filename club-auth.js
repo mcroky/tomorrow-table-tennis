@@ -145,6 +145,16 @@ account.getLeaderboard=async()=>{
  if(result.error)throw result.error;return {...result.data,savePending:!!pending||blocked};
 };
 account.queueSave=queueSave;
+account.presenceHeartbeat=async(activity)=>{
+ if(!client||!user||!booted||blocked||intentionalLogout)throw Error('LOGIN_REQUIRED');
+ const result=await client.rpc('ttk_presence_heartbeat',{p_activity:activity}).abortSignal(AbortSignal.timeout(10000));
+ if(result.error)throw result.error;return result.data;
+};
+account.getOperatorDashboard=async()=>{
+ if(!client||!user||!booted||blocked||intentionalLogout)throw Error('LOGIN_REQUIRED');
+ const result=await client.rpc('ttk_operator_dashboard').abortSignal(AbortSignal.timeout(12000));
+ if(result.error)throw result.error;return result.data;
+};
 account.submitFeedback=async({id,category,message,language})=>{
  if(!client||!user||!booted||blocked)throw Error('LOGIN_REQUIRED');
  const result=await client.rpc('ttk_submit_feedback',{p_id:id,p_category:category,p_message:message,p_language:language}).abortSignal(AbortSignal.timeout(15000));
