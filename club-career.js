@@ -408,7 +408,7 @@ function updateRegionNav(){
  hub.querySelectorAll('[data-region]').forEach(button=>{const tier=Number(button.dataset.region);button.setAttribute('aria-pressed',String(!fitMode&&focusTier===tier));button.dataset.locked=String(tier>Math.floor(frontier()/5));el('chapterProgress-'+tier).textContent=(tier>Math.floor(frontier()/5)?'🔒 · ':'')+data.cleared.filter(id=>nodes[id]?.tier===tier).length+' / 5';});
 }
 function focusRegion(tier){
- if(hub.hidden)return;focusTier=tier;fitMode=false;sizeViewport();const v=el('worldViewport');zoom=Math.max(.4,Math.min((v.clientWidth-36)/460,(v.clientHeight-24)/360,1.2)*.85);resizeMap();
+ if(hub.hidden)return;focusTier=tier;fitMode=false;sizeViewport();const v=el('worldViewport');zoom=Math.max(.28,Math.min((v.clientWidth-36)/460,(v.clientHeight-24)/360,1.2)*.595);resizeMap();
  const row=tier<4?0:1,col=row?7-tier:tier;v.scrollTo({left:(250+col*450)*zoom-v.clientWidth/2,top:(280+row*500)*zoom-v.clientHeight/2,behavior:'instant'});updateRegionNav();const nav=el('regionNav'),button=nav.querySelector('[data-region="'+tier+'"]');nav.scrollTo({left:button.offsetLeft-nav.offsetLeft-(nav.clientWidth-button.offsetWidth)/2,behavior:'instant'});
 }
 function centerMap(usePlayer=false){const n=usePlayer&&playerPoint?playerPoint:nodes[data.activeMatch?.node??selected],v=el('worldViewport');v.scrollTo({left:n.x*zoom-v.clientWidth/2,top:n.y*zoom-v.clientHeight/2,behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'});}
