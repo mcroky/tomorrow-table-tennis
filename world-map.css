@@ -379,3 +379,80 @@ body[data-surface=map] .world-title p{font-size:11px}
 .ranking-scroll{overflow-x:auto}.ranking-table{width:100%;border-collapse:separate;border-spacing:0;min-width:480px;text-align:left;font-size:12px}.ranking-table th{font-size:10px;font-weight:600;color:#87927b;padding:10px 12px;background:#e9eddf;border-bottom:1px solid #ced7c1;white-space:nowrap}.ranking-table td{padding:13px 12px;border-bottom:1px solid #e0e4d4;vertical-align:middle}.ranking-position{font-size:17px;font-weight:800;color:#7a8c70;width:55px}.ranking-table tr[data-podium="1"] .ranking-position{color:#b38226}.ranking-table tr[data-podium="2"] .ranking-position{color:#8198a0}.ranking-table tr[data-podium="3"] .ranking-position{color:#ab7651}.ranking-table tr[data-me=true]{background:#e7efdc;box-shadow:inset 3px 0 #6b8e57}
 .ranking-name{display:flex;align-items:center;gap:8px;min-width:0}.ranking-name b{font-size:12px;overflow-wrap:anywhere;max-width:230px}.ranking-avatar{width:30px;height:30px;display:grid;place-items:center;flex-shrink:0;border-radius:50%;background:#d5e2c8;color:#5b7650;font-style:normal;font-weight:800}.ranking-you{font-size:9px;padding:2px 5px;background:#476b4a;border-radius:5px;color:#f8f6e6;white-space:nowrap}.ranking-progress{display:grid;gap:3px;font-size:12px;font-variant-numeric:tabular-nums;white-space:nowrap}.ranking-progress small{font-size:10px;color:#ad8b43}
 @media(max-width:760px){.ranking-dialog{padding:16px}.ranking-header h2{font-size:23px}.ranking-mine{grid-template-columns:60px minmax(0,1fr);padding:12px;gap:10px}.ranking-mine>.ranking-progress{grid-column:2;display:flex;align-items:center;gap:12px}.ranking-mine strong{font-size:27px}.ranking-table td,.ranking-table th{padding:10px 8px}.ranking-toolbar{gap:8px}.ranking-toolbar>span{font-size:10px}}
+/* Court layout uses the available window height, including the controls below it. */
+body[data-surface=court] .shell{height:100dvh;max-width:1720px;padding:8px 16px;display:flex;flex-direction:column;gap:6px}
+body[data-surface=court] .shell>header{flex-shrink:0;min-height:30px;margin:0}
+body[data-surface=court] .shell>header .eyebrow{display:none}
+body[data-surface=court] .shell>header h1{font-size:17px}
+body[data-surface=court] .shell>header .mark{width:30px;height:30px;font-size:15px}
+body[data-surface=court] .shell>header .club{padding:4px 9px;font-size:10px}
+body[data-surface=court] .account-bar{flex-shrink:0;margin:0;padding:3px 10px;min-height:29px;font-size:10px;gap:8px}
+body[data-surface=court] .account-bar button{padding:3px 7px;font-size:10px}
+body[data-surface=court] .career{flex-shrink:0;padding:6px 10px;margin:0}
+body[data-surface=court] .career-head{gap:9px}
+body[data-surface=court] .career-head strong{font-size:18px}
+body[data-surface=court] .career-head small,body[data-surface=court] #careerSave[data-ok=true]{display:none}
+body[data-surface=court] .career-head .career-nav button{padding:6px 10px;font-size:11px}
+body[data-surface=court] .career-wallet{padding:5px 8px;font-size:11px}
+body[data-surface=court] #arena{flex:1;min-height:0;display:flex;flex-direction:column;gap:6px;position:relative}
+body[data-surface=court] #arena>*{flex-shrink:0;margin-top:0;margin-bottom:0}
+body[data-surface=court] #arena>.stage{flex:1 1 0;min-height:0;height:auto;max-height:none}
+body[data-surface=court] .toolbar{padding:5px 8px;gap:6px 10px}
+body[data-surface=court] .toolbar button{min-height:30px;padding:5px 10px;font-size:11px}
+body[data-surface=court] .tabs{padding:3px;gap:3px}
+body[data-surface=court] .feedback-strip{min-height:46px;height:46px;border-radius:9px}
+body[data-surface=court] .feedback-strip .impact-label{padding:3px 10px}
+body[data-surface=court] .feedback-strip .impact-label b{font-size:25px;line-height:1}
+body[data-surface=court] .feedback-strip .impact-label span{font-size:10px;margin-top:2px;line-height:1.2}
+body[data-surface=court] .feedback-strip .feedback-idle{font-size:11px}
+body[data-surface=court] .boss-tactic{padding:4px 10px;font-size:11px}
+body[data-surface=court] .shot-controls{padding:6px 9px;gap:5px 12px}
+body[data-surface=court] .shot-controls .course-buttons button{padding:5px 9px;font-size:11px}
+body[data-surface=court] .stroke-control,body[data-surface=court] .serve-control{gap:2px}
+body[data-surface=court] .shot-controls #shotResult{display:none}
+body[data-surface=court] .spin-read{padding:3px 8px;font-size:11px;line-height:1.4}
+.court-settings{align-self:flex-end;font-size:10px;color:#718469;position:relative}
+.court-settings>summary{cursor:pointer;list-style:none;padding:3px 7px;border-radius:5px}
+.court-settings>summary:hover{background:#dce6d2}
+.court-settings-panel{position:absolute;right:0;bottom:calc(100% + 7px);z-index:20;width:min(560px,calc(100vw - 32px));max-height:55dvh;overflow:auto;padding:14px;border:1px solid #b9cbb0;border-radius:12px;background:#f7f7e8;box-shadow:0 8px 30px #1c392b40}
+.court-settings-panel .audio-strip{border:0;margin:0;padding:0;gap:9px}
+.court-settings-panel .status{margin-top:12px;display:block;font-size:11px;line-height:1.7}
+.court-settings-panel .status span{display:block!important}
+@media(max-width:1050px){body[data-surface=court] .toolbar .label{display:none}body[data-surface=court] .toolbar{gap:5px}body[data-surface=court] .toolbar button{padding:5px 7px;font-size:10px}}
+@media(max-width:760px){
+ body[data-surface=court] .shell{padding:6px;gap:5px}
+ body[data-surface=court] .shell>header .club{display:none}
+ body[data-surface=court] .account-bar #cloudStatus{flex-basis:auto;order:0;font-size:9px}
+ body[data-surface=court] .account-bar #accountName{max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+ body[data-surface=court] .account-bar{gap:5px;padding:3px 6px}
+ body[data-surface=court] .career-head{gap:5px}
+ body[data-surface=court] .career-head>div:first-child{width:auto}
+ body[data-surface=court] .career-xp{min-width:75px;max-width:120px}
+ body[data-surface=court] .career-head .career-nav button{padding:5px 3px;font-size:10px}
+ body[data-surface=court] .toolbar .camera-group{gap:0}
+ body[data-surface=court] .toolbar .tabs button{min-height:27px}
+ body[data-surface=court] .toolbar .actions{gap:4px}
+ body[data-surface=court] .toolbar .actions #play{flex:1 1 auto;order:0;min-height:29px}
+ body[data-surface=court] .toolbar button{padding:5px;font-size:10px;min-height:29px}
+ body[data-surface=court] .shot-controls{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;padding:5px}
+ body[data-surface=court] .shot-controls .course-control{display:grid;width:auto;gap:2px}
+ body[data-surface=court] .shot-controls .course-buttons{gap:2px}
+ body[data-surface=court] .shot-controls .course-buttons button{flex:1;min-width:0;padding:5px 2px;font-size:10px;white-space:nowrap}
+ body[data-surface=court] .course-buttons kbd{display:none}
+ body[data-surface=court] .course-control>span,body[data-surface=court] .stroke-control>span,body[data-surface=court] .serve-control>span{font-size:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+ body[data-surface=court] .shot-controls .footing-status,body[data-surface=court] .shot-controls .enemy-return-status{font-size:9px;padding:3px 4px}
+ body[data-surface=court] .spin-read{grid-column:1/-1;font-size:10px}
+ body[data-surface=court] .mobile{gap:4px}
+ body[data-surface=court] .mobile button{padding:7px 4px;font-size:11px}
+ body[data-surface=court] .feedback-strip{height:40px;min-height:40px}
+ body[data-surface=court] .feedback-strip .impact-label b{font-size:22px}
+}
+@media(max-height:620px){
+ body[data-surface=court] .shell>header,body[data-surface=court] .account-bar{display:none}
+ body[data-surface=court] .career-head>div:first-child,body[data-surface=court] .career-xp,body[data-surface=court] .career-wallet{display:none}
+ body[data-surface=court] .career-nav{width:100%;margin:0}
+ body[data-surface=court] .feedback-strip{height:36px;min-height:36px}
+ body[data-surface=court] .feedback-strip .impact-label b{font-size:20px}
+ body[data-surface=court] .feedback-strip .impact-label span{font-size:9px}
+ body[data-surface=court] .shot-controls .footing-status,body[data-surface=court] .shot-controls .enemy-return-status{display:none}
+}

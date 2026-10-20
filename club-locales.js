@@ -3544,5 +3544,10 @@ window.ClubLocales={
     "Close rankings",
     "ランキングを閉じる",
     "关闭排行榜"
+  ],
+  "조작 안내": [
+    "Controls",
+    "操作ガイド",
+    "操作说明"
   ]
 };
