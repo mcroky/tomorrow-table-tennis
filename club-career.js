@@ -1,7 +1,7 @@
 (() => {
 'use strict';
 const tr=window.ClubI18n.t;
-const KEY=window.ClubAccount?.storageKey||'tomorrow-table-tennis-career-v1',W=1900,H=1060;
+const KEY=window.ClubAccount?.storageKey||'tomorrow-table-tennis-career-v1',W=1900,H=1060,overviewBounds={x:35,y:90,width:1800,height:880};
 const regions=[tr('동네 탁구'),tr('동호회 거리'),tr('시·군 대회'),tr('전국 아마추어'),tr('실업 리그'),tr('국가대표 선발전'),tr('세계선수권'),tr('올림픽')];
 const places=[
  [tr('골목 탁구대'),tr('공원 쉼터'),tr('학교 체육관'),tr('동네 탁구장'),tr('동네 최강자')],
@@ -42,7 +42,7 @@ const emptyTraining=()=>({sweet:0,placement:0,lastSide:0,finish:0,claimed:[]});
 
 const int=(v,lo,hi)=>Number.isFinite(v)?Math.max(lo,Math.min(hi,Math.floor(v))):lo,need=l=>80+(l-1)*45;
 const fresh=()=>({version:3,profile:window.ClubAvatar.defaults(),customized:false,level:1,xp:0,money:0,owned:Object.values(baseGear()),equipped:baseGear(),upgrades:{},stats:{power:0,speed:0,defense:0,attack:0,control:0},skills:Object.fromEntries(skills.map(s=>[s.id,0])),wins:0,losses:0,tierWins:regions.map(()=>0),rivalWins:regions.map(()=>0),stageMedals:Array(40).fill(0),training:emptyTraining(),cleared:[],mapNode:0,journey:null,activeMatch:null,lastResult:null});
-let data=fresh(),storageOK=true,saveMessage=tr('자동 저장 준비'),startHandler=null,mapHandler=null,practiceHandler=null,suspendHandler=null,forfeitResume=null,selected=0,tab='stage',zoom=.7,mapDrag=null,fitMode=false,focusTier=0,drawerOpen=false,drawerOpener=null,pendingResult=false,journeyFrame=0,journeyToken=0,journeyActive=false,playerPoint=null,arrivalTimer=0;
+let data=fresh(),storageOK=true,saveMessage=tr('자동 저장 준비'),startHandler=null,mapHandler=null,practiceHandler=null,suspendHandler=null,forfeitResume=null,selected=0,tab='stage',zoom=.7,mapDrag=null,fitMode=true,focusTier=null,drawerOpen=false,drawerOpener=null,pendingResult=false,journeyFrame=0,journeyToken=0,journeyActive=false,playerPoint=null,arrivalTimer=0;
 function frontier(d=data){let i=0;while(i<nodes.length&&d.cleared.includes(i))i++;return Math.min(i,39);}
 function unlocked(id,d=data){return id===0||d.cleared.includes(id-1);}
 function normalize(raw){
@@ -194,7 +194,7 @@ function illustratedRegion(name,i){
 
 function drawMap(){
  const land=regions.map(illustratedRegion).join('');
- const ocean='<defs><pattern id="seaPattern" width="95" height="70" patternUnits="userSpaceOnUse"><path d="M12 35q10 7 20 0m27-21q8 5 16 0" fill="none" stroke="#f5fff2" stroke-width="2" opacity=".38"/></pattern><linearGradient id="seaTint" x2="0" y2="1"><stop stop-color="#b9d8d6"/><stop offset="1" stop-color="#cce3d9"/></linearGradient></defs><rect width="'+W+'" height="'+H+'" fill="url(#seaTint)"/><rect width="'+W+'" height="'+H+'" fill="url(#seaPattern)"/><path d="M310 525Q680 475 1000 535T1640 515" fill="none" stroke="#f1f8df" stroke-width="2" stroke-dasharray="5 12" opacity=".7"/><g transform="translate(950 525)" text-anchor="middle"><rect x="-200" y="-25" width="400" height="50" rx="25" fill="#f9f4df" stroke="#9dbab0" stroke-width="2"/><text y="6" fill="#567c74" font-size="18" font-weight="700" letter-spacing="5">ROAD TO OLYMPICS</text></g><g transform="translate(1810 70)" fill="none" stroke="#6b968d" stroke-width="2" opacity=".65"><circle r="25"/><path d="M0-35V35M-35 0H35M0-19L8 8 0 3-8 8Z" fill="#f8f4df"/><text y="-43" text-anchor="middle" fill="#62887f" stroke="none" font-size="13">N</text></g>';
+ const ocean='<defs><pattern id="seaPattern" width="95" height="70" patternUnits="userSpaceOnUse"><path d="M12 35q10 7 20 0m27-21q8 5 16 0" fill="none" stroke="#f5fff2" stroke-width="2" opacity=".38"/></pattern><linearGradient id="seaTint" x2="0" y2="1"><stop stop-color="#b9d8d6"/><stop offset="1" stop-color="#cce3d9"/></linearGradient></defs><rect width="'+W+'" height="'+H+'" fill="url(#seaTint)"/><rect width="'+W+'" height="'+H+'" fill="url(#seaPattern)"/><path d="M310 525Q680 475 1000 535T1640 515" fill="none" stroke="#f1f8df" stroke-width="2" stroke-dasharray="5 12" opacity=".7"/><g transform="translate(950 525)" text-anchor="middle"><rect x="-200" y="-25" width="400" height="50" rx="25" fill="#f9f4df" stroke="#9dbab0" stroke-width="2"/><text y="6" fill="#567c74" font-size="18" font-weight="700" letter-spacing="5">ROAD TO OLYMPICS</text></g><g class="map-compass" transform="translate(1810 70)" fill="none" stroke="#6b968d" stroke-width="2" opacity=".65"><circle r="25"/><path d="M0-35V35M-35 0H35M0-19L8 8 0 3-8 8Z" fill="#f8f4df"/><text y="-43" text-anchor="middle" fill="#62887f" stroke="none" font-size="13">N</text></g>';
  const routes=nodes.slice(1).map((n,i)=>{const a=nodes[i],mid=(a.x+n.x)/2;return '<path id="route-'+i+'" d="M'+a.x+' '+a.y+' C'+mid+' '+a.y+' '+mid+' '+n.y+' '+n.x+' '+n.y+'" fill="none" stroke="#b1bba0" stroke-width="6" stroke-linecap="round" stroke-dasharray="3 12"/>';}).join('');
  el('worldBoard').innerHTML='<svg class="world-art" width="'+W+'" height="'+H+'" viewBox="0 0 '+W+' '+H+'" aria-hidden="true">'+ocean+land+routes+'</svg>'+nodes.map(n=>'<button type="button" class="world-node'+(n.boss?' boss':'')+'" data-node="'+n.id+'" style="left:'+n.x+'px;top:'+n.y+'px"><span class="node-medal" aria-hidden="true"></span><span class="node-stars" aria-hidden="true"></span><b>'+n.code+'</b><small>'+n.name+'</small></button>').join('');
  el('worldBoard').querySelectorAll('[data-node]').forEach(button=>button.onclick=()=>{finishMapJourney();selected=Number(button.dataset.node);render();if(fitMode){focusRegion(nodes[selected].tier);return;}openDrawer('stage');});
@@ -366,7 +366,7 @@ function showMap(){
  if(data.activeMatch)return false;
  if(mapHandler)mapHandler();hub.hidden=false;arena.hidden=true;document.body.dataset.surface='map';render();
  const result=pendingResult;pendingResult=false;closeDrawer(false);requestAnimationFrame(()=>{
-  if(hub.hidden)return;focusRegion(nodes[data.journey?.from??data.mapNode].tier);const complete=()=>{if(result&&!hub.hidden&&!drawerOpen)openDrawer(tab);};
+  if(hub.hidden)return;fitMap();const complete=()=>{if(result&&!hub.hidden&&!drawerOpen)openDrawer(tab);};
   if(data.journey){if(!journeyActive)playMapJourney(complete);}else complete();
  });
 }
@@ -401,8 +401,15 @@ function recordPoint(score){
  data.activeMatch=null;pendingResult=true;selected=won?frontier():n.id;if(data.level>oldLevel)setTab('skills');else setTab('stage');save();return {...data.lastResult};
 }
 function sizeViewport(){const v=el('worldViewport');if(hub.hidden)return;v.style.height=Math.max(280,window.innerHeight-v.getBoundingClientRect().top-26)+'px';}
-function resizeMap(){const v=el('worldViewport');el('worldBoard').style.transform='scale('+zoom+')';el('worldSpace').style.width=W*zoom+'px';el('worldSpace').style.height=H*zoom+'px';el('worldSpace').style.marginTop=Math.max(0,(v.clientHeight-H*zoom-4)/2)+'px';v.dataset.overview=String(zoom<.4);el('mapZoom').textContent=Math.round(zoom*100)+'%';v.style.setProperty('--node-label-size',Math.max(14,12/zoom)+'px');v.style.setProperty('--node-code-size',Math.max(16,11/zoom)+'px');el('worldPlayer')?.style.setProperty('--player-scale',Math.max(.8,Math.min(2.8,.65/zoom)));}
-function fitMap(){if(hub.hidden)return;fitMode=true;focusTier=null;updateRegionNav();sizeViewport();const v=el('worldViewport');zoom=Math.max(.08,Math.min((v.clientWidth-12)/W,(v.clientHeight-12)/H,1));resizeMap();v.scrollTo({left:0,top:0,behavior:'instant'});}
+function resizeMap(){
+ const v=el('worldViewport'),bounds=fitMode?overviewBounds:{x:0,y:0,width:W,height:H},space=el('worldSpace');
+ el('worldBoard').style.transform='translate('+(-bounds.x*zoom)+'px,'+(-bounds.y*zoom)+'px) scale('+zoom+')';
+ space.style.width=bounds.width*zoom+'px';space.style.height=bounds.height*zoom+'px';space.style.marginTop=Math.max(0,(v.clientHeight-bounds.height*zoom)/2)+'px';
+ v.dataset.fitted=String(fitMode);v.dataset.overview=String(zoom<.4);el('mapZoom').textContent=Math.round(zoom*100)+'%';
+ v.style.setProperty('--node-label-size',Math.max(14,12/zoom)+'px');v.style.setProperty('--node-code-size',Math.max(16,11/zoom)+'px');
+ el('worldPlayer')?.style.setProperty('--player-scale',Math.max(.8,Math.min(fitMode?1:2.8,.65/zoom)));
+}
+function fitMap(){if(hub.hidden)return;fitMode=true;focusTier=null;updateRegionNav();sizeViewport();const v=el('worldViewport');zoom=Math.max(.08,Math.min((v.clientWidth-24)/overviewBounds.width,(v.clientHeight-24)/overviewBounds.height,1));resizeMap();v.scrollTo({left:0,top:0,behavior:'instant'});}
 function updateRegionNav(){
  el('mapFit').setAttribute('aria-pressed',String(fitMode));
  hub.querySelectorAll('[data-region]').forEach(button=>{const tier=Number(button.dataset.region);button.setAttribute('aria-pressed',String(!fitMode&&focusTier===tier));button.dataset.locked=String(tier>Math.floor(frontier()/5));el('chapterProgress-'+tier).textContent=(tier>Math.floor(frontier()/5)?'🔒 · ':'')+data.cleared.filter(id=>nodes[id]?.tier===tier).length+' / 5';});
@@ -466,5 +473,5 @@ window.ClubCareer={
  inspect(){return JSON.parse(JSON.stringify({...data,points:points(),skillPoints:skillPoints(),bonuses:bonuses()}));}
 };
 if(storageOK)save();else render();
-arena.hidden=true;hub.hidden=false;document.body.dataset.surface='map';requestAnimationFrame(()=>{focusRegion(nodes[data.mapNode].tier);if(data.journey&&data.customized)playMapJourney();});
+arena.hidden=true;hub.hidden=false;document.body.dataset.surface='map';requestAnimationFrame(()=>{fitMap();if(data.journey&&data.customized)playMapJourney();});
 })();

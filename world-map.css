@@ -479,3 +479,7 @@ body[data-surface=court] .spin-read{padding:3px 8px;font-size:11px;line-height:1
 /* Keep the playfield focused on the table on wide desktop windows. */
 body[data-surface=court] .shell{max-width:1320px}
 body[data-surface=court] #arena>.stage{width:100%;align-self:center;max-width:calc(60dvh * 16 / 9);box-shadow:0 8px 24px #263d241a}
+/* Fit the illustrated world bounds, without extra ocean creating scrollbars. */
+.world-viewport[data-fitted=true]{overflow:hidden;cursor:default}
+.world-viewport[data-fitted=true] #worldSpace{overflow:hidden}
+.world-viewport[data-fitted=true] .map-compass{display:none}
