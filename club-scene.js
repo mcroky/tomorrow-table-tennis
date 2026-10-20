@@ -1716,9 +1716,10 @@ function updateTouchBallGuide(vp){
  const x=(px/clipW*.5+.5)*canvas.clientWidth,y=(.5-py/clipW*.5)*canvas.clientHeight,dx=(previousBallScreen?.x??x)-x,dy=(previousBallScreen?.y??y)-y;
  touchBallMarker.hidden=false;touchBallMarker.style.transform='translate3d('+(x-5)+'px,'+(y-5)+'px,0)';touchBallMarker.style.setProperty('--tail-length',Math.min(20,Math.hypot(dx,dy)*1.2)+'px');touchBallMarker.style.setProperty('--tail-angle',Math.atan2(dy,dx)+'rad');touchBallMarker.dataset.chance=String(!!ball.smashChance);previousBallScreen={x,y};
 }
-const touchMedia=matchMedia('(pointer: coarse)');
-function detectTouch(){document.documentElement.dataset.input=touchMedia.matches||navigator.maxTouchPoints>0?'touch':'keyboard';}
-detectTouch();touchMedia.addEventListener('change',detectTouch);
+const touchMedia=matchMedia('(pointer: coarse)'),desktopPointerMedia=matchMedia('(any-hover: hover) and (any-pointer: fine)');
+// Touch capability alone also describes laptops with touch screens.
+function detectTouch(){document.documentElement.dataset.input=touchMedia.matches&&!desktopPointerMedia.matches?'touch':'keyboard';}
+detectTouch();touchMedia.addEventListener('change',detectTouch);desktopPointerMedia.addEventListener('change',detectTouch);
 const stick=$('touchStick'),knob=$('touchStickKnob');let stickPointer=null;
 let stickOrigin=null,stickSensitivity=100,stickAxis=null,stickFreeMove=false,stickCandidate=null,stickAxisTimer=null,stickLastPoint=null;
 try{const saved=Number(localStorage.getItem('ttk-stick-sensitivity'));if(saved>=70&&saved<=140)stickSensitivity=saved;}catch{}
@@ -1737,7 +1738,7 @@ function positionTouchDeck(){
  if(touchDeck.parentElement!==parent){releaseTouch();parent.append(touchDeck);}
  $('stage').dataset.touchOverlay=String(overlay);
 }
-positionTouchDeck();addEventListener('resize',positionTouchDeck);touchMedia.addEventListener('change',positionTouchDeck);
+positionTouchDeck();addEventListener('resize',positionTouchDeck);touchMedia.addEventListener('change',positionTouchDeck);desktopPointerMedia.addEventListener('change',positionTouchDeck);
 function releaseTouch(){clearTimeout(stickAxisTimer);stickAxisTimer=null;stickCandidate=null;stickLastPoint=null;stickPointer=null;stickOrigin=null;stickAxis=null;delete moveZone.dataset.axis;moveHint.textContent=tr('드래그해서 이동');state.touchMove={x:0,z:0};knob.style.transform='translate(-50%,-50%)';stick.style.left='50%';stick.style.top='50%';stick.classList.remove('active');moveZone.classList.remove('active');document.querySelectorAll('.touch-hit-buttons button').forEach(b=>b.classList.remove('pressed'));}
 function moveStick(e){
  if(e.pointerId!==stickPointer||!stickOrigin)return;

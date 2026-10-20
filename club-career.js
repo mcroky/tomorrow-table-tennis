@@ -416,7 +416,7 @@ function resizeMap(){
  el('worldPlayer')?.style.setProperty('--player-scale',Math.max(.8,Math.min(fitMode?1:2.8,.65/zoom)));
 }
 function fitMap(){if(hub.hidden)return;fitMode=true;focusTier=null;updateRegionNav();sizeViewport();const v=el('worldViewport');zoom=Math.max(.08,Math.min((v.clientWidth-24)/overviewBounds.width,(v.clientHeight-24)/overviewBounds.height,1));resizeMap();v.scrollTo({left:0,top:0,behavior:'instant'});}
-function compactMap(){return innerWidth<=760||(navigator.maxTouchPoints>0&&innerWidth<=1100);}
+function compactMap(){return innerWidth<=760||(innerWidth<=1100&&matchMedia('(pointer: coarse)').matches&&!matchMedia('(any-hover: hover) and (any-pointer: fine)').matches);}
 function defaultMapView(){if(compactMap())focusRegion(nodes[data.mapNode].tier);else fitMap();}
 function updateRegionNav(){
  el('mapFit').setAttribute('aria-pressed',String(fitMode));
