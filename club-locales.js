@@ -3604,5 +3604,30 @@ window.ClubLocales={
     "Legendary ball with golden bands and a gentle glow",
     "金の帯と柔らかな輝きを宿す伝説のボール",
     "金色纹带与柔和光辉交映的传说球"
+  ],
+  "앞뒤와 좌우 이동": [
+    "Move in all directions",
+    "前後左右に移動",
+    "前后左右移动"
+  ],
+  "서브": [
+    "Serve",
+    "サーブ",
+    "发球"
+  ],
+  "스매시 버튼": [
+    "Smash button",
+    "スマッシュボタン",
+    "扣杀按钮"
+  ],
+  "스윙 버튼": [
+    "Swing button",
+    "スイングボタン",
+    "挥拍按钮"
+  ],
+  "내 서브 · 스윙 버튼으로 시작": [
+    "Your serve · Tap Swing",
+    "自分のサーブ · スイングボタンで開始",
+    "我方发球 · 点击挥拍开始"
   ]
 };

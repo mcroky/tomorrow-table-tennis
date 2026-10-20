@@ -487,3 +487,100 @@ body[data-surface=court] #arena>.stage{width:100%;align-self:center;max-width:ca
 body[data-surface=court] .shell{max-width:1120px;margin-left:auto;margin-right:auto}
 body[data-surface=court] #arena>.court-frame-slot{flex:1 1 0;min-height:0;min-width:0;width:100%;display:flex;align-items:center;justify-content:center}
 body[data-surface=court] .court-frame-slot>.stage{flex:0 0 auto;min-height:0;max-height:100%;max-width:100%;margin:0}
+/* Keyboard-free controls on phones, tablets and touch laptops. */
+.court-controls{display:flex;flex-direction:column;gap:6px;min-width:0}
+body[data-surface=court] .court-controls>.shot-controls{margin:0}
+.touch-deck{align-items:center;position:relative;gap:12px;padding:4px 10px;min-height:88px;touch-action:none;user-select:none;-webkit-user-select:none}
+.touch-stick{position:relative;flex:0 0 80px;width:80px;height:80px;border:1px solid #a9bda1;border-radius:50%;background:radial-gradient(circle,#e9efdf 28%,#d9e5ce 30% 62%,#c5d8bc 64%);box-shadow:inset 0 2px 7px #30533318;touch-action:none}
+.stick-knob{position:absolute;left:50%;top:50%;width:33px;height:33px;border-radius:50%;transform:translate(-50%,-50%);background:linear-gradient(145deg,#729568,#3d644c);border:2px solid #f5f2d7;box-shadow:0 3px 6px #2f4a3333;pointer-events:none}
+.stick-arrow{position:absolute;font-size:9px;color:#8c9f7b;pointer-events:none}.stick-arrow.up{top:3px;left:35px}.stick-arrow.down{bottom:3px;left:35px}.stick-arrow.left{left:4px;top:31px}.stick-arrow.right{right:4px;top:31px}.touch-stick.active{border-color:#5b8755;background-color:#c4d9b7}
+.touch-move-label{font-size:10px;color:#7f9274}
+.touch-hit-buttons{display:flex;gap:10px;margin-left:auto;touch-action:none}
+body[data-surface=court] .mobile .touch-hit-buttons button{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;width:76px;height:66px;min-height:44px;padding:5px;border-radius:18px;touch-action:none;font-size:22px;font-weight:800;box-shadow:0 3px 0 #536b4730}
+.touch-hit-buttons button span{font-size:13px}
+body[data-surface=court] .mobile .touch-swing{background:#3d6c51;border-color:#335e45;color:#fff6df}
+body[data-surface=court] .mobile .touch-smash{background:linear-gradient(135deg,#f0cf82,#e6af55);border-color:#bc8c39;color:#70481e}
+.touch-hit-buttons button.pressed{transform:translateY(2px);filter:brightness(.9)}
+html[data-input=touch] body[data-surface=court] .mobile{display:flex}
+html[data-input=touch] body[data-surface=court] .shell>header,html[data-input=touch] body[data-surface=court] .account-bar{display:none}
+html[data-input=touch] body[data-surface=court] .toolbar #swing,html[data-input=touch] body[data-surface=court] .toolbar #smash{display:none}
+html[data-input=touch] body[data-surface=court] .course-buttons kbd{display:none}
+html[data-input=touch] body[data-surface=court] .feedback-strip{height:36px;min-height:36px}
+html[data-input=touch] body[data-surface=court] .feedback-strip .impact-label b{font-size:20px}
+html[data-input=touch] body[data-surface=court] .shot-controls .course-buttons button{min-height:38px}
+html[data-input=touch] body[data-surface=court] .scoreboard{top:7px;left:50%;transform:translateX(-50%);gap:9px;padding:4px 10px;border-radius:8px}
+html[data-input=touch] body[data-surface=court] .scoreboard strong{font-size:22px;letter-spacing:1px}
+html[data-input=touch] body[data-surface=court] .scoreboard small{font-size:7px}
+html[data-input=touch] body[data-surface=court] .scoreboard span{font-size:9px}
+html[data-input=touch] body[data-surface=court] .stage .hud{top:8px;left:8px;right:8px}
+html[data-input=touch] body[data-surface=court] .stage .location{display:none}
+html[data-input=touch] body[data-surface=court] .view-tag{font-size:8px;padding:4px 5px}
+html[data-input=touch] body[data-surface=court] .stage .bottom-hud{bottom:8px;left:8px;right:8px}
+html[data-input=touch] body[data-surface=court] .stage .hint-card{padding:4px 7px;max-width:78%;border-radius:7px}
+html[data-input=touch] body[data-surface=court] .stage .hint-card small{display:none}
+html[data-input=touch] body[data-surface=court] .stage .hint-card b{font-size:10px}
+html[data-input=touch] body[data-surface=court] .stage .hints{display:none}
+@media(max-width:760px){.touch-move-label{display:none}.touch-deck{padding:2px 8px}.touch-hit-buttons{gap:8px}html[data-input=touch] body[data-surface=court] .toolbar .actions #play{flex:1}html[data-input=touch] body[data-surface=court] .scoreboard span{display:none}}
+@media(pointer:coarse){button{touch-action:manipulation}.world-tools button{min-height:40px}.career-head .career-nav button{min-height:36px}.drawer-header button{min-height:40px}}
+@media(max-height:520px) and (min-width:600px){
+ html[data-input=touch] body[data-surface=court] .shell{padding:5px 8px;gap:4px}
+ html[data-input=touch] body[data-surface=court] #arena{display:grid;grid-template-columns:minmax(0,1fr) 218px;grid-template-rows:auto 30px minmax(0,1fr) 17px;gap:5px 9px}
+ html[data-input=touch] body[data-surface=court] .toolbar{grid-column:1/-1;grid-row:1;flex-wrap:nowrap;padding:3px 6px}
+ html[data-input=touch] body[data-surface=court] .toolbar .camera-group{flex:1;width:auto}
+ html[data-input=touch] body[data-surface=court] .toolbar .actions{width:auto}
+ html[data-input=touch] body[data-surface=court] .toolbar button{min-height:28px;padding:4px 6px;font-size:10px}
+ html[data-input=touch] body[data-surface=court] .toolbar .tabs{display:flex}
+ html[data-input=touch] body[data-surface=court] .feedback-strip{grid-column:1;grid-row:2;height:30px;min-height:30px}
+ html[data-input=touch] body[data-surface=court] .feedback-strip .impact-label{padding:2px 6px}
+ html[data-input=touch] body[data-surface=court] .feedback-strip .impact-label b{font-size:17px}
+ html[data-input=touch] body[data-surface=court] #bossTactic{position:absolute;top:40px;left:7px;max-width:calc(100% - 248px);z-index:4;font-size:9px}
+ html[data-input=touch] body[data-surface=court] #arena>.court-frame-slot{grid-column:1;grid-row:3;min-height:0}
+ html[data-input=touch] body[data-surface=court] .court-controls{grid-column:2;grid-row:2/5;justify-content:space-between;min-height:0;gap:4px;border-left:1px solid #ced8c1;padding-left:8px}
+ html[data-input=touch] body[data-surface=court] .shot-controls{display:flex;flex-direction:column;align-items:stretch;padding:5px;gap:4px;font-size:10px}
+ html[data-input=touch] body[data-surface=court] .shot-controls .course-control{display:block;width:100%}
+ html[data-input=touch] body[data-surface=court] .shot-controls .course-buttons button{min-height:33px;padding:4px 7px;flex:1;font-size:10px}
+ html[data-input=touch] body[data-surface=court] .shot-controls .course-control>span,html[data-input=touch] body[data-surface=court] .shot-controls .stroke-control>span,html[data-input=touch] body[data-surface=court] .shot-controls .serve-control>span{font-size:9px}
+ html[data-input=touch] body[data-surface=court] .shot-controls .spin-read{font-size:9px;padding:3px;line-height:1.2}
+ html[data-input=touch] body[data-surface=court] .touch-deck{min-height:71px;padding:0;gap:6px}
+ html[data-input=touch] body[data-surface=court] .touch-stick{width:64px;height:64px;flex-basis:64px}
+ html[data-input=touch] body[data-surface=court] .stick-arrow.up,html[data-input=touch] body[data-surface=court] .stick-arrow.down{left:27px}
+ html[data-input=touch] body[data-surface=court] .stick-arrow.left,html[data-input=touch] body[data-surface=court] .stick-arrow.right{top:23px}
+ html[data-input=touch] body[data-surface=court] .touch-move-label{display:none}
+ html[data-input=touch] body[data-surface=court] .touch-hit-buttons{gap:5px;margin:0}
+ html[data-input=touch] body[data-surface=court] .mobile .touch-hit-buttons button{width:61px;height:61px;border-radius:15px;font-size:20px}
+ html[data-input=touch] body[data-surface=court] .touch-hit-buttons button span{font-size:11px}
+ html[data-input=touch] body[data-surface=court] .court-settings{grid-column:1;grid-row:4;justify-self:end}
+}
+body[data-surface=court] .court-controls>.mobile{margin:0}
+/* Compact touch chrome leaves the court usable on smaller phones. */
+html[data-input=touch] body[data-surface=court] #lastMatchReview{display:none}
+html[data-input=touch] body[data-surface=court] .scoreboard strong{white-space:nowrap;flex-shrink:0}
+html[data-input=touch] body[data-surface=court] .scoreboard span{display:none}
+@media(max-width:760px){html[data-input=touch] body[data-surface=court] .tabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr))}html[data-input=touch] body[data-surface=court] .career-head{gap:4px}html[data-input=touch] body[data-surface=court] .career-head .career-nav button{min-height:32px}}
+@media(max-width:600px) and (max-height:720px){
+ html[data-input=touch] body[data-surface=court] .career-head>div:first-child,html[data-input=touch] body[data-surface=court] .career-xp,html[data-input=touch] body[data-surface=court] .career-wallet{display:none}
+ html[data-input=touch] body[data-surface=court] .career{padding:4px}
+ html[data-input=touch] body[data-surface=court] .touch-deck{min-height:74px}
+ html[data-input=touch] body[data-surface=court] .touch-stick{width:68px;height:68px;flex-basis:68px}
+ html[data-input=touch] body[data-surface=court] .stick-arrow.up,html[data-input=touch] body[data-surface=court] .stick-arrow.down{left:29px}
+ html[data-input=touch] body[data-surface=court] .stick-arrow.left,html[data-input=touch] body[data-surface=court] .stick-arrow.right{top:25px}
+ html[data-input=touch] body[data-surface=court] .mobile .touch-hit-buttons button{height:62px}
+ html[data-input=touch] body[data-surface=court] .shot-controls .footing-status,html[data-input=touch] body[data-surface=court] .shot-controls .enemy-return-status{display:none}
+}
+@media(max-height:520px) and (min-width:600px){
+ html[data-input=touch] body[data-surface=court] .court-controls>.shot-controls>*{min-width:0;max-width:100%;flex:0 0 auto}
+ html[data-input=touch] body[data-surface=court] .court-controls>.shot-controls>.spin-read{display:none}
+ html[data-input=touch] body[data-surface=court] .court-controls>.shot-controls #shotResult,html[data-input=touch] body[data-surface=court] .court-controls>.shot-controls .footing-status,html[data-input=touch] body[data-surface=court] .court-controls>.shot-controls .enemy-return-status{display:none}
+ html[data-input=touch] body[data-surface=court] .scoreboard{gap:7px;padding:3px 8px}
+ html[data-input=touch] body[data-surface=court] .scoreboard strong{font-size:19px}
+}
+html[data-input=touch] body[data-surface=court] .feedback-strip{height:44px;min-height:44px}
+@media(max-height:520px) and (min-width:600px){
+ html[data-input=touch] body[data-surface=court] .career{padding:3px 6px}
+ html[data-input=touch] body[data-surface=court] .career-head .career-nav button{min-height:28px;padding:4px 8px;font-size:10px}
+ html[data-input=touch] body[data-surface=court] .toolbar{padding:2px 5px}
+ html[data-input=touch] body[data-surface=court] .toolbar .tabs{padding:2px}
+ html[data-input=touch] body[data-surface=court] .toolbar button{min-height:24px;padding:3px 5px;font-size:9px}
+ html[data-input=touch] body[data-surface=court] .feedback-strip{height:30px;min-height:30px}
+ html[data-input=touch] body[data-surface=court] .feedback-strip .impact-label span{display:none}
+}

@@ -1284,7 +1284,7 @@ function setView(view){
  document.querySelectorAll('[data-view]').forEach(b=>{b.classList.toggle('active',b.dataset.view===view);b.setAttribute('aria-pressed',b.dataset.view===view)});
  $('cameraLabel').textContent={pov:tr('라켓 시점'),follow:tr('선수 뒤'),side:tr('측면'),top:tr('전체 보기')}[view];
 }
-function message(text,phase=tr('PRACTICE RALLY')){$('message').textContent=text;$('phase').textContent=phase;}
+function message(text,phase=tr('PRACTICE RALLY')){if(document.documentElement.dataset.input==='touch'){text=text.replace(/Shift \+ SPACE/gi,tr('스매시 버튼')).replace(/\bSPACE\b/g,tr('스윙 버튼'));if(document.documentElement.lang==='ko')text=text.replaceAll('버튼로','버튼으로').replaceAll('버튼를','버튼을');}$('message').textContent=text;$('phase').textContent=phase;}
 
 function feed(){
  state.serve=null;
@@ -1306,7 +1306,7 @@ function prepareServe(){
  state.swing=0;state.enemySwing=0;state.velocity=[0,0];state.px=clamp(state.px,-.65,.65);state.pz=2.05;state.enemyX=clamp(state.enemyX,-.65,.65);state.enemyZ=-2.05;
  showIncoming('flat');
  state.serve={player,phase:'ready',age:0,style:state.serveLength,course:0};ball.rallyShot=null;ball.vx=ball.vy=ball.vz=0;
- $('serveStatus').textContent=(player?tr('내 서브 · SPACE로 시작'):tr('상대 서브 · 리턴 준비'))+' · '+(total>=20?tr('듀스 · 매 포인트 교대'):tr('2점마다 교대'));
+ $('serveStatus').textContent=(player?(document.documentElement.dataset.input==='touch'?tr('내 서브 · 스윙 버튼으로 시작'):tr('내 서브 · SPACE로 시작')):tr('상대 서브 · 리턴 준비'))+' · '+(total>=20?tr('듀스 · 매 포인트 교대'):tr('2점마다 교대'));
  message(player?tr('코스와 서브 길이를 고른 뒤 SPACE를 누르세요.'):tr('상대가 서브를 준비합니다. 공을 기다리세요.'),'SERVE');
 }
 function beginServeToss(){
@@ -1386,7 +1386,7 @@ function swing(power=!!(state.keys.ShiftLeft||state.keys.ShiftRight),buffered=fa
  if(state.swing>0&&(!buffered||state.swing>.12)){
   if(state.swing<=.34)state.queuedSwing={power:!!power,expires:state.elapsed+.24};return;
  }
- const inputX=(state.keys.KeyD||state.keys.ArrowRight?1:0)-(state.keys.KeyA||state.keys.ArrowLeft?1:0);
+ const inputX=(state.keys.KeyD||state.keys.ArrowRight?1:0)-(state.keys.KeyA||state.keys.ArrowLeft?1:0)+(state.touchMove?.x||0);
  if(inputX*state.velocity[0]<-.25)updateDirectionChange(0,inputX);
  const previous=strikeRig(true),rec=state.playerStroke,turn=state.playerMotion.turn,depthTransfer=rec.rallyRecovery?.mode==='retreat'?rec.rallyRecovery:null,fromRetreat=rec.rallyRecovery?.mode==='retreat';state.queuedSwing=null;rec.rallyRecovery=null;
  const linked=!depthTransfer&&turn&&(turn.phase==='brake'||turn.phase==='push'||turn.phase==='recover'&&turn.age<.20);
@@ -1496,7 +1496,7 @@ function update(dt){
  rememberRigMotion(priorPlayer);rememberRigMotion(priorEnemy);
  state.elapsed+=dt;updateExpressions(dt);
  const celebration=state.celebration;if(celebration.active){celebration.age+=dt;if(celebration.age>=celebration.duration)celebration.active=false;}
- const k=state.celebration.active?{}:state.keys,dx=(k.KeyD||k.ArrowRight?1:0)-(k.KeyA||k.ArrowLeft?1:0),dz=(k.KeyS||k.ArrowDown?1:0)-(k.KeyW||k.ArrowUp?1:0),len=Math.max(1,Math.hypot(dx,dz)),blend=1-Math.exp(-13*dt);
+ const k=state.celebration.active?{}:state.keys,touch=state.celebration.active?null:state.touchMove,dx=(k.KeyD||k.ArrowRight?1:0)-(k.KeyA||k.ArrowLeft?1:0)+(touch?.x||0),dz=(k.KeyS||k.ArrowDown?1:0)-(k.KeyW||k.ArrowUp?1:0)+(touch?.z||0),len=Math.max(1,Math.hypot(dx,dz)),blend=1-Math.exp(-13*dt);
  const phase=state.swing>0?1-state.swing:0,cp=state.playerStroke.contactPhase??.38;
  updateRallyRecovery(dt,dx,dz);
  const release=state.playerStroke.rallyRecovery?.release||0;
@@ -1619,6 +1619,17 @@ document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>setView(b.data
  document.querySelectorAll('[data-serve]').forEach(b=>b.onclick=()=>setServeLength(b.dataset.serve));
 document.querySelectorAll('[data-hold]').forEach(b=>{b.onpointerdown=e=>{e.preventDefault();state.keys[b.dataset.hold]=true;b.setPointerCapture(e.pointerId)};b.onpointerup=b.onpointercancel=()=>state.keys[b.dataset.hold]=false;});
 $('play').onclick=start;$('swing').onclick=()=>swing(false);$('mobileSwing').onclick=()=>swing(false);$('smash').onclick=$('mobileSmash').onclick=()=>swing(true);$('reset').onclick=()=>setView(state.view);
+const touchMedia=matchMedia('(pointer: coarse)');
+function detectTouch(){document.documentElement.dataset.input=touchMedia.matches||navigator.maxTouchPoints>0?'touch':'keyboard';}
+detectTouch();touchMedia.addEventListener('change',detectTouch);
+const stick=$('touchStick'),knob=$('touchStickKnob');let stickPointer=null;
+function releaseTouch(){stickPointer=null;state.touchMove={x:0,z:0};knob.style.transform='translate(-50%,-50%)';stick.classList.remove('active');document.querySelectorAll('.touch-hit-buttons button').forEach(b=>b.classList.remove('pressed'));}
+function moveStick(e){if(e.pointerId!==stickPointer)return;const r=stick.getBoundingClientRect(),radius=r.width*.33,dx=e.clientX-r.left-r.width/2,dz=e.clientY-r.top-r.height/2,length=Math.hypot(dx,dz),scale=Math.min(1,radius/Math.max(length,.001)),x=dx*scale,z=dz*scale;state.touchMove={x:Math.abs(x/radius)<.12?0:x/radius,z:Math.abs(z/radius)<.12?0:z/radius};knob.style.transform='translate(calc(-50% + '+x+'px),calc(-50% + '+z+'px))';}
+stick.onpointerdown=e=>{if(stickPointer!==null||career.isMap()||document.querySelector('dialog[open]'))return;e.preventDefault();sound.unlock();stickPointer=e.pointerId;stick.setPointerCapture(e.pointerId);stick.classList.add('active');moveStick(e);};
+stick.onpointermove=e=>{if(e.pointerId===stickPointer){e.preventDefault();moveStick(e);}};
+stick.onpointerup=stick.onpointercancel=stick.onlostpointercapture=e=>{if(e.pointerId===stickPointer)releaseTouch();};
+for(const [id,power] of [['mobileSwing',false],['mobileSmash',true]]){const button=$(id);button.onpointerdown=e=>{e.preventDefault();if(document.querySelector('dialog[open]')||career.isMap())return;button.setPointerCapture(e.pointerId);button.classList.add('pressed');swing(power);};button.onpointerup=button.onpointercancel=button.onlostpointercapture=()=>button.classList.remove('pressed');button.onclick=e=>{if(e.detail===0)swing(power);};}
+addEventListener('blur',releaseTouch);addEventListener('resize',releaseTouch);document.addEventListener('visibilitychange',()=>{if(document.hidden)releaseTouch();});
 addEventListener('keydown',e=>{if(career.isMap()||document.getElementById('forfeitDialog')?.open)return;if(e.target instanceof Element&&e.target.closest('input,select,textarea'))return;state.keys[e.code]=true;if(['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code))e.preventDefault();if(e.code==='Space'&&!e.repeat)swing(e.shiftKey);if(!e.ctrlKey&&!e.metaKey&&!e.altKey&&['KeyJ','KeyK','KeyL'].includes(e.code))setCourse({KeyJ:-1,KeyK:0,KeyL:1}[e.code]);if(!e.repeat&&!e.ctrlKey&&!e.metaKey&&!e.altKey){if(e.code==='KeyZ')setStrokeStyle('drive');if(e.code==='KeyX')setStrokeStyle('cut');if(e.code==='KeyC')setServeLength('short');if(e.code==='KeyV')setServeLength('deep');}const views=['pov','follow','side','top'];if(/^Digit[1-4]$/.test(e.code))setView(views[Number(e.code.slice(-1))-1]);});
 addEventListener('keyup',e=>state.keys[e.code]=false);addEventListener('blur',()=>{state.queuedSwing=null;state.keys={};dragging=false;});
 
@@ -1665,6 +1676,7 @@ function frame(time){
  avatar(state.enemyX,state.enemyZ,1,opponentLevel().shirt||'#528f85',state.enemySwing,false);
  if(state.view==='pov')povHands();else avatar(state.px,state.pz,-1,'#df7253',state.swing,true);
  if(state.pointWait<=0){shadow(ball.x,ball.z,.055,.045);gearBall(ball.x,ball.y,ball.z,.021,career.appearance().ball);}
+ const touchLabel=$('mobileSwing').querySelector('span'),nextTouchLabel=state.serve?.player?tr('서브'):tr('스윙');if(touchLabel.textContent!==nextTouchLabel)touchLabel.textContent=nextTouchLabel;
  drawCourseGuide();drawImpact();updateFootingUI(time);
  gl.bindBuffer(gl.ARRAY_BUFFER,dynamicMesh.buffer);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(geo),gl.DYNAMIC_DRAW);dynamicMesh.count=geo.length/10;drawMesh(dynamicMesh);if(auraGeo.length){uploadMesh(auraMesh,auraGeo);drawAura(auraMesh,eye);}
  flushImpactAnnouncement();

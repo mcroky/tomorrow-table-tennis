@@ -455,7 +455,7 @@ const courtStage=el('stage');
 let courtFrame=el('courtFrame');
 if(!courtFrame){courtFrame=document.createElement('div');courtFrame.id='courtFrame';courtFrame.className='court-frame-slot';courtStage.before(courtFrame);courtFrame.append(courtStage);}
 if(!window.ClubAssetMap){const styles=document.querySelector('link[href*="world-map.css"]');if(styles)styles.href='./world-map.css?v=centered-court-20261020';}
-const courtSizeObserver=new ResizeObserver(entries=>{const {width,height}=entries[0].contentRect;if(width<=0||height<=0)return;const w=Math.floor(Math.min(width,height*16/9)),h=Math.floor(w*9/16);courtStage.style.width=w+'px';courtStage.style.height=h+'px';courtStage.style.maxWidth='none';});
+const courtSizeObserver=new ResizeObserver(entries=>{const {width,height}=entries[0].contentRect;if(width<=0||height<=0)return;const portraitTouch=document.documentElement.dataset.input==='touch'&&innerHeight>innerWidth,w=Math.floor(portraitTouch?width:Math.min(width,height*16/9)),h=Math.floor(portraitTouch?height:w*9/16);courtStage.style.width=w+'px';courtStage.style.height=h+'px';courtStage.style.maxWidth='none';});
 courtSizeObserver.observe(courtFrame);
 const viewport=el('worldViewport');
 viewport.onpointerdown=e=>{if(e.button!==0||e.target.closest('button'))return;focusTier=null;updateRegionNav();mapDrag={x:e.clientX,y:e.clientY,left:viewport.scrollLeft,top:viewport.scrollTop};viewport.setPointerCapture(e.pointerId);viewport.classList.add('dragging');};
