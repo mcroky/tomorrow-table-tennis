@@ -349,6 +349,8 @@ function renderTraining(){
 function opponentConfig(){
  const match=data.activeMatch,n=nodes[match?.node??0],rank=match?.mode==='rival'?match.rank:0,key=n.id+':'+rank;if(opponentCache.has(key))return opponentCache.get(key);
  const progress=n.id/39,boss=window.ClubBosses.forNode(n.id),base={speed:.70+progress*.56+(n.step===2?.06:n.boss?.05:0),reaction:(1.7-progress*.95)*(n.boss?.90:1),power:.86+progress*.37+(n.step===3||n.boss?.04:0),placement:.65+progress*.49+(n.step===1?.08:0)};
+ // Ease into rallies in the first two regions, then taper to the existing pace.
+ if(!rank)base.power*=1-.14*Math.max(0,1-n.id/10);
  if(boss){base.boss={...boss,rank,name:boss.name+(rank?' · '+tr('라이벌 재대결')+' '+rank+tr('단계'):'')};for(const key of ['speed','reaction','power','placement'])base[key]*=boss[key];base.shirt=boss.color;if(rank){base.speed*=1+rank*.055;base.reaction*=1-rank*.06;base.power*=1+rank*.045;base.placement=Math.min(1.30,base.placement*(1+rank*.035));}}
  opponentCache.set(key,base);return base;
 }

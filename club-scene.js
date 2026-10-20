@@ -151,7 +151,7 @@ function selectVenue(tier){
 const state={strokeStyle:'drive',serveLength:'short',serve:null,course:0,lastShot:null,previewFooting:null,queuedSwing:null,celebration:{active:false,age:0,duration:1.5,power:false,from:null},highFeed:false,playerStroke:{mix:0,selected:'forehand',locked:null,predictedX:0},enemyStroke:{mix:0,selected:'forehand',locked:null,predictedX:0},elapsed:0,velocity:[0,0],playerMotion:{phase:0,blend:0,lateral:0},enemyMotion:{phase:0,blend:0,lateral:0},enemyPrepared:false,enemyHit:false,view:'pov',povFov:56,yaw:0,pitch:.45,distance:4.5,px:0,pz:2.18,enemyX:.06,enemyZ:-2,enemyDefense:{phase:'ready',age:0,amount:0,stretch:0,recoil:0,lean:0,vx:0,targetX:0,targetY:1.1,bodyTarget:0,direction:1,pressure:0,delay:0,outcome:null,events:[]},swing:0,enemySwing:0,playing:false,pointWait:0,score:[0,0],keys:{},drag:false,moved:false,hit:false};
 const career=window.ClubCareer;
 const growth=()=>career.bonuses();
-const opponentLevel=()=>state.careerMatch?career.opponent():{speed:1,reaction:1,power:1,placement:1};
+const opponentLevel=()=>state.careerMatch?career.opponent():{speed:1,reaction:1,power:.90,placement:1};
 let eye=[.12,1.57,2.95],target=[0,.77,-.3],ball={x:0,y:1,z:1.7,vx:0,vy:0,vz:0},lastTime=0;
 
 // Character geometry uses local frames, so the racket, wrist and body rotate together.
@@ -633,7 +633,7 @@ function processQueuedSwing(){
  const q=state.queuedSwing;if(!q)return;
  if(state.elapsed>q.expires||state.celebration.active||state.pointWait>0){state.queuedSwing=null;return;}
  const eta=ball.vz>.05?(state.pz-.45-ball.z)/ball.vz:Infinity;
- if(state.swing<=.12&&(!state.playing||(eta>=.015&&eta<=.36))){state.queuedSwing=null;swing(q.power,true);}
+ if(state.swing<=.12&&(!state.playing||(eta>=.015&&eta<=.36))){state.queuedSwing=null;swing(q.power,true,!!q.assisted);}
 }
 
 // Resolve the wrist and arm capsules against an expanded chest in the chest's own frame.
@@ -874,7 +874,7 @@ function impact(player,contact,beforeCountdown,afterCountdown){
  const position=add(surface,mul(rig.n,contact.side*(BALL_RADIUS+.001)));
  [ball.x,ball.y,ball.z]=position;
  const defending=!player&&rec.defense,footing=evaluateFooting(rig),course=player?state.course:0;
- const active=state[key]>0,p=active?1-state[key]:-1,timing=Math.abs(p-(rec.contactPhase??.38)),perfect=!defending&&footing.score>=(player?.62:.78)&&active&&contact.sweet<=.42&&timing<.105&&(rec.inputTiming??1)<.036*(player?growth().sweetWindow:1);
+ const active=state[key]>0,p=active?1-state[key]:-1,timing=Math.abs(p-(rec.contactPhase??.38)),perfect=!defending&&(!player||!rec.assistedTiming)&&footing.score>=(player?.62:.78)&&active&&contact.sweet<=.42&&timing<.105&&(rec.inputTiming??1)<.036*(player?growth().sweetWindow:1);
  const timingOffset=active?(p-(rec.contactPhase??.38))*(rec.duration||strokeDuration):0,timingError=active?Math.max(Math.abs(timingOffset),(rec.inputTiming??0)*.65):0,timingRisk=player&&active?smooth(clamp((timingError-.055*growth().sweetWindow)/.14,0,1)):0;
  const edge=contact.sweet>.82,centered=contact.sweet<=.42,smash=!!rec.smash&&active&&ball.y>1.16&&!edge,finisher=player&&smash&&!edge&&!!ball.smashChance&&!!ball.chanceBounced&&footing.score>=.72&&timingRisk<.20,unstableReturn=!player&&(footing.score<.62||footing.planted<2&&footing.speed>.85||footing.score<.76&&state.enemyDefense.stretch>.55),kind=unstableReturn?'unstable-block':finisher?(perfect?'critical-finish-smash':'finish-smash'):defending?(state.enemyDefense.stretch>.5?'desperate-block':'pressure-block'):perfect?(smash?'critical-smash':'critical'):(smash?'smash':(!active?'block':edge?'edge':centered?'center':'hit'));
  if(player){state.hit=true;if((rec.approachStrike||rec.advanceShot)&&!finisher){const a=rec.approachStrike||rec.advanceShot;rec.rallyRecovery={mode:'retreat',phase:'follow',phaseAge:0,age:0,supportSide:a.leadSide,direction:0,retreatZ:0,readDirection:0,release:0,amount:0,shift:0,roll:0,backLoad:0,headingYaw:rec.turnShot?.headingYaw||0,diagonalLoad:rec.turnShot?.diagonalLoad||0,freeStepped:false};}else if(rec.turnShot&&!finisher)rec.rallyRecovery={phase:'follow',phaseAge:0,age:0,supportSide:rec.turnShot.side,direction:0,shotDirection:rec.turnShot.direction,targetX:state.px,readDirection:0,release:0,amount:0,shift:0,roll:0,freeStepped:false};}else state.enemyHit=true;
@@ -1398,12 +1398,16 @@ career.bindPractice(()=>{
  $('bossTactic').hidden=true;state.enemyAI=null;
  state.careerMatch=false;state.matchFinished=false;state.playing=false;state.pointWait=0;state.keys={};state.velocity=[0,0];state.celebration.active=false;state.swing=0;start();
 });
-function swing(power=!!(state.keys.ShiftLeft||state.keys.ShiftRight),buffered=false){
+function swing(power=!!(state.keys.ShiftLeft||state.keys.ShiftRight),buffered=false,assisted=false){
  sound.unlock();if(state.careerMatch&&!state.playing||state.celebration.active||state.pointWait>0)return;
  if(state.serve){if(state.serve.player&&state.serve.phase==='ready')beginServeToss();return;}
  if(state.swing>0&&(!buffered||state.swing>.12)){
-  if(state.swing<=.34)state.queuedSwing={power:!!power,expires:state.elapsed+.24};return;
+  if(state.swing<=(power?.34:.45))state.queuedSwing={power:!!power,expires:state.elapsed+(power?.24:.34),assisted:!power};return;
  }
+ // The same modest normal-shot input buffer applies to every input device.
+ // It schedules a real racket swing; contact still requires a swept face hit.
+ const incomingEta=ball.vz>.05?(state.pz-.45-ball.z)/ball.vz:Infinity;
+ if(!power&&!buffered&&state.playing&&!state.hit&&incomingEta>.42&&incomingEta<=.64){state.queuedSwing={power:false,expires:state.elapsed+.44,assisted:true};return;}
  const inputX=(state.keys.KeyD||state.keys.ArrowRight?1:0)-(state.keys.KeyA||state.keys.ArrowLeft?1:0)+(state.touchMove?.x||0);
  if(inputX*state.velocity[0]<-.25)updateDirectionChange(0,inputX);
  const previous=strikeRig(true),rec=state.playerStroke,turn=state.playerMotion.turn,depthTransfer=rec.rallyRecovery?.mode==='retreat'?rec.rallyRecovery:null,fromRetreat=rec.rallyRecovery?.mode==='retreat';state.queuedSwing=null;rec.rallyRecovery=null;
@@ -1424,8 +1428,13 @@ function swing(power=!!(state.keys.ShiftLeft||state.keys.ShiftRight),buffered=fa
   rec.approachStrike={side,supportSide:side,leadSide:-side,direction:0,momentum:clamp(Math.max(-state.velocity[1],motion.lastAdvanceSpeed||0,(motion.approachLoad||0)*1.45)/1.45,.15,1),hipYaw:previous.pose.hip,supportYaw:footIntent(previous,side).yaw,freeStepped:false,stepped:false,leadPlanted:false,started:state.elapsed};
   rec.transition.duration=.135;rec.transition.velocity={...rec.poseVelocity};rec.transition.handVelocity=[...(rec.handVelocity||[0,0,0])];
  }
- rec.shotStyle=state.strokeStyle;rec.duration=rec.smash?.84:rec.shotStyle==='cut'?.78:strokeDuration;rec.contactPhase=rec.smash?.31:.38;rec.whoosh=false;rec.planted=false;rec.aim=[0,0,0];state.swing=1;state.hit=false;
- if(state.playing)aimStroke(true);else message(rec.smash?tr('스매시 준비! 높은 공 연습에서 타이밍을 맞춰보세요.'):(rec.locked==='backhand'?tr('백핸드'):tr('포핸드'))+tr(' 준비 스윙.'),tr('WARM UP'));
+ rec.shotStyle=state.strokeStyle;rec.duration=rec.smash?.84:rec.shotStyle==='cut'?.78:strokeDuration;rec.contactPhase=rec.smash?.31:.38;rec.assistedTiming=assisted;rec.whoosh=false;rec.planted=false;rec.aim=[0,0,0];state.swing=1;state.hit=false;
+ if(state.playing){
+  aimStroke(true);
+  // A slightly late normal press can use a shorter stroke. Keep its original
+  // timing error so the adjustment never grants a free perfect/critical hit.
+  if(!power&&incomingEta>.06&&incomingEta<.24){const originalTiming=rec.inputTiming;rec.duration=Math.max(.60,Math.min(rec.duration,incomingEta/rec.contactPhase));rec.assistedTiming=true;aimStroke(true);rec.inputTiming=Math.max(originalTiming,rec.inputTiming);}
+ }else message(rec.smash?tr('스매시 준비! 높은 공 연습에서 타이밍을 맞춰보세요.'):(rec.locked==='backhand'?tr('백핸드'):tr('포핸드'))+tr(' 준비 스윙.'),tr('WARM UP'));
 }
 function planBossReturn(kind,chance){
  const opponent=opponentLevel(),boss=opponent.boss;if(!boss||chance)return null;
