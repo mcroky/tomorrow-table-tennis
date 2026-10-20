@@ -1,8 +1,8 @@
 (() => {
 'use strict';
 const tr=window.ClubI18n.t;
-const rarities={common:{name:tr('일반'),order:0,color:'#7c8976'},uncommon:{name:tr('고급'),order:1,color:'#478158'},rare:{name:tr('희귀'),order:2,color:'#4d78ad'},epic:{name:tr('영웅'),order:3,color:'#9064ad'}};
-const gradeIds={uncommon:['clothes-mint','headband-white','shoes-light','racket-control','ball-white'],rare:['clothes-navy','headband-red','shoes-sprint','racket-drive','ball-orange'],epic:['clothes-gold','headband-gold','shoes-elite','racket-pro','ball-gold']};
+const rarities={common:{name:tr('일반'),order:0,color:'#7c8976'},uncommon:{name:tr('고급'),order:1,color:'#478158'},rare:{name:tr('희귀'),order:2,color:'#4d78ad'},epic:{name:tr('영웅'),order:3,color:'#9064ad'},legendary:{name:tr('전설'),order:4,color:'#d5a539'}};
+const gradeIds={legendary:['clothes-legend','headband-legend','shoes-legend','racket-legend','ball-legend'],uncommon:['clothes-mint','headband-white','shoes-light','racket-control','ball-white'],rare:['clothes-navy','headband-red','shoes-sprint','racket-drive','ball-orange'],epic:['clothes-gold','headband-gold','shoes-elite','racket-pro','ball-gold']};
 const effectLabels={speed:tr('이동 속도'),recovery:tr('자세 회복'),guard:tr('수비 보정'),accuracy:tr('코스 오차 감소'),power:tr('타구 위력')};
 const describe=bonus=>Object.entries(bonus).filter(([,v])=>v!==0).map(([k,v])=>effectLabels[k]+' +'+(Math.round(v*1000)/10)+'%').join(' · ')||tr('추가 능력치 없음');
 const item=(id,slot,name,price,color,description,bonus={},accent='#f1e7cc')=>({id,slot,name,price,color,description,bonus,accent,grade:Object.keys(gradeIds).find(g=>gradeIds[g].includes(id))||'common'});
@@ -30,6 +30,11 @@ window.ClubEquipment={rarities,effectLabels,describe,enhance,upgradeCost,
  item('ball-base','ball',tr('연습용 아이보리 공'),0,'#fff1bd',tr('기본 연습용 공'),{accuracy:.01}),
  item('ball-white','ball',tr('클래식 화이트 공'),250,'#fffaf0',tr('정확한 코스를 위한 화이트 공'),{accuracy:.03}),
  item('ball-orange','ball',tr('클래식 오렌지 공'),650,'#f7a13e',tr('공격과 정확도를 함께 높이는 공'),{power:.03,accuracy:.04}),
+ item('clothes-legend','clothes',tr('천상의 제왕 유니폼'),12500,'#243e59',tr('금빛 문장과 은은한 오라를 두른 전설 선수복'),{recovery:.12,guard:.09},'#f3d17c'),
+ item('headband-legend','headband',tr('여명의 왕관 밴드'),8500,'#f1d48b',tr('보석 장식과 여명의 빛이 흐르는 전설 밴드'),{recovery:.12,guard:.06},'#a9eee1'),
+ item('shoes-legend','shoes',tr('별빛 비상 슈즈'),14500,'#eff5ef',tr('금빛 날개 장식과 별빛 오라의 전설 슈즈'),{speed:.10,recovery:.08},'#e2b95d'),
+ item('racket-legend','racket',tr('오로라 소버린'),18500,'#285d66',tr('금빛 프레임과 오로라를 품은 전설 블레이드'),{power:.12,accuracy:.09},'#f5d27e'),
+ item('ball-legend','ball',tr('영원의 별 탁구공'),6500,'#fff9df',tr('금빛 띠와 부드러운 광채를 품은 전설 탁구공'),{power:.07,accuracy:.09},'#e6bc60'),
  item('ball-gold','ball',tr('골든 챔피언 공'),1400,'#ead17a',tr('최상위 대회용 챔피언 공'),{power:.05,accuracy:.06})
  ]
 };

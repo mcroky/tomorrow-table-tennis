@@ -456,3 +456,23 @@ body[data-surface=court] .spin-read{padding:3px 8px;font-size:11px;line-height:1
  body[data-surface=court] .feedback-strip .impact-label span{font-size:9px}
  body[data-surface=court] .shot-controls .footing-status,body[data-surface=court] .shot-controls .enemy-return-status{display:none}
 }
+/* Each rarity has its own fabric, metalwork and emblem treatment. */
+.shop-item{position:relative;isolation:isolate}
+.shop-item[data-grade=uncommon] .item-swatch{background-image:linear-gradient(125deg,transparent 35%,#ffffff35 36% 43%,transparent 44%)}
+.shop-item[data-grade=rare] .item-swatch{background-image:linear-gradient(130deg,transparent 20%,#ffffff65 21% 26%,transparent 27% 58%,#ffffff40 59% 66%,transparent 67%)}
+.shop-item[data-grade=epic] .item-swatch{background-image:linear-gradient(125deg,transparent 20%,#ffe4a591 21% 28%,transparent 29% 55%,#ffe4a56b 56% 67%,transparent 68%);filter:drop-shadow(0 2px 4px #9164ac48)}
+.shop-item[data-grade=rare] .item-swatch:before,.shop-item[data-grade=epic] .item-swatch:before,.shop-item[data-grade=legendary] .item-swatch:before{content:'';position:absolute;inset:4px;border:1px solid var(--item-accent);border-radius:inherit;pointer-events:none}
+.shop-item[data-grade=epic] .item-swatch.clothes:after{content:'✧';color:#fff1ba;text-shadow:0 1px 2px #7d5839}
+.shop-item[data-grade=legendary]{border:1px solid #c5a14b;background:linear-gradient(130deg,#fff5d9,#edf0e6 50%,#f8e8bf);box-shadow:inset 3px 0 #d2ac50,0 4px 15px #b292421c}
+.shop-item[data-grade=legendary]:after{content:'';position:absolute;inset:0;border:1px solid #f2d47d;border-radius:inherit;box-shadow:0 0 15px #e8c67165;pointer-events:none;animation:legendary-breathe 4.2s ease-in-out infinite;z-index:-1}
+.item-grade[data-grade=legendary]{color:#805b15;background:linear-gradient(110deg,#efd28a,#fff3c5,#edcd77);border:1px solid #d3b25d;font-weight:850;letter-spacing:.08em}
+.item-grade[data-grade=legendary]:before{content:'✦ ';color:#a8771e}
+.shop-item[data-grade=legendary] .item-swatch{border-color:#f5d681;background-image:linear-gradient(125deg,transparent 12%,#f9db8dde 13% 20%,transparent 21% 43%,#fff9ddab 44% 53%,transparent 54% 72%,#f4cf7ebf 73% 80%,transparent 81%);filter:drop-shadow(0 0 5px #eac35e90)}
+.shop-item[data-grade=legendary] .item-swatch:before{inset:3px;border:2px solid #f8dda0}
+.shop-item[data-grade=legendary] .item-swatch.clothes:after{content:'✦';color:#b1eee0;text-shadow:0 1px #7c6636,0 0 3px #fff7cd}
+.shop-item[data-grade=legendary] .item-swatch.headband:before{inset:3px 17px;background:#afeadf;transform:rotate(45deg);border:1px solid #ffe7a7;border-radius:1px}
+.shop-item[data-grade=legendary] .item-swatch.ball{background-image:radial-gradient(circle at 30% 20%,#fffef0 0 18%,transparent 20%),linear-gradient(155deg,transparent 40%,#e7bf60 42% 54%,transparent 56%)}
+.avatar-preview-wrap[data-legendary=true]{border-color:#c8ad63;background:radial-gradient(ellipse at 50% 70%,#f8e9b4,#dfe7d6 68%);box-shadow:inset 0 0 0 1px #ffecb85c}
+.world-player[data-legendary=true]:before{content:'';position:absolute;inset:15px -22px -8px;border-radius:50%;background:radial-gradient(ellipse,#f8d47860,transparent 68%);animation:legendary-breathe 4.2s ease-in-out infinite;pointer-events:none;z-index:-1}
+@keyframes legendary-breathe{0%,100%{opacity:.12}50%{opacity:.85}}
+@media(prefers-reduced-motion:reduce){.shop-item[data-grade=legendary]:after,.world-player[data-legendary=true]:before{animation:none;opacity:.4}}

@@ -94,7 +94,7 @@ hub.innerHTML=[
  tr('<section id="panel-stage" role="tabpanel" aria-labelledby="tab-stage"><span id="nodeCode" class="node-code"></span><h3 id="nodeTitle"></h3><p id="nodeRegion"></p><div id="nodeOpponent" class="node-opponent"></div><p id="nodeRule"></p><div class="node-reward" id="nodeReward"></div><p id="nodeGate"></p><button id="careerStart" class="node-start" type="button"></button><p class="world-caption">승리하면 다음 거점 개방 · 11점, 2점 차 승리<br>첫 클리어 보너스 · 패배해도 경험치 획득</p></section>'),
  tr('<section id="panel-stats" role="tabpanel" aria-labelledby="tab-stats" hidden><h3>나의 선수</h3><p id="careerPoints"></p><div id="careerStats" class="career-stats"></div><p class="world-caption">레벨업마다 능력치 포인트 3개. 경기 종료 후 배분할 수 있어요.</p></section>'),
  tr('<section id="panel-skills" role="tabpanel" aria-labelledby="tab-skills" hidden><h3>나만의 플레이 스타일</h3><p id="skillPoints"></p><div id="skillTree"></div><p class="world-caption">레벨업마다 스킬 포인트 1개. 모든 스킬은 패시브이며 최대 3단계입니다.</p></section>'),
- tr('<section id="panel-shop" role="tabpanel" aria-labelledby="tab-shop" hidden><h3>탁구 용품점</h3><p id="shopBalance"></p><div id="equippedList" class="equipped-list"></div><div id="gearBonusSummary" class="gear-bonus-summary"></div><p class="grade-guide">일반 → 고급 → 희귀 → 영웅</p><div id="shopCategories" class="shop-categories"></div><div id="shopItems" class="shop-items"></div><p id="shopNotice" role="status" aria-live="polite"></p><p class="world-caption">구매·장착은 경기 종료 후 가능합니다. 모든 장비 슬롯에 등급과 능력치 옵션이 있으며 장착한 옵션만 합산됩니다. 선수 뒤 시점(2)에서 외형을 확인하세요.</p></section>'),
+ tr('<section id="panel-shop" role="tabpanel" aria-labelledby="tab-shop" hidden><h3>탁구 용품점</h3><p id="shopBalance"></p><div id="equippedList" class="equipped-list"></div><div id="gearBonusSummary" class="gear-bonus-summary"></div><p class="grade-guide">일반 → 고급 → 희귀 → 영웅 → 전설</p><div id="shopCategories" class="shop-categories"></div><div id="shopItems" class="shop-items"></div><p id="shopNotice" role="status" aria-live="polite"></p><p class="world-caption">구매·장착은 경기 종료 후 가능합니다. 모든 장비 슬롯에 등급과 능력치 옵션이 있으며 장착한 옵션만 합산됩니다. 선수 뒤 시점(2)에서 외형을 확인하세요.</p></section>'),
  '<div id="careerResult" class="career-result" role="status" aria-live="polite" hidden></div></aside></div>'
 ].join('');
 el('nodeReward').insertAdjacentHTML('afterend','<section id="stageMedals" class="stage-medals"></section>');
@@ -127,7 +127,7 @@ function renderShop(){
  el('shopBalance').textContent=tr('보유 상금 ')+won(data.money)+(data.activeMatch?tr(' · 경기 종료 후 구매·장착'):'');
  el('equippedList').innerHTML=gearItems().map(i=>'<div><small>'+slots[i.slot]+'</small>'+gradeBadge(i)+'<span>'+i.name+'</span></div>').join('');
  el('gearBonusSummary').textContent=tr('장착 효과 합계 · ')+equipment.describe(gearBonuses());
- el('shopItems').innerHTML=catalog.filter(i=>i.slot===shopCategory&&(!i.bossReward||data.owned.includes(i.id))).map(base=>{
+ el('shopItems').innerHTML=catalog.filter(i=>i.slot===shopCategory&&(!i.bossReward||data.owned.includes(i.id))).sort((a,b)=>equipment.rarities[a.grade].order-equipment.rarities[b.grade].order||a.price-b.price).map(base=>{
   const i=enhancedGear(base.id),owned=data.owned.includes(i.id),equipped=data.equipped[i.slot]===i.id,locked=!!data.activeMatch||equipped||!owned&&data.money<i.price;
   return '<article class="shop-item" data-preview-card="'+i.id+'" data-grade="'+i.grade+'"><button type="button" data-preview="'+i.id+'" class="item-swatch '+i.slot+'" style="--item-color:'+(i.color||'#d8ddce')+';--item-accent:'+i.accent+'" aria-label="'+i.name+tr(' 착장 미리보기"></button><div>')+gradeBadge(i)+'<b>'+i.name+'</b><p class="item-effects">'+equipment.describe(i.bonus)+'</p>'+compareGear(i)+'<strong>'+(i.bossReward?tr('보스 전리품'):!i.price?tr('기본 지급'):won(i.price))+'</strong></div><button type="button" class="item-preview-button" data-preview="'+i.id+tr('">입어보기 · 능력치 비교</button><button type="button" data-item="')+i.id+'" '+(locked?'disabled':'')+'>'+(equipped?tr('장착 중'):owned?tr('장착'):data.money<i.price?tr('상금 부족'):tr('구매·장착'))+'</button>'+(owned&&Object.values(i.bonus).some(v=>v>0)?'<button type="button" class="gear-upgrade-button" data-upgrade="'+i.id+'" '+(data.activeMatch||i.level>=5?'disabled':'')+'>'+(i.level>=5?tr('최대 강화 +5'):tr('강화 미리보기')+' · +'+i.level+' → +'+(i.level+1))+'</button>':'')+'</article>';
  }).join('');
@@ -203,7 +203,7 @@ function drawMap(){
  el('worldPlayer').onclick=()=>{finishMapJourney();closeDrawer(false);avatarEditor.open(!data.customized);};
 }
 function updateMapPlayer(){
- const wear=appearance(),look=profile(),player=el('worldPlayer');if(!player)return;
+ const wear=appearance(),look=profile(),player=el('worldPlayer');if(!player)return;player.dataset.legendary=String(Object.values(wear).some(item=>item.grade==='legendary'));
  player.style.setProperty('--map-shirt',wear.clothes.color);player.style.setProperty('--map-trim',wear.clothes.accent);player.style.setProperty('--map-shoes',wear.shoes.color);player.style.setProperty('--map-racket',wear.racket.color);player.style.setProperty('--map-band',wear.headband.color||'transparent');
  player.querySelectorAll('[fill="#ddb18d"],[fill="#d7a680"]').forEach(e=>e.setAttribute('fill','var(--map-skin)'));
  player.querySelectorAll('[stroke="#ddb18d"],[stroke="#d7a883"]').forEach(e=>e.setAttribute('stroke','var(--map-skin)'));

@@ -3549,5 +3549,60 @@ window.ClubLocales={
     "Controls",
     "操作ガイド",
     "操作说明"
+  ],
+  "전설": [
+    "Legendary",
+    "伝説",
+    "传说"
+  ],
+  "천상의 제왕 유니폼": [
+    "Celestial Sovereign Jersey",
+    "天空の覇者ユニフォーム",
+    "天穹帝王战衣"
+  ],
+  "여명의 왕관 밴드": [
+    "Dawn Crown Headband",
+    "暁の王冠バンド",
+    "曙光王冠头带"
+  ],
+  "별빛 비상 슈즈": [
+    "Starlight Flight Shoes",
+    "星光の飛翔シューズ",
+    "星光飞翼战靴"
+  ],
+  "오로라 소버린": [
+    "Aurora Sovereign",
+    "オーロラ・ソブリン",
+    "极光君主"
+  ],
+  "영원의 별 탁구공": [
+    "Eternal Star Ball",
+    "永遠の星ボール",
+    "永恒星辰乒乓球"
+  ],
+  "금빛 문장과 은은한 오라를 두른 전설 선수복": [
+    "Legendary jersey with a golden crest and a soft aura",
+    "金の紋章と淡いオーラをまとった伝説のウェア",
+    "金色纹章与柔和光环环绕的传说战衣"
+  ],
+  "보석 장식과 여명의 빛이 흐르는 전설 밴드": [
+    "Legendary headband with jewels and the glow of dawn",
+    "宝石と暁の光を宿す伝説のバンド",
+    "镶嵌宝石、流转曙光的传说头带"
+  ],
+  "금빛 날개 장식과 별빛 오라의 전설 슈즈": [
+    "Legendary shoes with golden wings and a starlight aura",
+    "金の翼と星光のオーラをまとう伝説のシューズ",
+    "金翼装饰与星光环绕的传说战靴"
+  ],
+  "금빛 프레임과 오로라를 품은 전설 블레이드": [
+    "Legendary blade with a golden frame and an aurora glow",
+    "金のフレームとオーロラを宿す伝説のブレード",
+    "金色边框与极光交织的传说球拍"
+  ],
+  "금빛 띠와 부드러운 광채를 품은 전설 탁구공": [
+    "Legendary ball with golden bands and a gentle glow",
+    "金の帯と柔らかな輝きを宿す伝説のボール",
+    "金色纹带与柔和光辉交映的传说球"
   ]
 };

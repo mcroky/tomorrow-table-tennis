@@ -63,3 +63,9 @@ J/K/L 코스, Z 드라이브/X 커트, C 짧은 서브/V 깊은 서브, 1~4 시�
 현재 캠페인 기록은 클라이언트에서 계산하므로 이 랭킹은 캐주얼 진행도 비교용입니다. 공정한 경쟁용 보상/온라인 PvP에는 서버 경기 판정이 추가로 필요합니다.
 DB 접근 정책은 [Supabase RLS](https://supabase.com/docs/guides/database/postgres/row-level-security), 자동 갱신은 [트리거](https://supabase.com/docs/guides/database/postgres/triggers)를 사용합니다.
 운영 권고: Advisor의 [유출 비밀번호 차단](https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection)은 현재 비활성 상태입니다.
+
+## 전설 장비와 등급별 외형
+일반 → 고급 → 희귀 → 영웅 → 전설 순으로 배색 패널, 금속 테두리, 문장과 보석 장식이 늘어납니다.
+전설 라인은 유니폼 12,500원, 밴드 8,500원, 신발 14,500원, 라켓 18,500원, 공 6,500원입니다.
+전설 오라는 약 4.2초 주기로 부드럽게 맥동하며 경기와 구매 전 착장 미리보기에도 표시됩니다.
+오라는 별도 소규모 렌더 패스로 표시하고, 미리보기의 고정 모델은 GPU 버퍼를 재사용합니다. 동작 줄이기 설정에서는 맥동을 멈춥니다.
