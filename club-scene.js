@@ -1620,7 +1620,7 @@ function advance(realDt){
 
 let dragging=false,pointerX=0,pointerY=0,travel=0;
 canvas.addEventListener('pointerdown',e=>{dragging=true;pointerX=e.clientX;pointerY=e.clientY;travel=0;canvas.setPointerCapture(e.pointerId)});
-canvas.addEventListener('pointermove',e=>{if(!dragging)return;const dx=e.clientX-pointerX,dy=e.clientY-pointerY;travel+=Math.abs(dx)+Math.abs(dy);pointerX=e.clientX;pointerY=e.clientY;state.yaw-=dx*.006;state.pitch=clamp(state.pitch+dy*.004,state.view==='pov'?-.1:.12,state.view==='pov'?.8:1.43)});
+canvas.addEventListener('pointermove',e=>{if(!dragging)return;const dx=e.clientX-pointerX,dy=e.clientY-pointerY;travel+=Math.abs(dx)+Math.abs(dy);pointerX=e.clientX;pointerY=e.clientY;state.yaw-=dx*.006;state.pitch=clamp(state.pitch+dy*.004,state.view==='pov'?-.1:state.view==='follow'?.54:.12,state.view==='pov'?.8:1.43)});
 canvas.addEventListener('pointerup',()=>{dragging=false;if(travel<5)swing()});canvas.addEventListener('pointercancel',()=>dragging=false);
 canvas.addEventListener('wheel',e=>{e.preventDefault();if(state.view==='pov')state.povFov=clamp(state.povFov+e.deltaY*.02,36,72);else state.distance=clamp(state.distance+e.deltaY*.003,state.view==='follow'?5.5:2.8,state.view==='follow'?7.6:5.5)},{passive:false});
 document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>setView(b.dataset.view));
