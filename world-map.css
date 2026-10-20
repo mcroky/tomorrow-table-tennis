@@ -317,3 +317,54 @@ html[lang=zh-CN]{font-family:system-ui,'Microsoft YaHei','PingFang SC',sans-seri
 #arena[data-venue-mood="night"] .location{color:#f0efdd;text-shadow:0 1px 5px #152a40}#arena[data-venue-mood="night"] .location small{color:#d0e0dc}#arena[data-venue-mood="night"] .stage{border-color:#7a9299;background:#43566d}#arena[data-venue-mood="night"] .scoreboard{background:#182d40ed;border-color:#c9bd8d66}
 
 .shop-item .gear-upgrade-button{grid-column:1 / -1;border-color:#c9ad69;background:#f4ead0;color:#80653b;font-size:11px;padding:8px;border-radius:8px}.gear-upgrade-button:disabled{opacity:.5}.upgrade-dialog{width:min(540px,calc(100vw - 28px));max-height:90vh;overflow:auto;border:1px solid #b7c4ab;border-radius:18px;padding:24px;background:#faf7e9;color:#365044;box-shadow:0 20px 80px #10291b55}.upgrade-dialog::backdrop{background:#20372d80;backdrop-filter:blur(3px)}.upgrade-dialog>small{color:#9b7b43;letter-spacing:2px;font-size:10px}.upgrade-dialog h2{font-size:20px;margin:8px 0 15px}.upgrade-dialog table{width:100%;border-collapse:collapse;font-size:12px}.upgrade-dialog th,.upgrade-dialog td{text-align:left;padding:10px 6px;border-bottom:1px solid #d8ddc9}.upgrade-dialog td:last-child{color:#568348;font-weight:700}.upgrade-dialog p{font-size:12px;line-height:1.7}.upgrade-rule{color:#7c846e}.upgrade-equipped{padding:10px;background:#e9efdf;border-radius:8px}.upgrade-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:20px}.upgrade-actions button{border:1px solid #bcc9ad;border-radius:8px;padding:10px 16px;background:#edf1e3;color:#426143}.upgrade-actions button:last-child{background:#496f50;color:#fff9df;border-color:#496f50}.upgrade-actions button:disabled{opacity:.45;cursor:default}
+/* Readable chapter view: spend the window on the map rather than stacked headers. */
+body[data-surface=map] .shell{padding:10px 20px 12px}
+body[data-surface=map] header{margin-bottom:6px;min-height:34px}
+body[data-surface=map] .mark{width:32px;height:32px;font-size:16px}
+body[data-surface=map] .eyebrow{display:none}
+body[data-surface=map] h1{font-size:18px}
+body[data-surface=map] header .club{padding:5px 10px;font-size:11px}
+body[data-surface=map] .account-bar{margin:6px 0;padding:4px 10px;min-height:34px;gap:8px;font-size:11px}
+body[data-surface=map] .account-bar button{padding:4px 8px}
+body[data-surface=map] .career{padding:8px 12px;margin-bottom:8px}
+body[data-surface=map] .career-head{gap:10px}
+body[data-surface=map] .career-head strong{font-size:19px}
+body[data-surface=map] .career-head .career-nav button{padding:7px 11px}
+body[data-surface=map] #careerSave[data-ok=true]{display:none}
+body[data-surface=map] .world-hub{margin-top:10px}
+body[data-surface=map] .world-title{align-items:center;margin-bottom:9px;gap:8px}
+body[data-surface=map] .world-title>div>small{display:none}
+body[data-surface=map] .world-title h2{font-size:23px;line-height:1.2}
+body[data-surface=map] .world-title p{font-size:11px}
+.region-nav{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:6px;padding:0 0 10px;overflow-x:auto;scrollbar-width:thin;scrollbar-color:#a6bca5 transparent}
+.region-nav button{display:flex;align-items:center;gap:7px;min-width:0;text-align:left;border:1px solid #c6d3c0;border-radius:11px;padding:9px 8px;background:#f7f6e9;color:#536c55;transition:background .15s,border-color .15s}
+.region-nav .chapter-number{font-size:16px;font-weight:800;color:#91a28a;font-variant-numeric:tabular-nums}
+.region-nav button>span:last-child{min-width:0}
+.region-nav b{display:block;font-size:11px;white-space:nowrap}
+.region-nav small{display:block;margin-top:2px;font-size:10px;line-height:1.2;color:#81917a}
+.region-nav button[data-locked=true]{background:#e6e9e0;color:#7f8a79}
+.region-nav button[aria-pressed=true]{background:#355e48;border-color:#355e48;color:#fff9dc;box-shadow:0 3px 8px #294c3820}
+.region-nav button[aria-pressed=true] .chapter-number{color:#f1d395}
+.region-nav button[aria-pressed=true] small{color:#d0ddc5}
+.world-tools #mapFit[aria-pressed=true]{background:#355e48;color:#fff9dc;border-color:#355e48}
+.world-viewport{background:#c3ded5}
+@media(max-width:1050px){.region-nav{grid-template-columns:repeat(8,minmax(114px,1fr))}.region-nav button{padding:7px 9px}.region-nav .chapter-number{font-size:14px}}
+@media(max-width:760px){
+ body[data-surface=map] .shell{padding:8px}
+ body[data-surface=map] header .club{display:none}
+ body[data-surface=map] .account-bar #cloudStatus{flex-basis:auto;order:0;font-size:10px}
+ body[data-surface=map] .account-bar #accountName{max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+ body[data-surface=map] .account-bar{gap:5px;font-size:10px;padding:4px 6px}
+ body[data-surface=map] .account-bar button{font-size:10px;padding:4px 6px}
+ body[data-surface=map] .career{padding:7px 9px}
+ body[data-surface=map] .career-head{gap:6px}
+ body[data-surface=map] .career-head>div:first-child{width:auto}
+ body[data-surface=map] .career-xp{min-width:80px;max-width:130px}
+ body[data-surface=map] .career-head .career-nav button{padding:6px 3px;min-height:32px}
+ body[data-surface=map] .world-title{gap:6px;align-items:flex-start}
+ body[data-surface=map] .world-title h2{font-size:20px}
+ body[data-surface=map] .world-title p{font-size:10px}
+ .region-nav{gap:5px;padding-bottom:8px}.region-nav button{min-height:48px}
+}
+.world-viewport:not([data-overview=true]) .world-node small{font-size:var(--node-label-size,14px)}
+.world-viewport:not([data-overview=true]) .world-node b{font-size:var(--node-code-size,16px)}

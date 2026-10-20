@@ -42,7 +42,7 @@ const emptyTraining=()=>({sweet:0,placement:0,lastSide:0,finish:0,claimed:[]});
 
 const int=(v,lo,hi)=>Number.isFinite(v)?Math.max(lo,Math.min(hi,Math.floor(v))):lo,need=l=>80+(l-1)*45;
 const fresh=()=>({version:3,profile:window.ClubAvatar.defaults(),customized:false,level:1,xp:0,money:0,owned:Object.values(baseGear()),equipped:baseGear(),upgrades:{},stats:{power:0,speed:0,defense:0,attack:0,control:0},skills:Object.fromEntries(skills.map(s=>[s.id,0])),wins:0,losses:0,tierWins:regions.map(()=>0),rivalWins:regions.map(()=>0),stageMedals:Array(40).fill(0),training:emptyTraining(),cleared:[],mapNode:0,journey:null,activeMatch:null,lastResult:null});
-let data=fresh(),storageOK=true,saveMessage=tr('자동 저장 준비'),startHandler=null,mapHandler=null,practiceHandler=null,suspendHandler=null,forfeitResume=null,selected=0,tab='stage',zoom=.7,mapDrag=null,fitMode=true,drawerOpen=false,drawerOpener=null,pendingResult=false,journeyFrame=0,journeyToken=0,journeyActive=false,playerPoint=null,arrivalTimer=0;
+let data=fresh(),storageOK=true,saveMessage=tr('자동 저장 준비'),startHandler=null,mapHandler=null,practiceHandler=null,suspendHandler=null,forfeitResume=null,selected=0,tab='stage',zoom=.7,mapDrag=null,fitMode=false,focusTier=0,drawerOpen=false,drawerOpener=null,pendingResult=false,journeyFrame=0,journeyToken=0,journeyActive=false,playerPoint=null,arrivalTimer=0;
 function frontier(d=data){let i=0;while(i<nodes.length&&d.cleared.includes(i))i++;return Math.min(i,39);}
 function unlocked(id,d=data){return id===0||d.cleared.includes(id-1);}
 function normalize(raw){
@@ -88,6 +88,7 @@ el('campaignContinue').insertAdjacentHTML('afterend','<button id="lastMatchRevie
 root.insertAdjacentHTML('beforeend',tr("<dialog id=\"forfeitDialog\" class=\"forfeit-dialog\" aria-labelledby=\"forfeitTitle\"><small>FORFEIT MATCH</small><h2 id=\"forfeitTitle\">경기를 기권할까요?</h2><p>기권하면 패배로 기록되며, 경험치가 차감됩니다. 경기 보상은 받을 수 없어요.</p><strong id=\"forfeitPenalty\"></strong><p class=\"forfeit-note\">레벨업 필요 경험치의 20% 차감 (보유 경험치 한도) · 경험치는 0 아래로 내려가지 않으며 레벨과 투자한 능력치는 유지됩니다.</p><div><button type=\"button\" id=\"forfeitCancel\" autofocus>경기 계속하기</button><button type=\"button\" id=\"forfeitConfirm\">기권하고 나가기</button></div></dialog>"));
 hub.innerHTML=[
  tr('<div class="world-title"><div><small>동네의 한 게임이, 세계의 무대까지.</small><h2>나의 탁구 여정</h2><p id="worldProgress"></p></div><div class="world-tools"><button id="mapFit" type="button">전체 보기</button><button id="mapPanel" type="button" aria-controls="campaignDrawer" aria-expanded="false">선수 정보 ☰</button><button id="mapCenter" type="button">현재 위치</button><button id="mapOut" type="button" aria-label="지도 축소">−</button><output id="mapZoom"></output><button id="mapIn" type="button" aria-label="지도 확대">+</button></div></div>'),
+ '<nav id="regionNav" class="region-nav" aria-label="'+tr('전체 보기')+'">'+regions.map((name,i)=>'<button type="button" data-region="'+i+'" aria-pressed="false"><span class="chapter-number">'+String(i+1).padStart(2,'0')+'</span><span><b>'+name+'</b><small id="chapterProgress-'+i+'"></small></span></button>').join('')+'</nav>',
  tr('<div class="campaign-layout"><div class="world-viewport" id="worldViewport" tabindex="0" aria-label="40개 스테이지 월드맵. 스크롤하거나 드래그해서 탐색하세요."><div id="worldSpace"><div id="worldBoard"></div></div></div>'),
  tr('<button type="button" class="drawer-backdrop" id="drawerBackdrop" aria-label="정보창 닫기" tabindex="-1" aria-hidden="true"></button><aside id="campaignDrawer" class="campaign-aside" role="dialog" aria-modal="true" aria-labelledby="drawerTitle" aria-hidden="true" inert><div class="drawer-header"><b id="drawerTitle">선수 정보</b><button id="drawerClose" type="button" aria-label="정보창 닫기">닫기 ×</button></div><div class="campaign-tabs" role="tablist" aria-label="캠페인 메뉴"><button id="tab-stage" role="tab" aria-controls="panel-stage" data-tab="stage">스테이지</button><button id="tab-stats" role="tab" aria-controls="panel-stats" data-tab="stats">능력치</button><button id="tab-skills" role="tab" aria-controls="panel-skills" data-tab="skills">스킬 트리</button><button id="tab-shop" role="tab" aria-controls="panel-shop" data-tab="shop">상점</button></div>'),
  tr('<section id="panel-stage" role="tabpanel" aria-labelledby="tab-stage"><span id="nodeCode" class="node-code"></span><h3 id="nodeTitle"></h3><p id="nodeRegion"></p><div id="nodeOpponent" class="node-opponent"></div><p id="nodeRule"></p><div class="node-reward" id="nodeReward"></div><p id="nodeGate"></p><button id="careerStart" class="node-start" type="button"></button><p class="world-caption">승리하면 다음 거점 개방 · 11점, 2점 차 승리<br>첫 클리어 보너스 · 패배해도 경험치 획득</p></section>'),
@@ -196,7 +197,7 @@ function drawMap(){
  const ocean='<defs><pattern id="seaPattern" width="95" height="70" patternUnits="userSpaceOnUse"><path d="M12 35q10 7 20 0m27-21q8 5 16 0" fill="none" stroke="#f5fff2" stroke-width="2" opacity=".38"/></pattern><linearGradient id="seaTint" x2="0" y2="1"><stop stop-color="#b9d8d6"/><stop offset="1" stop-color="#cce3d9"/></linearGradient></defs><rect width="'+W+'" height="'+H+'" fill="url(#seaTint)"/><rect width="'+W+'" height="'+H+'" fill="url(#seaPattern)"/><path d="M310 525Q680 475 1000 535T1640 515" fill="none" stroke="#f1f8df" stroke-width="2" stroke-dasharray="5 12" opacity=".7"/><g transform="translate(950 525)" text-anchor="middle"><rect x="-200" y="-25" width="400" height="50" rx="25" fill="#f9f4df" stroke="#9dbab0" stroke-width="2"/><text y="6" fill="#567c74" font-size="18" font-weight="700" letter-spacing="5">ROAD TO OLYMPICS</text></g><g transform="translate(1810 70)" fill="none" stroke="#6b968d" stroke-width="2" opacity=".65"><circle r="25"/><path d="M0-35V35M-35 0H35M0-19L8 8 0 3-8 8Z" fill="#f8f4df"/><text y="-43" text-anchor="middle" fill="#62887f" stroke="none" font-size="13">N</text></g>';
  const routes=nodes.slice(1).map((n,i)=>{const a=nodes[i],mid=(a.x+n.x)/2;return '<path id="route-'+i+'" d="M'+a.x+' '+a.y+' C'+mid+' '+a.y+' '+mid+' '+n.y+' '+n.x+' '+n.y+'" fill="none" stroke="#b1bba0" stroke-width="6" stroke-linecap="round" stroke-dasharray="3 12"/>';}).join('');
  el('worldBoard').innerHTML='<svg class="world-art" width="'+W+'" height="'+H+'" viewBox="0 0 '+W+' '+H+'" aria-hidden="true">'+ocean+land+routes+'</svg>'+nodes.map(n=>'<button type="button" class="world-node'+(n.boss?' boss':'')+'" data-node="'+n.id+'" style="left:'+n.x+'px;top:'+n.y+'px"><span class="node-medal" aria-hidden="true"></span><span class="node-stars" aria-hidden="true"></span><b>'+n.code+'</b><small>'+n.name+'</small></button>').join('');
- el('worldBoard').querySelectorAll('[data-node]').forEach(button=>button.onclick=()=>{finishMapJourney();selected=Number(button.dataset.node);render();openDrawer('stage');});
+ el('worldBoard').querySelectorAll('[data-node]').forEach(button=>button.onclick=()=>{finishMapJourney();selected=Number(button.dataset.node);render();if(fitMode){focusRegion(nodes[selected].tier);return;}openDrawer('stage');});
  el('worldBoard').insertAdjacentHTML('beforeend',tr('<button type="button" id="worldPlayer" class="world-player" aria-label="내 선수 정보"><span class="player-tag" id="worldPlayerTag"></span><span class="map-avatar"><svg class="map-figure" viewBox="0 0 72 100" aria-hidden="true"><ellipse cx="36" cy="94" rx="21" ry="5" fill="#304a3830"/><g class="map-leg leg-left"><path d="M28 67L26 87" stroke="#d7a883" stroke-width="8" stroke-linecap="round"/><path d="M23 88h11" stroke="var(--map-shoes)" stroke-width="9" stroke-linecap="round"/></g><g class="map-leg leg-right"><path d="M43 67L46 87" stroke="#d7a883" stroke-width="8" stroke-linecap="round"/><path d="M43 88h11" stroke="var(--map-shoes)" stroke-width="9" stroke-linecap="round"/></g><g class="map-arm arm-left"><path d="M23 43L16 62" stroke="#ddb18d" stroke-width="7" stroke-linecap="round"/></g><g class="map-arm arm-right"><path d="M49 43L56 61" stroke="#ddb18d" stroke-width="7" stroke-linecap="round"/><path d="M57 61l4 11" stroke="#a98050" stroke-width="4"/><ellipse cx="62" cy="76" rx="7" ry="9" fill="var(--map-racket)" stroke="#bf9a69" stroke-width="2"/></g><path d="M25 37L47 37 51 62Q36 70 21 62Z" fill="var(--map-shirt)" stroke="#ffffff80" stroke-width="1.5"/><path d="M23 62h26l-2 13H25Z" fill="#344a43"/><text x="36" y="57" text-anchor="middle" fill="var(--map-trim)" font-size="16" font-weight="800">7</text><rect x="31" y="30" width="10" height="11" rx="4" fill="#d7a680"/><ellipse cx="36" cy="22" rx="15" ry="17" fill="#ddb18d"/><path d="M21 23Q17 3 35 3Q54 1 52 23L45 12 28 16Z" fill="#3d3832"/><path class="map-headband" d="M22 17Q36 13 50 17" fill="none" stroke="var(--map-band)" stroke-width="5"/><circle cx="30" cy="24" r="1.6" fill="#344238"/><circle cx="42" cy="24" r="1.6" fill="#344238"/><path d="M32 31q4 3 8 0" fill="none" stroke="#976b52" stroke-width="1.5"/></svg></span></button>'));
  el('worldViewport').insertAdjacentHTML('afterend',tr('<div id="newRegionBanner" class="new-region-banner" role="status"><small>NEW REGION UNLOCKED</small><strong id="newRegionName"></strong><span>새로운 무대가 열렸어요!</span><i aria-hidden="true">✦</i></div><div id="mapJourneyNotice" class="map-journey-notice" role="status" aria-live="polite"></div>'));
  el('worldPlayer').onclick=()=>{finishMapJourney();closeDrawer(false);avatarEditor.open(!data.customized);};
@@ -217,6 +218,7 @@ function placeMapPlayer(point){
  const player=el('worldPlayer');if(!player||!point)return;
  if(playerPoint&&Math.abs(point.x-playerPoint.x)>.03)player.style.setProperty('--map-facing',point.x<playerPoint.x?-1:1);
  player.style.left=point.x+'px';player.style.top=(point.y-24)+'px';playerPoint={x:point.x,y:point.y};
+ if(journeyActive&&!fitMode){const v=el('worldViewport'),x=point.x*zoom,y=point.y*zoom,left=v.scrollLeft,top=v.scrollTop;v.scrollLeft=Math.max(x-v.clientWidth*.75,Math.min(left,x-v.clientWidth*.25));v.scrollTop=Math.max(y-v.clientHeight*.75,Math.min(top,y-v.clientHeight*.35));}
 }
 function finishMapJourney(){
  journeyToken++;clearTimeout(arrivalTimer);hub.querySelectorAll('.player-arrival').forEach(node=>node.classList.remove('player-arrival'));if(journeyFrame)cancelAnimationFrame(journeyFrame);journeyFrame=0;journeyActive=false;
@@ -239,7 +241,7 @@ function playMapJourney(done=()=>{}){
   const elapsed=time-started-delay,u=duration?Math.max(0,Math.min(1,elapsed/duration)):1,e=u*u*(3-2*u);
   if(elapsed>=0){player.classList.remove('celebrating');el('newRegionBanner').classList.remove('visible');hub.classList.remove('region-unlock');if(!reduced)player.classList.add('walking');}placeMapPlayer(path.getPointAtLength(length*e));trail.setAttribute('stroke-dashoffset',String(length*(1-e)));
   if(u<1){journeyFrame=requestAnimationFrame(step);return;}
-  journeyFrame=0;journeyActive=false;el('region-'+nodes[trip.to].tier).classList.remove('region-unlocking');player.classList.remove('walking');trail.remove();data.mapNode=trip.to;data.journey=null;save();
+  journeyFrame=0;journeyActive=false;el('region-'+nodes[trip.to].tier).classList.remove('region-unlocking');player.classList.remove('walking');trail.remove();data.mapNode=trip.to;data.journey=null;save();if(!fitMode)focusRegion(nodes[trip.to].tier);
   const destination=el('worldBoard').querySelector('[data-node="'+trip.to+'"]');destination.classList.add('player-arrival');player.classList.add('arrived');notice.textContent=nodes[trip.to].code+' '+nodes[trip.to].name+tr(' 도착!');
   clearTimeout(arrivalTimer);arrivalTimer=setTimeout(()=>{destination.classList.remove('player-arrival');player.classList.remove('arrived');if(token!==journeyToken)return;notice.classList.remove('visible');if(!hub.hidden&&!drawerOpen)done();},reduced?100:700);
  };journeyFrame=requestAnimationFrame(step);
@@ -252,7 +254,7 @@ function render(){
  el('careerWallet').textContent=tr('상금 ')+won(data.money);renderShop();
  el('careerLevel').textContent='Lv. '+data.level;el('careerRank').textContent=data.cleared.includes(39)?tr('올림픽 챔피언'):regions[Math.floor(frontier()/5)]+tr(' 도전자');
  el('careerXpText').textContent=data.level>=99?tr('최고 레벨'):data.xp+' / '+need(data.level)+' XP';el('careerXp').max=need(data.level);el('careerXp').value=data.level>=99?need(data.level):data.xp;
- el('worldProgress').textContent=data.cleared.length+tr(' / 40 거점 클리어 · ')+tr('별 ')+data.stageMedals.reduce((sum,mask)=>sum+countStars(mask),0)+' / 120 · '+data.wins+tr('승 ')+data.losses+tr('패 · 능력치 ')+p+tr('P / 스킬 ')+sp+'SP';
+ updateRegionNav();el('worldProgress').textContent=data.cleared.length+tr(' / 40 거점 클리어 · ')+tr('별 ')+data.stageMedals.reduce((sum,mask)=>sum+countStars(mask),0)+' / 120 · '+data.wins+tr('승 ')+data.losses+tr('패 · 능력치 ')+p+tr('P / 스킬 ')+sp+'SP';
  el('campaignContinue').textContent=m?tr('진행 중 경기 이어하기'):data.cleared.includes(39)?tr('금메달 방어전'):tr('다음 거점 도전');el('campaignContinue').disabled=!startHandler||!!m&&hub.hidden;
  for(const id of ['worldHome','practiceHome','shopHome']){el(id).disabled=!!m;el(id).title=m?tr('경기 종료 또는 기권 후 이동할 수 있어요.'):'';}el('forfeitMatch').hidden=!m;
  el('nodeCode').textContent=n.code+' · '+(n.boss?tr('BOSS STAGE'):tr('CHALLENGE'));
@@ -364,7 +366,7 @@ function showMap(){
  if(data.activeMatch)return false;
  if(mapHandler)mapHandler();hub.hidden=false;arena.hidden=true;document.body.dataset.surface='map';render();
  const result=pendingResult;pendingResult=false;closeDrawer(false);requestAnimationFrame(()=>{
-  if(hub.hidden)return;fitMap();const complete=()=>{if(result&&!hub.hidden&&!drawerOpen)openDrawer(tab);};
+  if(hub.hidden)return;focusRegion(nodes[data.journey?.from??data.mapNode].tier);const complete=()=>{if(result&&!hub.hidden&&!drawerOpen)openDrawer(tab);};
   if(data.journey){if(!journeyActive)playMapJourney(complete);}else complete();
  });
 }
@@ -399,8 +401,16 @@ function recordPoint(score){
  data.activeMatch=null;pendingResult=true;selected=won?frontier():n.id;if(data.level>oldLevel)setTab('skills');else setTab('stage');save();return {...data.lastResult};
 }
 function sizeViewport(){const v=el('worldViewport');if(hub.hidden)return;v.style.height=Math.max(280,window.innerHeight-v.getBoundingClientRect().top-26)+'px';}
-function resizeMap(){const v=el('worldViewport');el('worldBoard').style.transform='scale('+zoom+')';el('worldSpace').style.width=W*zoom+'px';el('worldSpace').style.height=H*zoom+'px';el('worldSpace').style.marginTop=Math.max(0,(v.clientHeight-H*zoom-4)/2)+'px';v.dataset.overview=String(zoom<.4);el('mapZoom').textContent=Math.round(zoom*100)+'%';el('worldPlayer')?.style.setProperty('--player-scale',Math.max(.8,Math.min(2.8,.65/zoom)));}
-function fitMap(){if(hub.hidden)return;fitMode=true;sizeViewport();const v=el('worldViewport');zoom=Math.max(.08,Math.min((v.clientWidth-12)/W,(v.clientHeight-12)/H,1));resizeMap();v.scrollTo({left:0,top:0,behavior:'instant'});}
+function resizeMap(){const v=el('worldViewport');el('worldBoard').style.transform='scale('+zoom+')';el('worldSpace').style.width=W*zoom+'px';el('worldSpace').style.height=H*zoom+'px';el('worldSpace').style.marginTop=Math.max(0,(v.clientHeight-H*zoom-4)/2)+'px';v.dataset.overview=String(zoom<.4);el('mapZoom').textContent=Math.round(zoom*100)+'%';v.style.setProperty('--node-label-size',Math.max(14,12/zoom)+'px');v.style.setProperty('--node-code-size',Math.max(16,11/zoom)+'px');el('worldPlayer')?.style.setProperty('--player-scale',Math.max(.8,Math.min(2.8,.65/zoom)));}
+function fitMap(){if(hub.hidden)return;fitMode=true;focusTier=null;updateRegionNav();sizeViewport();const v=el('worldViewport');zoom=Math.max(.08,Math.min((v.clientWidth-12)/W,(v.clientHeight-12)/H,1));resizeMap();v.scrollTo({left:0,top:0,behavior:'instant'});}
+function updateRegionNav(){
+ el('mapFit').setAttribute('aria-pressed',String(fitMode));
+ hub.querySelectorAll('[data-region]').forEach(button=>{const tier=Number(button.dataset.region);button.setAttribute('aria-pressed',String(!fitMode&&focusTier===tier));button.dataset.locked=String(tier>Math.floor(frontier()/5));el('chapterProgress-'+tier).textContent=(tier>Math.floor(frontier()/5)?'🔒 · ':'')+data.cleared.filter(id=>nodes[id]?.tier===tier).length+' / 5';});
+}
+function focusRegion(tier){
+ if(hub.hidden)return;focusTier=tier;fitMode=false;sizeViewport();const v=el('worldViewport');zoom=Math.max(.45,Math.min((v.clientWidth-36)/460,(v.clientHeight-24)/360,1.2));resizeMap();
+ const row=tier<4?0:1,col=row?7-tier:tier;v.scrollTo({left:(250+col*450)*zoom-v.clientWidth/2,top:(280+row*500)*zoom-v.clientHeight/2,behavior:'instant'});updateRegionNav();const nav=el('regionNav'),button=nav.querySelector('[data-region="'+tier+'"]');nav.scrollTo({left:button.offsetLeft-nav.offsetLeft-(nav.clientWidth-button.offsetWidth)/2,behavior:'instant'});
+}
 function centerMap(usePlayer=false){const n=usePlayer&&playerPoint?playerPoint:nodes[data.activeMatch?.node??selected],v=el('worldViewport');v.scrollTo({left:n.x*zoom-v.clientWidth/2,top:n.y*zoom-v.clientHeight/2,behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'});}
 function openDrawer(next=tab){
  setTab(next);if(!drawerOpen){drawerOpener=document.activeElement;el('campaignDrawer').getBoundingClientRect();}drawerOpen=true;
@@ -418,8 +428,8 @@ document.addEventListener('keydown',event=>{
  if(event.key==='Escape'){event.preventDefault();closeDrawer();return;}
  if(event.key==='Tab'){const focusable=[...el('campaignDrawer').querySelectorAll('button:not(:disabled),[tabindex="0"],select,input,a[href]')].filter(e=>e.getClientRects().length),first=focusable[0],last=focusable[focusable.length-1];if(!first)return;if(!el('campaignDrawer').contains(document.activeElement)){event.preventDefault();(event.shiftKey?last:first).focus();}else if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus();}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus();}}
 });
-window.addEventListener('resize',()=>{if(hub.hidden)return;sizeViewport();if(fitMode)fitMap();else{resizeMap();centerMap();}});
-drawMap();setTab('stage');
+window.addEventListener('resize',()=>{if(hub.hidden)return;sizeViewport();if(fitMode)fitMap();else if(focusTier!==null)focusRegion(focusTier);else{resizeMap();centerMap();}});
+drawMap();setTab('stage');hub.querySelectorAll('[data-region]').forEach(button=>button.onclick=()=>{finishMapJourney();focusRegion(Number(button.dataset.region));});
 hub.querySelectorAll('[data-tab]').forEach(button=>{button.onclick=()=>setTab(button.dataset.tab);button.onkeydown=e=>{if(!['ArrowLeft','ArrowRight'].includes(e.key))return;e.preventDefault();const tabs=['stage','stats','skills','shop'],next=tabs[(tabs.indexOf(tab)+(e.key==='ArrowRight'?1:3))%4];setTab(next);el('tab-'+next).focus();};});
 hub.querySelectorAll('[data-stat]').forEach(button=>button.onclick=()=>{if(data.activeMatch||points()<=0)return;data.stats[button.dataset.stat]++;save();});
 hub.querySelectorAll('[data-skill]').forEach(button=>button.onclick=()=>{const s=skills.find(s=>s.id===button.dataset.skill);if(data.activeMatch||skillPoints()<=0||data.level<s.level||data.skills[s.id]>=3||s.requires&&data.skills[s.requires]<2)return;data.skills[s.id]++;save();});
@@ -430,11 +440,11 @@ el('practiceHome').onclick=()=>{if(!practiceHandler||data.activeMatch)return;ent
 el('forfeitMatch').onclick=requestForfeit;el('forfeitCancel').onclick=()=>el('forfeitDialog').close();el('forfeitConfirm').onclick=forfeitMatch;
 el('forfeitDialog').addEventListener('close',()=>{const resume=forfeitResume;forfeitResume=null;if(resume&&data.activeMatch)resume();});
 window.addEventListener('beforeunload',event=>{if(data.activeMatch){event.preventDefault();event.returnValue='';}});
-el('mapCenter').onclick=()=>{selected=data.activeMatch?.node??data.mapNode;render();fitMode=false;zoom=Math.max(zoom,.65);resizeMap();centerMap(true);};
-function changeZoom(delta){fitMode=false;zoom=Math.max(.1,Math.min(1.2,Math.round((zoom+delta)*100)/100));resizeMap();centerMap();}
+el('mapCenter').onclick=()=>{selected=data.activeMatch?.node??data.mapNode;render();focusRegion(nodes[data.mapNode].tier);};
+function changeZoom(delta){fitMode=false;focusTier=null;updateRegionNav();zoom=Math.max(.1,Math.min(1.2,Math.round((zoom+delta)*100)/100));resizeMap();centerMap();}
 el('mapOut').onclick=()=>changeZoom(-.1);el('mapIn').onclick=()=>changeZoom(.1);
 const viewport=el('worldViewport');
-viewport.onpointerdown=e=>{if(e.button!==0||e.target.closest('button'))return;mapDrag={x:e.clientX,y:e.clientY,left:viewport.scrollLeft,top:viewport.scrollTop};viewport.setPointerCapture(e.pointerId);viewport.classList.add('dragging');};
+viewport.onpointerdown=e=>{if(e.button!==0||e.target.closest('button'))return;focusTier=null;updateRegionNav();mapDrag={x:e.clientX,y:e.clientY,left:viewport.scrollLeft,top:viewport.scrollTop};viewport.setPointerCapture(e.pointerId);viewport.classList.add('dragging');};
 viewport.onpointermove=e=>{if(!mapDrag)return;viewport.scrollLeft=mapDrag.left-(e.clientX-mapDrag.x);viewport.scrollTop=mapDrag.top-(e.clientY-mapDrag.y);};
 viewport.onpointerup=viewport.onpointercancel=()=>{mapDrag=null;viewport.classList.remove('dragging');};
 const avatarEditor=new window.ClubAvatar.Editor({getProfile:profile,getEquipment:appearance,onSave:look=>{data.profile=look;data.customized=true;save();if(data.journey&&!journeyActive&&!hub.hidden)requestAnimationFrame(()=>playMapJourney());}});
@@ -452,5 +462,5 @@ window.ClubCareer={
  inspect(){return JSON.parse(JSON.stringify({...data,points:points(),skillPoints:skillPoints(),bonuses:bonuses()}));}
 };
 if(storageOK)save();else render();
-arena.hidden=true;hub.hidden=false;document.body.dataset.surface='map';requestAnimationFrame(()=>{fitMap();if(data.journey&&data.customized)playMapJourney();});
+arena.hidden=true;hub.hidden=false;document.body.dataset.surface='map';requestAnimationFrame(()=>{focusRegion(nodes[data.mapNode].tier);if(data.journey&&data.customized)playMapJourney();});
 })();
