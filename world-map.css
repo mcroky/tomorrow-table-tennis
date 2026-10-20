@@ -368,6 +368,7 @@ body[data-surface=map] .world-title p{font-size:11px}
 }
 .world-viewport:not([data-overview=true]) .world-node small{font-size:var(--node-label-size,14px)}
 .world-viewport:not([data-overview=true]) .world-node b{font-size:var(--node-code-size,16px)}
+.world-viewport:not([data-overview=true]) .node-medal{width:var(--node-medal-size,48px);height:var(--node-medal-size,48px)}
 /* User rankings load only when opened; private career saves remain owner scoped. */
 .world-tools #rankingOpen{background:#f1e6c6;border-color:#d6bf80;color:#80612f;font-weight:700}
 .ranking-dialog{width:min(800px,calc(100vw - 24px));max-height:calc(100dvh - 24px);padding:24px;border:1px solid #bdcbb2;border-radius:20px;background:#f9f7ea;color:#365743;box-shadow:0 20px 70px #17352950;overflow:auto}
@@ -598,6 +599,35 @@ html[data-input=touch] body[data-surface=court] .feedback-strip{height:44px;min-
 .ball-guide-option{display:flex;align-items:center;gap:8px;padding:0 0 12px;font-size:12px;color:#46664d}
 .ball-guide-option input{accent-color:#4b7654;width:18px;height:18px}
 .touch-hit-buttons button:disabled{opacity:.5;filter:saturate(.55);box-shadow:none;transform:none}
+/* Put portrait touch controls in the unused lower court corners. */
+@media(max-width:850px) and (orientation:portrait){
+ html[data-input=touch] body[data-surface=court] .career-head>div:first-child,
+ html[data-input=touch] body[data-surface=court] .career-xp,
+ html[data-input=touch] body[data-surface=court] .career-wallet{display:none}
+ html[data-input=touch] body[data-surface=court] .career-nav{width:100%;margin:0;justify-content:space-between}
+ html[data-input=touch] body[data-surface=court] .career-head .career-nav button{min-height:34px;padding:5px 8px}
+ html[data-input=touch] body[data-surface=court] .feedback-strip{height:32px;min-height:32px}
+ html[data-input=touch] body[data-surface=court] .feedback-strip .impact-label b{font-size:20px}
+ html[data-input=touch] body[data-surface=court] .feedback-strip .impact-label span{font-size:9px}
+ html[data-input=touch] body[data-surface=court] .shot-controls .footing-status,
+ html[data-input=touch] body[data-surface=court] .shot-controls .enemy-return-status,
+ html[data-input=touch] body[data-surface=court] .course-control>span,
+ html[data-input=touch] body[data-surface=court] .stroke-control>span,
+ html[data-input=touch] body[data-surface=court] .serve-control>span{display:none}
+ html[data-input=touch] body[data-surface=court] .shot-controls .course-buttons button{min-height:36px}
+ html[data-input=touch] body[data-surface=court] .spin-read{margin:0;padding:2px 6px;font-size:10px;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+ html[data-input=touch] body[data-surface=court] .stage>.touch-deck{display:flex;position:absolute;left:10px;right:10px;bottom:12px;z-index:5;margin:0;padding:0;min-height:80px;background:transparent;border:0;pointer-events:none}
+ html[data-input=touch] body[data-surface=court] .stage>.touch-deck .touch-stick,
+ html[data-input=touch] body[data-surface=court] .stage>.touch-deck .touch-hit-buttons{pointer-events:auto}
+ html[data-input=touch] body[data-surface=court] .stage>.touch-deck .touch-move-label{display:none}
+ html[data-input=touch] body[data-surface=court] .stage>.touch-deck .touch-hit-buttons{margin-left:auto}
+ html[data-input=touch] body[data-surface=court] .stage[data-touch-overlay=true] .bottom-hud{display:none}
+ html[data-input=touch] body[data-surface=court] .feedback-idle{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:0 10px;font-size:11px}
+}
+@media(max-width:760px){
+ body[data-surface=map] .career-nav,html[data-input=touch] body[data-surface=court] .career-nav{flex-wrap:nowrap;justify-content:flex-start;max-width:100%;min-width:0;overflow-x:auto;scrollbar-width:none}
+ body[data-surface=map] .career-nav button,html[data-input=touch] body[data-surface=court] .career-nav button{flex:0 0 auto;white-space:nowrap}
+}
 .world-tools #feedbackOpen{color:#456b58;background:#e7eddf}
 .feedback-dialog{width:min(520px,calc(100vw - 24px));max-height:calc(100dvh - 24px);box-sizing:border-box;overflow:auto;padding:22px;border:1px solid #c5d0bd;border-radius:20px;background:#faf9ed;color:#294b40;box-shadow:0 18px 70px #16352e44}
 .feedback-dialog::backdrop{background:#18382c70;backdrop-filter:blur(3px)}

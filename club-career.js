@@ -366,7 +366,7 @@ function showMap(){
  if(data.activeMatch)return false;
  if(mapHandler)mapHandler();hub.hidden=false;arena.hidden=true;document.body.dataset.surface='map';render();
  const result=pendingResult;pendingResult=false;closeDrawer(false);requestAnimationFrame(()=>{
-  if(hub.hidden)return;fitMap();const complete=()=>{if(result&&!hub.hidden&&!drawerOpen)openDrawer(tab);};
+  if(hub.hidden)return;defaultMapView();const complete=()=>{if(result&&!hub.hidden&&!drawerOpen)openDrawer(tab);};
   if(data.journey){if(!journeyActive)playMapJourney(complete);}else complete();
  });
 }
@@ -410,12 +410,15 @@ function resizeMap(){
  el('worldPlayer')?.style.setProperty('--player-scale',Math.max(.8,Math.min(fitMode?1:2.8,.65/zoom)));
 }
 function fitMap(){if(hub.hidden)return;fitMode=true;focusTier=null;updateRegionNav();sizeViewport();const v=el('worldViewport');zoom=Math.max(.08,Math.min((v.clientWidth-24)/overviewBounds.width,(v.clientHeight-24)/overviewBounds.height,1));resizeMap();v.scrollTo({left:0,top:0,behavior:'instant'});}
+function compactMap(){return innerWidth<=760||(navigator.maxTouchPoints>0&&innerWidth<=1100);}
+function defaultMapView(){if(compactMap())focusRegion(nodes[data.mapNode].tier);else fitMap();}
 function updateRegionNav(){
  el('mapFit').setAttribute('aria-pressed',String(fitMode));
  hub.querySelectorAll('[data-region]').forEach(button=>{const tier=Number(button.dataset.region);button.setAttribute('aria-pressed',String(!fitMode&&focusTier===tier));button.dataset.locked=String(tier>Math.floor(frontier()/5));el('chapterProgress-'+tier).textContent=(tier>Math.floor(frontier()/5)?'🔒 · ':'')+data.cleared.filter(id=>nodes[id]?.tier===tier).length+' / 5';});
 }
 function focusRegion(tier){
- if(hub.hidden)return;focusTier=tier;fitMode=false;sizeViewport();const v=el('worldViewport');zoom=Math.max(.28,Math.min((v.clientWidth-36)/460,(v.clientHeight-24)/360,1.2)*.595);resizeMap();
+ if(hub.hidden)return;focusTier=tier;fitMode=false;sizeViewport();const v=el('worldViewport');zoom=compactMap()?Math.max(.72,Math.min((v.clientWidth-24)/430,(v.clientHeight-24)/320,1.2)):Math.max(.28,Math.min((v.clientWidth-36)/460,(v.clientHeight-24)/360,1.2)*.595);resizeMap();
+ v.style.setProperty('--node-medal-size',Math.max(48,44/zoom)+'px');
  const row=tier<4?0:1,col=row?7-tier:tier;v.scrollTo({left:(250+col*450)*zoom-v.clientWidth/2,top:(280+row*500)*zoom-v.clientHeight/2,behavior:'instant'});updateRegionNav();const nav=el('regionNav'),button=nav.querySelector('[data-region="'+tier+'"]');nav.scrollTo({left:button.offsetLeft-nav.offsetLeft-(nav.clientWidth-button.offsetWidth)/2,behavior:'instant'});
 }
 function centerMap(usePlayer=false){const n=usePlayer&&playerPoint?playerPoint:nodes[data.activeMatch?.node??selected],v=el('worldViewport');v.scrollTo({left:n.x*zoom-v.clientWidth/2,top:n.y*zoom-v.clientHeight/2,behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'});}
@@ -436,6 +439,8 @@ document.addEventListener('keydown',event=>{
  if(event.key==='Tab'){const focusable=[...el('campaignDrawer').querySelectorAll('button:not(:disabled),[tabindex="0"],select,input,a[href]')].filter(e=>e.getClientRects().length),first=focusable[0],last=focusable[focusable.length-1];if(!first)return;if(!el('campaignDrawer').contains(document.activeElement)){event.preventDefault();(event.shiftKey?last:first).focus();}else if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus();}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus();}}
 });
 window.addEventListener('resize',()=>{if(hub.hidden)return;sizeViewport();if(fitMode)fitMap();else if(focusTier!==null)focusRegion(focusTier);else{resizeMap();centerMap();}});
+let mapLayoutFrame=0;
+new ResizeObserver(()=>{cancelAnimationFrame(mapLayoutFrame);mapLayoutFrame=requestAnimationFrame(()=>{if(hub.hidden)return;if(fitMode)fitMap();else if(focusTier!==null)focusRegion(focusTier);else sizeViewport();});}).observe(hub.querySelector('.world-title'));
 drawMap();setTab('stage');hub.querySelectorAll('[data-region]').forEach(button=>button.onclick=()=>{finishMapJourney();focusRegion(Number(button.dataset.region));});
 hub.querySelectorAll('[data-tab]').forEach(button=>{button.onclick=()=>setTab(button.dataset.tab);button.onkeydown=e=>{if(!['ArrowLeft','ArrowRight'].includes(e.key))return;e.preventDefault();const tabs=['stage','stats','skills','shop'],next=tabs[(tabs.indexOf(tab)+(e.key==='ArrowRight'?1:3))%4];setTab(next);el('tab-'+next).focus();};});
 hub.querySelectorAll('[data-stat]').forEach(button=>button.onclick=()=>{if(data.activeMatch||points()<=0)return;data.stats[button.dataset.stat]++;save();});
@@ -476,5 +481,5 @@ window.ClubCareer={
  inspect(){return JSON.parse(JSON.stringify({...data,points:points(),skillPoints:skillPoints(),bonuses:bonuses()}));}
 };
 if(storageOK)save();else render();
-arena.hidden=true;hub.hidden=false;document.body.dataset.surface='map';requestAnimationFrame(()=>{fitMap();if(data.journey&&data.customized)playMapJourney();});
+arena.hidden=true;hub.hidden=false;document.body.dataset.surface='map';requestAnimationFrame(()=>{defaultMapView();if(data.journey&&data.customized)playMapJourney();});
 })();

@@ -1,5 +1,6 @@
 'use strict';
 window.ClubLocales={
+  "공 위치 강조": ["Ball visibility guide","ボールの位置を強調","突出显示球的位置"],
   "운영자": ["Admin","管理者","管理员"],
   "운영 현황": ["Game dashboard","運営状況","运营概况"],
   "접속 기준: 최근 90초 내 연결 · 같은 계정은 1명 · 30초마다 갱신": ["Online: seen within 90 seconds · one per account · updates every 30 seconds","接続基準：90秒以内の通信・同じアカウントは1人・30秒ごとに更新","在线标准：90秒内有连接 · 同一账号计1人 · 每30秒更新"],

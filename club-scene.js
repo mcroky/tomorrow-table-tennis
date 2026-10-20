@@ -23,12 +23,12 @@ void main(){vec4 p=uVP*vec4(aPosition,1.);gl_Position=p;vColor=aColor;vNormal=aN
 gl.attachShader(program,shader(gl.FRAGMENT_SHADER,`
 precision mediump float;
 uniform vec3 uFogColor,uAuraEye;
-uniform float uAuraTime;
+uniform float uAuraTime,uMeshOpacity;
 varying vec3 vColor,vNormal,vWorld;
 varying float vMaterial,vDepth;
 void main(){
- if(vMaterial>=4.){float rim=1.-abs(dot(normalize(vNormal),normalize(uAuraEye-vWorld)));float pulse=.1+.9*(.5-.5*cos(uAuraTime*1.5));gl_FragColor=vec4(vColor,(vMaterial-4.)*pulse*(.12+.88*rim*rim));return;}
- if(vMaterial>1.5){gl_FragColor=vec4(.18,.23,.17,clamp(vMaterial-2.,0.,1.)*.20);return;}
+ if(vMaterial>=4.){float rim=1.-abs(dot(normalize(vNormal),normalize(uAuraEye-vWorld)));float pulse=.1+.9*(.5-.5*cos(uAuraTime*1.5));gl_FragColor=vec4(vColor,(vMaterial-4.)*pulse*(.12+.88*rim*rim)*uMeshOpacity);return;}
+ if(vMaterial>1.5){gl_FragColor=vec4(.18,.23,.17,clamp(vMaterial-2.,0.,1.)*.20*uMeshOpacity);return;}
  vec3 n=normalize(vNormal);
  float lighting=.72+.26*max(dot(n,normalize(vec3(-.6,1.,.3))),0.)+.04*max(n.z,0.);
  vec3 col=vColor*lighting;
@@ -40,7 +40,7 @@ void main(){
   col*=1.-seam*.16-endSeam*.13+sin(board*19.)*.036+grain;
  }
  float fog=clamp((vDepth-5.)*.012,0.,.16);
- gl_FragColor=vec4(mix(col,uFogColor,fog),1.);
+ gl_FragColor=vec4(mix(col,uFogColor,fog),uMeshOpacity);
 }
 `));
 gl.linkProgram(program);
@@ -48,6 +48,7 @@ if(!gl.getProgramParameter(program,gl.LINK_STATUS))throw Error(gl.getProgramInfo
 gl.useProgram(program);gl.enable(gl.DEPTH_TEST);gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);gl.clearColor(.77,.80,.73,1);
 const attrs=['aPosition','aNormal','aColor','aMaterial'].map(n=>gl.getAttribLocation(program,n));
 const uVP=gl.getUniformLocation(program,'uVP'),uFogColor=gl.getUniformLocation(program,'uFogColor'),uAuraTime=gl.getUniformLocation(program,'uAuraTime'),uAuraEye=gl.getUniformLocation(program,'uAuraEye');
+const uMeshOpacity=gl.getUniformLocation(program,'uMeshOpacity');gl.uniform1f(uMeshOpacity,1);
 const auraMotion=matchMedia('(prefers-reduced-motion: reduce)');
 gl.uniform3fv(uFogColor,color('#c4ccba'));
 let geo=[],auraGeo=[],material=0,modelFrames=[],portraitDetail=false;
@@ -91,7 +92,7 @@ function roundSegment(a,b,r1,r2,col,segments,smoothNormals){
 function tube(a,b,r,col,segments=8){roundSegment(a,b,r,r,col,segments,false);}
 function shadow(x,z,rx,rz){const c=[.18,.23,.17],n=[0,1,0];for(let i=0;i<40;i++){const t=i*2*Math.PI/40,t2=(i+1)*2*Math.PI/40;material=2.9;vertex([x,.008,z],n,c);material=2.;vertex([x+rx*1.35*Math.cos(t),.008,z+rz*1.35*Math.sin(t)],n,c);vertex([x+rx*1.35*Math.cos(t2),.008,z+rz*1.35*Math.sin(t2)],n,c);}material=0;}
 function buffer(data,usage=gl.STATIC_DRAW){const b=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,b);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(data),usage);return{buffer:b,count:data.length/10};}
-function drawMesh(mesh){gl.bindBuffer(gl.ARRAY_BUFFER,mesh.buffer);let offsets=[0,3,6,9],sizes=[3,3,3,1];attrs.forEach((a,i)=>{gl.enableVertexAttribArray(a);gl.vertexAttribPointer(a,sizes[i],gl.FLOAT,false,40,offsets[i]*4);});gl.drawArrays(gl.TRIANGLES,0,mesh.count);}
+function drawMesh(mesh,first=0,count=mesh.count){gl.bindBuffer(gl.ARRAY_BUFFER,mesh.buffer);let offsets=[0,3,6,9],sizes=[3,3,3,1];attrs.forEach((a,i)=>{gl.enableVertexAttribArray(a);gl.vertexAttribPointer(a,sizes[i],gl.FLOAT,false,40,offsets[i]*4);});gl.drawArrays(gl.TRIANGLES,first,count);}
 function lookAt(eye,target){const z=norm(sub(eye,target)),x=norm(cross([0,1,0],z)),y=cross(z,x);return[x[0],y[0],z[0],0,x[1],y[1],z[1],0,x[2],y[2],z[2],0,-dot(x,eye),-dot(y,eye),-dot(z,eye),1];}
 function perspective(fov,aspect){const f=1/Math.tan(fov/2),n=.045,far=70;return[f/aspect,0,0,0,0,f,0,0,0,0,(far+n)/(n-far),-1,0,0,2*far*n/(n-far),0];}
 function mm(a,b){const o=new Float32Array(16);for(let c=0;c<4;c++)for(let r=0;r<4;r++){let n=0;for(let k=0;k<4;k++)n+=a[k*4+r]*b[c*4+k];o[c*4+r]=n;}return o;}
@@ -1279,8 +1280,15 @@ function cameraGoal(){
   // the table. Portrait screens and retreating footwork need extra room.
   const aspect=canvas.clientWidth/Math.max(1,canvas.clientHeight),portrait=clamp((1.15-aspect)/.45,0,1);
   const center=[state.px*.30,.74,0],pitch=Math.max(.54,state.pitch)+portrait*.045;
-  const distance=Math.max(5.5,state.distance)+portrait*.20+Math.max(0,state.pz-2.18)*.65;
-  return[add(center,[Math.sin(state.yaw)*Math.cos(pitch)*distance,Math.sin(pitch)*distance,Math.cos(state.yaw)*Math.cos(pitch)*distance]),center];
+  const orbit=[Math.sin(state.yaw)*Math.cos(pitch),Math.sin(pitch),Math.cos(state.yaw)*Math.cos(pitch)],right=[Math.cos(state.yaw),0,-Math.sin(state.yaw)],up=cross(orbit,right),tan=Math.tan(49*Math.PI/360);
+  let distance=Math.max(5.5,state.distance)+portrait*.20+Math.max(0,state.pz-2.18)*.65;
+  const topBound=Math.max(.4,1-2*(document.documentElement.dataset.input==='touch'?60:94)/Math.max(1,canvas.clientHeight));
+  // Fit feet after a retreat and keep the rival's head below the score HUD.
+  for(const p of [[state.px-.5,0,state.pz+.30],[state.px+.5,0,state.pz+.30],[state.px,2.25,state.pz],[state.enemyX,1.98,state.enemyZ]]){
+   const delta=sub(p,center),y=dot(delta,up);
+   distance=Math.max(distance,dot(delta,orbit)+Math.max(Math.abs(dot(delta,right))/(tan*aspect*.94),Math.abs(y)/(tan*(y>0?topBound:.94))));
+  }
+  return[add(center,mul(orbit,distance)),center];
  }
  const center=[0,.75,0];
  return[add(center,[Math.sin(state.yaw)*Math.cos(state.pitch)*state.distance,Math.sin(state.pitch)*state.distance,Math.cos(state.yaw)*Math.cos(state.pitch)*state.distance]),center];
@@ -1288,13 +1296,13 @@ function cameraGoal(){
 function setView(view){
  state.view=view;state.yaw=0;
  if(view==='pov'){state.pitch=.30;state.distance=4.5;state.povFov=56}
- if(view==='follow'){state.pitch=.62;state.distance=5.9}
+ if(view==='follow'){state.pitch=.72;state.distance=5.9}
  if(view==='side'){state.yaw=1.06;state.pitch=.44;state.distance=4.9}
  if(view==='top'){state.yaw=.18;state.pitch=1.12;state.distance=4.6}
  document.querySelectorAll('[data-view]').forEach(b=>{b.classList.toggle('active',b.dataset.view===view);b.setAttribute('aria-pressed',b.dataset.view===view)});
  $('cameraLabel').textContent={pov:tr('라켓 시점'),follow:tr('선수 뒤'),side:tr('측면'),top:tr('전체 보기')}[view];
 }
-function message(text,phase=tr('PRACTICE RALLY')){if(document.documentElement.dataset.input==='touch'){text=text.replace(/Shift \+ SPACE/gi,tr('스매시 버튼')).replace(/\bSPACE\b/g,tr('스윙 버튼'));if(document.documentElement.lang==='ko')text=text.replaceAll('버튼로','버튼으로').replaceAll('버튼를','버튼을');}$('message').textContent=text;$('phase').textContent=phase;}
+function message(text,phase=tr('PRACTICE RALLY')){if(document.documentElement.dataset.input==='touch'){text=text.replace(/Shift \+ SPACE/gi,tr('스매시 버튼')).replace(/\bSPACE\b/g,tr('스윙 버튼'));if(document.documentElement.lang==='ko')text=text.replaceAll('버튼로','버튼으로').replaceAll('버튼를','버튼을');if(innerWidth<=850&&innerHeight>innerWidth){const idle=document.querySelector('.feedback-idle');if(idle)idle.textContent=text;}}$('message').textContent=text;$('phase').textContent=phase;}
 
 function feed(){
  state.serve=null;
@@ -1631,9 +1639,9 @@ document.querySelectorAll('[data-hold]').forEach(b=>{b.onpointerdown=e=>{e.preve
 $('play').onclick=start;$('swing').onclick=()=>swing(false);$('mobileSwing').onclick=()=>swing(false);$('smash').onclick=$('mobileSmash').onclick=()=>swing(true);$('reset').onclick=()=>setView(state.view);
 const touchBallMarker=document.createElement('span');touchBallMarker.className='touch-ball-marker';touchBallMarker.hidden=true;touchBallMarker.setAttribute('aria-hidden','true');touchBallMarker.innerHTML='<i></i>';$('stage').append(touchBallMarker);
 let ballAssist=true,previousBallScreen=null;try{ballAssist=localStorage.getItem('ttk-touch-ball-guide')!=='off';}catch{}
-const ballGuideOption=document.createElement('label');ballGuideOption.className='ball-guide-option';const ballGuideCheckbox=document.createElement('input');ballGuideCheckbox.type='checkbox';ballGuideCheckbox.checked=ballAssist;ballGuideOption.append(ballGuideCheckbox,document.createTextNode(tr('모바일 공 위치 강조')));document.querySelector('.court-settings-panel').prepend(ballGuideOption);ballGuideCheckbox.onchange=()=>{ballAssist=ballGuideCheckbox.checked;try{localStorage.setItem('ttk-touch-ball-guide',ballAssist?'on':'off');}catch{}};
+const ballGuideOption=document.createElement('label');ballGuideOption.className='ball-guide-option';const ballGuideCheckbox=document.createElement('input');ballGuideCheckbox.type='checkbox';ballGuideCheckbox.checked=ballAssist;ballGuideOption.append(ballGuideCheckbox,document.createTextNode(tr('공 위치 강조')));document.querySelector('.court-settings-panel').prepend(ballGuideOption);ballGuideCheckbox.onchange=()=>{ballAssist=ballGuideCheckbox.checked;try{localStorage.setItem('ttk-touch-ball-guide',ballAssist?'on':'off');}catch{}};
 function updateTouchBallGuide(vp){
- if(document.documentElement.dataset.input!=='touch'||!ballAssist||!state.playing||state.pointWait>0||state.celebration.active){touchBallMarker.hidden=true;previousBallScreen=null;return;}
+ if((document.documentElement.dataset.input!=='touch'&&state.view!=='follow')||!ballAssist||!state.playing||state.pointWait>0||state.celebration.active){touchBallMarker.hidden=true;previousBallScreen=null;return;}
  const clipW=vp[3]*ball.x+vp[7]*ball.y+vp[11]*ball.z+vp[15],px=vp[0]*ball.x+vp[4]*ball.y+vp[8]*ball.z+vp[12],py=vp[1]*ball.x+vp[5]*ball.y+vp[9]*ball.z+vp[13];
  if(clipW<=.05||Math.abs(px/clipW)>1||Math.abs(py/clipW)>1){touchBallMarker.hidden=true;previousBallScreen=null;return;}
  const x=(px/clipW*.5+.5)*canvas.clientWidth,y=(.5-py/clipW*.5)*canvas.clientHeight,dx=(previousBallScreen?.x??x)-x,dy=(previousBallScreen?.y??y)-y;
@@ -1643,6 +1651,14 @@ const touchMedia=matchMedia('(pointer: coarse)');
 function detectTouch(){document.documentElement.dataset.input=touchMedia.matches||navigator.maxTouchPoints>0?'touch':'keyboard';}
 detectTouch();touchMedia.addEventListener('change',detectTouch);
 const stick=$('touchStick'),knob=$('touchStickKnob');let stickPointer=null;
+const touchDeck=document.querySelector('.touch-deck'),courtControls=document.querySelector('.court-controls');
+function positionTouchDeck(){
+ const overlay=document.documentElement.dataset.input==='touch'&&innerWidth<=850&&innerHeight>innerWidth;
+ const parent=overlay?$('stage'):courtControls;
+ if(touchDeck.parentElement!==parent){releaseTouch();parent.append(touchDeck);}
+ $('stage').dataset.touchOverlay=String(overlay);
+}
+positionTouchDeck();addEventListener('resize',positionTouchDeck);touchMedia.addEventListener('change',positionTouchDeck);
 function releaseTouch(){stickPointer=null;state.touchMove={x:0,z:0};knob.style.transform='translate(-50%,-50%)';stick.classList.remove('active');document.querySelectorAll('.touch-hit-buttons button').forEach(b=>b.classList.remove('pressed'));}
 function moveStick(e){if(e.pointerId!==stickPointer)return;const r=stick.getBoundingClientRect(),radius=r.width*.33,dx=e.clientX-r.left-r.width/2,dz=e.clientY-r.top-r.height/2,length=Math.hypot(dx,dz),scale=Math.min(1,radius/Math.max(length,.001)),x=dx*scale,z=dz*scale;const magnitude=Math.min(1,length/radius),strength=magnitude<.14?0:(magnitude-.14)/.86;state.touchMove={x:length?dx/length*strength:0,z:length?dz/length*strength:0};knob.style.transform='translate(calc(-50% + '+x+'px),calc(-50% + '+z+'px))';}
 stick.onpointerdown=e=>{if(stickPointer!==null||career.isMap()||document.querySelector('dialog[open]'))return;e.preventDefault();sound.unlock();stickPointer=e.pointerId;stick.setPointerCapture(e.pointerId);stick.classList.add('active');moveStick(e);};
@@ -1676,6 +1692,17 @@ addEventListener('pointerdown',()=>sound.unlock(),{once:true});
 addEventListener('keydown',()=>sound.unlock(),{once:true});
 syncAudioUI();
 
+let followPlayerOpacity=1;
+function updateFollowPlayerOpacity(vp,dt){
+ let goal=1;
+ if(state.view==='follow'&&state.playing&&state.pointWait<=0&&ball.y>.5){
+  const project=(x,y,z)=>{const w=vp[3]*x+vp[7]*y+vp[11]*z+vp[15];return{x:(.5+(vp[0]*x+vp[4]*y+vp[8]*z+vp[12])/w*.5)*canvas.clientWidth,y:(.5-(vp[1]*x+vp[5]*y+vp[9]*z+vp[13])/w*.5)*canvas.clientHeight,w};};
+  const b=project(ball.x,ball.y,ball.z),head=project(state.px,1.98,state.pz),hip=project(state.px,.52,state.pz),left=project(state.px-.48,1.2,state.pz),right=project(state.px+.48,1.2,state.pz);
+  if(b.w>.05&&b.w>Math.min(head.w,hip.w)-.35&&b.x>Math.min(left.x,right.x)-12&&b.x<Math.max(left.x,right.x)+12&&b.y>Math.min(head.y,hip.y)-10&&b.y<Math.max(head.y,hip.y)+10)goal=.30;
+ }
+ followPlayerOpacity=state.view==='follow'?mix(followPlayerOpacity,goal,1-Math.exp(-dt*(goal<followPlayerOpacity?32:12))):1;
+ if(followPlayerOpacity>.995)followPlayerOpacity=1;
+}
 function frame(time){
  if(career.isMap()){lastTime=time;requestAnimationFrame(frame);return;}
  const renderStart=performance.now();
@@ -1691,15 +1718,27 @@ function frame(time){
  const vibration=fx.shake,age=fx.age,side=fx.lastContact?.shot==='backhand'?-1:1;
  const rattle=!!fx.contactClock?.rattle;
  const shake=[Math.cos(age*(rattle?190:93))*vibration*side,Math.cos(age*(rattle?225:117))*vibration*(rattle?.35:.65),0];
- const frameVP=mm(perspective(((state.view==='pov'?state.povFov:49)-fx.shake*22)*Math.PI/180,w/h),lookAt(add(eye,shake),add(target,mul(shake,.15))));gl.uniformMatrix4fv(uVP,false,frameVP);updateTouchBallGuide(frameVP);
+ const frameVP=mm(perspective(((state.view==='pov'?state.povFov:49)-fx.shake*22)*Math.PI/180,w/h),lookAt(add(eye,shake),add(target,mul(shake,.15))));gl.uniformMatrix4fv(uVP,false,frameVP);updateTouchBallGuide(frameVP);updateFollowPlayerOpacity(frameVP,dt);
  drawMesh(venueMesh);drawMesh(staticMesh);geo=[];auraGeo=[];
  avatar(state.enemyX,state.enemyZ,1,opponentLevel().shirt||'#528f85',state.enemySwing,false);
+ const playerFirst=geo.length/10;
  if(state.view==='pov')povHands();else avatar(state.px,state.pz,-1,'#df7253',state.swing,true);
+ const playerEnd=geo.length/10;
  if(state.pointWait<=0){shadow(ball.x,ball.z,.055,.045);gearBall(ball.x,ball.y,ball.z,.021,career.appearance().ball);}
  const touchUnavailable=state.pointWait>0||state.celebration.active||state.careerMatch&&!state.playing;for(const id of ['mobileSwing','mobileSmash']){if($(id).disabled!==touchUnavailable)$(id).disabled=touchUnavailable;}
  const touchLabel=$('mobileSwing').querySelector('span'),nextTouchLabel=state.serve?.player?tr('서브'):tr('스윙');if(touchLabel.textContent!==nextTouchLabel)touchLabel.textContent=nextTouchLabel;
  drawCourseGuide();drawImpact();updateFootingUI(time);
- gl.bindBuffer(gl.ARRAY_BUFFER,dynamicMesh.buffer);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(geo),gl.DYNAMIC_DRAW);dynamicMesh.count=geo.length/10;drawMesh(dynamicMesh);if(auraGeo.length){uploadMesh(auraMesh,auraGeo);drawAura(auraMesh,eye);}
+ gl.bindBuffer(gl.ARRAY_BUFFER,dynamicMesh.buffer);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(geo),gl.DYNAMIC_DRAW);dynamicMesh.count=geo.length/10;
+ if(followPlayerOpacity<1){
+  // Reuse the same uploaded geometry; only the occluding athlete is blended.
+  drawMesh(dynamicMesh,0,playerFirst);drawMesh(dynamicMesh,playerEnd,dynamicMesh.count-playerEnd);
+  // Resolve the nearest surface first so faces/limbs inside the model do not
+  // show through one another when the athlete fades.
+  gl.colorMask(false,false,false,false);drawMesh(dynamicMesh,playerFirst,playerEnd-playerFirst);gl.colorMask(true,true,true,true);
+  gl.uniform1f(uMeshOpacity,followPlayerOpacity);gl.depthMask(false);gl.depthFunc(gl.LEQUAL);
+  try{drawMesh(dynamicMesh,playerFirst,playerEnd-playerFirst);}finally{gl.depthMask(true);gl.depthFunc(gl.LESS);gl.uniform1f(uMeshOpacity,1);}
+ }else drawMesh(dynamicMesh);
+ if(auraGeo.length){uploadMesh(auraMesh,auraGeo);drawAura(auraMesh,eye);}
  flushImpactAnnouncement();
  const renderCost=performance.now()-renderStart;fx.renderLead=mix(fx.renderLead,clamp(renderCost+8,8,45),.12);
  requestAnimationFrame(frame);
