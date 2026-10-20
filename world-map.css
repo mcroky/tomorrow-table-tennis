@@ -599,6 +599,15 @@ html[data-input=touch] body[data-surface=court] .feedback-strip{height:44px;min-
 .ball-guide-option{display:flex;align-items:center;gap:8px;padding:0 0 12px;font-size:12px;color:#46664d}
 .ball-guide-option input{accent-color:#4b7654;width:18px;height:18px}
 .touch-hit-buttons button:disabled{opacity:.5;filter:saturate(.55);box-shadow:none;transform:none}
+.touch-move-zone{position:relative;flex:0 0 148px;width:148px;height:116px;touch-action:none;user-select:none;-webkit-user-select:none;border-radius:22px;background:radial-gradient(ellipse,#e8efde32,transparent 72%)}
+.touch-move-zone .touch-stick{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%)}
+.touch-zone-hint{position:absolute;bottom:0;left:0;right:0;text-align:center;font-size:10px;color:#426246;pointer-events:none;text-shadow:0 1px 2px #fff9e7}
+.touch-move-zone.active .touch-zone-hint{opacity:0}
+.touch-sensitivity{display:flex;align-items:center;gap:10px;padding:0 0 14px;font-size:12px;color:#46664d}
+.touch-sensitivity input{flex:1;min-width:60px;accent-color:#4b7654}.touch-sensitivity output{min-width:38px;text-align:right}
+html[data-input=keyboard] .touch-sensitivity{display:none}
+@media(max-width:380px){.touch-move-zone{width:132px;flex-basis:132px;height:110px}}
+@media(max-height:520px) and (min-width:600px){.touch-move-zone{width:72px;flex-basis:72px;height:88px}.touch-zone-hint{font-size:8px}}
 /* Put portrait touch controls in the unused lower court corners. */
 @media(max-width:850px) and (orientation:portrait){
  html[data-input=touch] body[data-surface=court] .career-head>div:first-child,
@@ -618,7 +627,9 @@ html[data-input=touch] body[data-surface=court] .feedback-strip{height:44px;min-
  html[data-input=touch] body[data-surface=court] .spin-read{margin:0;padding:2px 6px;font-size:10px;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
  html[data-input=touch] body[data-surface=court] .stage>.touch-deck{display:flex;position:absolute;left:10px;right:10px;bottom:12px;z-index:5;margin:0;padding:0;min-height:80px;background:transparent;border:0;pointer-events:none}
  html[data-input=touch] body[data-surface=court] .stage>.touch-deck .touch-stick,
+ html[data-input=touch] body[data-surface=court] .stage>.touch-deck .touch-move-zone,
  html[data-input=touch] body[data-surface=court] .stage>.touch-deck .touch-hit-buttons{pointer-events:auto}
+ html[data-input=touch] body[data-surface=court] .stage>.touch-deck{align-items:flex-end}
  html[data-input=touch] body[data-surface=court] .stage>.touch-deck .touch-move-label{display:none}
  html[data-input=touch] body[data-surface=court] .stage>.touch-deck .touch-hit-buttons{margin-left:auto}
  html[data-input=touch] body[data-surface=court] .stage[data-touch-overlay=true] .bottom-hud{display:none}

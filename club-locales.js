@@ -1,5 +1,8 @@
 'use strict';
 window.ClubLocales={
+  "왼쪽 영역 어디서나 드래그해서 이동": ["Drag anywhere in the left area to move","左側のエリアをドラッグして移動","在左侧区域任意位置拖动即可移动"],
+  "드래그해서 이동": ["Drag to move","ドラッグして移動","拖动移动"],
+  "조이스틱 감도": ["Joystick sensitivity","スティック感度","摇杆灵敏度"],
   "공 위치 강조": ["Ball visibility guide","ボールの位置を強調","突出显示球的位置"],
   "운영자": ["Admin","管理者","管理员"],
   "운영 현황": ["Game dashboard","運営状況","运营概况"],

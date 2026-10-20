@@ -1651,6 +1651,12 @@ const touchMedia=matchMedia('(pointer: coarse)');
 function detectTouch(){document.documentElement.dataset.input=touchMedia.matches||navigator.maxTouchPoints>0?'touch':'keyboard';}
 detectTouch();touchMedia.addEventListener('change',detectTouch);
 const stick=$('touchStick'),knob=$('touchStickKnob');let stickPointer=null;
+let stickOrigin=null,stickSensitivity=100;
+try{const saved=Number(localStorage.getItem('ttk-stick-sensitivity'));if(saved>=70&&saved<=140)stickSensitivity=saved;}catch{}
+const moveZone=document.createElement('div');moveZone.className='touch-move-zone';moveZone.setAttribute('aria-label',tr('왼쪽 영역 어디서나 드래그해서 이동'));stick.before(moveZone);moveZone.append(stick);
+const moveHint=document.createElement('small');moveHint.className='touch-zone-hint';moveHint.textContent=tr('드래그해서 이동');moveZone.append(moveHint);
+const sensitivityOption=document.createElement('label');sensitivityOption.className='touch-sensitivity';const sensitivityName=document.createElement('span');sensitivityName.textContent=tr('조이스틱 감도');const sensitivityInput=document.createElement('input');sensitivityInput.type='range';sensitivityInput.min='70';sensitivityInput.max='140';sensitivityInput.step='10';sensitivityInput.value=String(stickSensitivity);const sensitivityValue=document.createElement('output');sensitivityValue.textContent=stickSensitivity+'%';sensitivityOption.append(sensitivityName,sensitivityInput,sensitivityValue);ballGuideOption.after(sensitivityOption);
+sensitivityInput.oninput=()=>{stickSensitivity=Number(sensitivityInput.value);sensitivityValue.textContent=stickSensitivity+'%';try{localStorage.setItem('ttk-stick-sensitivity',String(stickSensitivity));}catch{}};
 const touchDeck=document.querySelector('.touch-deck'),courtControls=document.querySelector('.court-controls');
 function positionTouchDeck(){
  const overlay=document.documentElement.dataset.input==='touch'&&innerWidth<=850&&innerHeight>innerWidth;
@@ -1659,11 +1665,25 @@ function positionTouchDeck(){
  $('stage').dataset.touchOverlay=String(overlay);
 }
 positionTouchDeck();addEventListener('resize',positionTouchDeck);touchMedia.addEventListener('change',positionTouchDeck);
-function releaseTouch(){stickPointer=null;state.touchMove={x:0,z:0};knob.style.transform='translate(-50%,-50%)';stick.classList.remove('active');document.querySelectorAll('.touch-hit-buttons button').forEach(b=>b.classList.remove('pressed'));}
-function moveStick(e){if(e.pointerId!==stickPointer)return;const r=stick.getBoundingClientRect(),radius=r.width*.33,dx=e.clientX-r.left-r.width/2,dz=e.clientY-r.top-r.height/2,length=Math.hypot(dx,dz),scale=Math.min(1,radius/Math.max(length,.001)),x=dx*scale,z=dz*scale;const magnitude=Math.min(1,length/radius),strength=magnitude<.14?0:(magnitude-.14)/.86;state.touchMove={x:length?dx/length*strength:0,z:length?dz/length*strength:0};knob.style.transform='translate(calc(-50% + '+x+'px),calc(-50% + '+z+'px))';}
-stick.onpointerdown=e=>{if(stickPointer!==null||career.isMap()||document.querySelector('dialog[open]'))return;e.preventDefault();sound.unlock();stickPointer=e.pointerId;stick.setPointerCapture(e.pointerId);stick.classList.add('active');moveStick(e);};
-stick.onpointermove=e=>{if(e.pointerId===stickPointer){e.preventDefault();moveStick(e);}};
-stick.onpointerup=stick.onpointercancel=stick.onlostpointercapture=e=>{if(e.pointerId===stickPointer)releaseTouch();};
+function releaseTouch(){stickPointer=null;stickOrigin=null;state.touchMove={x:0,z:0};knob.style.transform='translate(-50%,-50%)';stick.style.left='50%';stick.style.top='50%';stick.classList.remove('active');moveZone.classList.remove('active');document.querySelectorAll('.touch-hit-buttons button').forEach(b=>b.classList.remove('pressed'));}
+function moveStick(e){
+ if(e.pointerId!==stickPointer||!stickOrigin)return;
+ const rawX=e.clientX-stickOrigin.x,rawZ=e.clientY-stickOrigin.y,visualRadius=stick.clientWidth*.34,visualLength=Math.hypot(rawX,rawZ),visualScale=Math.min(1,visualRadius/Math.max(visualLength,.001));
+ knob.style.transform='translate(calc(-50% + '+rawX*visualScale+'px),calc(-50% + '+rawZ*visualScale+'px))';
+ // A small vertical wobble during a lateral slide should not move the player
+ // towards or away from the table. Deliberate diagonal movement remains analog.
+ const dx=rawX*smooth(clamp((Math.abs(rawX)/Math.max(1,Math.abs(rawZ))-.15)/.20,0,1)),dz=rawZ*smooth(clamp((Math.abs(rawZ)/Math.max(1,Math.abs(rawX))-.20)/.24,0,1)),length=Math.hypot(dx,dz),radius=42*100/stickSensitivity,magnitude=Math.min(1,length/radius);
+ const strength=magnitude<.10?0:Math.pow((magnitude-.10)/.90,.85);
+ state.touchMove={x:length?dx/length*strength:0,z:length?dz/length*strength:0};
+}
+moveZone.onpointerdown=e=>{
+ if(stickPointer!==null||career.isMap()||document.querySelector('dialog[open]'))return;
+ e.preventDefault();sound.unlock();stickPointer=e.pointerId;stickOrigin={x:e.clientX,y:e.clientY};const r=moveZone.getBoundingClientRect(),edge=stick.clientWidth*.38;
+ stick.style.left=clamp(e.clientX-r.left,edge,r.width-edge)+'px';stick.style.top=clamp(e.clientY-r.top,edge,r.height-edge)+'px';
+ moveZone.setPointerCapture(e.pointerId);stick.classList.add('active');moveZone.classList.add('active');moveStick(e);
+};
+moveZone.onpointermove=e=>{if(e.pointerId===stickPointer){e.preventDefault();moveStick(e);}};
+moveZone.onpointerup=moveZone.onpointercancel=moveZone.onlostpointercapture=e=>{if(e.pointerId===stickPointer)releaseTouch();};
 for(const [id,power] of [['mobileSwing',false],['mobileSmash',true]]){const button=$(id);button.onpointerdown=e=>{e.preventDefault();if(document.querySelector('dialog[open]')||career.isMap())return;button.setPointerCapture(e.pointerId);button.classList.add('pressed');swing(power);};button.onpointerup=button.onpointercancel=button.onlostpointercapture=()=>button.classList.remove('pressed');button.onclick=e=>{if(e.detail===0)swing(power);};}
 addEventListener('blur',releaseTouch);addEventListener('resize',releaseTouch);document.addEventListener('visibilitychange',()=>{if(document.hidden)releaseTouch();});
 addEventListener('keydown',e=>{if(career.isMap()||document.getElementById('forfeitDialog')?.open)return;if(e.target instanceof Element&&e.target.closest('input,select,textarea'))return;state.keys[e.code]=true;if(['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code))e.preventDefault();if(e.code==='Space'&&!e.repeat)swing(e.shiftKey);if(!e.ctrlKey&&!e.metaKey&&!e.altKey&&['KeyJ','KeyK','KeyL'].includes(e.code))setCourse({KeyJ:-1,KeyK:0,KeyL:1}[e.code]);if(!e.repeat&&!e.ctrlKey&&!e.metaKey&&!e.altKey){if(e.code==='KeyZ')setStrokeStyle('drive');if(e.code==='KeyX')setStrokeStyle('cut');if(e.code==='KeyC')setServeLength('short');if(e.code==='KeyV')setServeLength('deep');}const views=['pov','follow','side','top'];if(/^Digit[1-4]$/.test(e.code))setView(views[Number(e.code.slice(-1))-1]);});
