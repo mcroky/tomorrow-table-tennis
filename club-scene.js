@@ -761,7 +761,7 @@ function strikeRig(player,countdownOverride=null,aimOverride=null){
  const leftShoulder=add(torsoOrigin,eulerVector([-.182,.445-lift*.008,.018-follow*.010],...torsoRotation));
  const weight=countdown>0?smooth(clamp(pose.t/(receiver.smash?.25:.30),0,1))*(1-smooth(clamp((pose.t-.60)/.40,0,1))):0;
  let hand=add(pose.hand,[pose.shift,pose.dip+breath,pose.forward]),aim=aimOverride||receiver.aim||[0,0,0];
- if(countdown>0&&aimOverride===null&&receiver.aimBodyX!==undefined)aim=[aim[0]+facing*(x-receiver.aimBodyX),aim[1],aim[2]-facing*(z-receiver.aimBodyZ)];
+ if(!player&&countdown>0&&aimOverride===null&&receiver.aimBodyX!==undefined)aim=[aim[0]+facing*(x-receiver.aimBodyX),aim[1],aim[2]-facing*(z-receiver.aimBodyZ)];
  hand=add(hand,mul(aim,weight));
  if(countdownOverride===null&&receiver.transition&&!state.celebration.active){const tr=receiver.transition,u=clamp((state.elapsed-tr.started)/tr.duration,0,1),w=smooth(u),carry=u*(1-u)*(1-u)*tr.duration;hand=tr.hand.map((n,i)=>mix(n,hand[i],w)+carry*(tr.handVelocity?.[i]||0));}
  const pole=eulerVector([mix(1,.45,pose.backhand),mix(-.60,-.80,pose.backhand)+lift*.85,mix(-.10,.55,pose.backhand)-lift*.25],...torsoRotation);
@@ -780,15 +780,15 @@ function strikeRig(player,countdownOverride=null,aimOverride=null){
 function predictFlight(seconds){
  const b={...ball};let t=0;while(t<seconds){const h=Math.min(1/240,seconds-t),old=b.y;b.x+=b.vx*h;b.y+=b.vy*h;b.z+=b.vz*h;b.vy-=(b.gravity||5.8)*h;if(old>=.79&&b.y<.79&&b.vy<0&&Math.abs(b.x)<.7625&&Math.abs(b.z)<1.37){b.y=.79;const cut=b.spin==='cut',drive=b.spin==='drive';b.vy=-b.vy*(b.entryBounce?.65:cut?.78:drive?.72:.88);b.vx*=cut?.78:drive?1.10:1;b.vz*=cut?.78:drive?1.13:1;}t+=h;}return b;
 }
-function aimStroke(player){
- const rec=player?state.playerStroke:state.enemyStroke,phase=rec.contactPhase??.38,t=(rec.duration||strokeDuration)*phase,pred=predictFlight(t);
+function aimStroke(player,remaining=null,dt=0){
+ const rec=player?state.playerStroke:state.enemyStroke,phase=rec.contactPhase??.38,t=remaining??(rec.duration||strokeDuration)*phase,pred=predictFlight(t);
  rec.lowContact=rec.smash?0:clamp((1.12-pred.y)/.24,0,1);
  const base=strikeRig(player,1-phase,[0,0,0]);
  const velocity=[pred.vx,pred.vy,pred.vz],side=-Math.sign(dot(velocity,base.n))||1,desired=sub([pred.x,pred.y,pred.z],mul(base.n,side*(BALL_RADIUS+FACE_DEPTH))),delta=sub(desired,base.center),facing=player?-1:1;
- rec.inputTiming=Math.abs(delta[2])/Math.max(.5,Math.abs(pred.vz));
+ if(remaining===null)rec.inputTiming=Math.abs(delta[2])/Math.max(.5,Math.abs(pred.vz));
  let local=[clamp(-facing*delta[0],-.29,.29),clamp(delta[1],-.32,.36),clamp(facing*delta[2],-.28,.28)];
  const length=Math.hypot(...local);if(length>.39)local=mul(local,.39/length);
- rec.aim=local;rec.aimBodyX=player?state.px:state.enemyX;rec.aimBodyZ=player?state.pz:state.enemyZ;
+ rec.aim=remaining!==null&&rec.aim?rec.aim.map((v,i)=>mix(v,local[i],1-Math.exp(-28*dt))):local;rec.aimBodyX=player?state.px:state.enemyX;rec.aimBodyZ=player?state.pz:state.enemyZ;
 }
 function rigLerp(a,b,t){const o={};for(const k of ['center','r','u','n'])o[k]=a[k].map((v,i)=>mix(v,b[k][i],t));for(const k of ['r','u','n'])o[k]=norm(o[k]);return o;}
 function sweptFace(a,b,r0,r1){
@@ -1623,7 +1623,10 @@ function update(dt){
  const braking=(1-.80*release)*(state.swing>0?smooth(clamp((phase-(cp-.15))/.09,0,1))*(1-smooth(clamp((phase-(cp+.16))/.23,0,1))):0);
  const linkedBrake=(1-release)*(state.playerStroke.turnShot&&state.swing>0?smooth(clamp(phase/.10,0,1))*(1-smooth(clamp((phase-(cp+.13))/.20,0,1))):0);
  const approachBrace=(1-release)*(state.playerStroke.approachStrike&&state.swing>0?smooth(clamp((phase-.08)/.12,0,1))*(1-smooth(clamp((phase-.60)/.35,0,1))):0);
- const turn=updateDirectionChange(dt,dx),runSpeed=1.45*growth().speed*(1-.80*braking)*(1-.55*linkedBrake),moveBlend=1-Math.exp(-(braking>.1?24:13)*growth().recovery*dt);
+ // A manually directed chase must reach its plant before the swing brakes the body.
+ const chaseEta=ball.vz>.05?clamp((state.pz-.45-ball.z)/ball.vz,0,.65):0,chaseGap=ball.x+ball.vx*chaseEta-state.px;
+ const chasing=state.playing&&!state.hit&&!state.playerStroke.smash&&ball.vz>.05&&dx*chaseGap>.025&&Math.abs(chaseGap)>.24,brakeWeight=chasing?.22:1;
+ const turn=updateDirectionChange(dt,dx),runSpeed=1.45*growth().speed*(1-.80*braking*brakeWeight)*(1-.55*linkedBrake*brakeWeight),moveBlend=1-Math.exp(-(braking>.1?24:13)*growth().recovery*dt);
  const lateralTarget=turn.phase==='brake'?0:dx/len*runSpeed,lateralBlend=1-Math.exp(-(turn.phase==='brake'?27:turn.phase==='push'?15:braking>.1?24:13)*growth().recovery*dt);
  const recovery=state.playerStroke.rallyRecovery,retreatPush=recovery?.mode==='retreat'&&recovery.phase==='push';
  const depthBraking=recovery?.mode==='retreat'&&recovery.phase==='brake';
@@ -1654,6 +1657,9 @@ function update(dt){
  if(state.enemySwing>0)state.enemySwing=Math.max(0,state.enemySwing-dt/(state.enemyStroke.duration||strokeDuration));
  updateReceiver(state.playerStroke,state.px,state.pz,-1,state.swing,dt);
  updateReceiver(state.enemyStroke,state.enemyX,state.enemyZ,1,state.enemySwing,dt);
+ // Re-aim within the existing arm reach as the player steps toward a side ball.
+ // Keep the original input-timing grade and stop tracking before follow-through.
+ if(state.playing&&!state.serve&&!state.hit&&state.pointWait<=0&&state.swing>0&&ball.vz>.05){const rec=state.playerStroke,phase=1-state.swing,cp=rec.contactPhase??.38;if(phase<cp-.015)aimStroke(true,Math.max(.015,(cp-phase)*(rec.duration||strokeDuration)+dt),dt);}
  for(const player of [true,false]){
   const rec=player?state.playerStroke:state.enemyStroke,z=player?state.pz:state.enemyZ,facing=player?-1:1;
   const inbound=state.playing&&state.pointWait<=0&&ball.vz*facing<-.05,eta=inbound?(z+facing*.45-ball.z)/ball.vz:Infinity;

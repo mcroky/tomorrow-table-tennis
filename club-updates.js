@@ -5,6 +5,11 @@ const text=words=>words[Math.max(0,language)];
 const title=text(['업데이트 내역','Updates','アップデート情報','更新记录']);
 // Add new releases at the top; keep previous entries available to players.
 const releases=[
+ {date:'2026-10-22',title:['사이드 공 리턴 개선','Better returns on wide shots','サイドへの返球を改善','改善边路来球回击'],items:[
+  ['좌우로 따라가며 스윙할 때 라켓이 이동 전 위치에 남아 공을 놓치던 문제를 수정했습니다.','Fixed the racket lagging behind your movement when swinging at a wide ball.','左右へ追いかけながら振るとラケットが移動前の位置に残って空振りする問題を修正しました。','修复追向左右边路并挥拍时，球拍滞留在移动前位置而漏球的问题。'],
+  ['사이드 공을 쫓는 도중에는 이동이 과하게 멈추지 않고, 공에 가까워지면 발을 디디며 타격하도록 개선했습니다.','Reduced excessive stopping during a lateral chase, while retaining the plant as you reach the ball.','サイドの球を追う途中で急に止まりすぎないようにし、球に近づくと踏み込んで打てるよう改善しました。','改善追边路球时过度急停的问题，接近来球后仍会踩稳击球。'],
+  ['직접 이동하고 스윙해야 리턴되는 규칙은 유지됩니다.','Returns still require manual movement and swing input.','移動とスイングは引き続き自分で操作します。','回球仍需手动移动和挥拍。']
+ ]},
  {date:'2026-10-21',title:['직접 치는 실전 경기','Take control in career matches','自分で打つ本番の試合','亲自掌控正式比赛'],items:[
   ['초반 일반 리턴이 지나치게 높게 튀어 일반 스윙으로 맞히기 어려웠던 궤적 문제를 수정했습니다. 높은 찬스 볼에는 스매시 버튼도 밝아지며, 직접 누른 스매시 입력을 잠시 받아둡니다.','Fixed early normal returns bouncing too high for a regular swing. Smash now lights up for high chance balls, and a manual smash press can wait briefly for that ball.','序盤の通常返球が高く弾みすぎて通常スイングで打ちにくかった軌道を修正。チャンスボールではスマッシュも光り、手動のスマッシュ先行入力を短時間受け付けます。','修复前期普通回球弹得过高、普通挥拍难以击中的轨迹问题。高机会球会点亮扣杀按钮，并短暂保留手动扣杀输入。'],
   ['중반까지 일반 스윙의 선입력을 허용합니다. 직접 누른 입력 한 번만 현재 공에 적용되며 자동 이동은 없습니다. 상대의 서브와 리턴 코스를 읽기 쉽게 바꾸고 수비에도 빈틈을 늘렸습니다.','Normal swings accept an early press through midgame. Each manual press applies only once to the current ball, without automatic movement. Opponent serves and returns are more readable, with more defensive openings.','中盤までは通常スイングの先行入力に対応。手動入力一回は今の球に一度だけ適用され、自動移動はありません。相手のサーブと返球を読みやすくし、守備にも隙を増やしました。','前中期普通挥拍支持提前输入。每次手动输入仅对当前来球挥拍一次，不自动移动。对手发球和回球更易判断，防守空当也更多。'],
