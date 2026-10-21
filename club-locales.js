@@ -1,5 +1,7 @@
 'use strict';
 window.ClubLocales={
+  "로키 스튜디오로 돌아가기":["Return to Roky Studio","Roky Studioに戻る","返回Roky Studio"],
+  "← 로키 스튜디오":["← Roky Studio","← Roky Studio","← Roky Studio"],
   "필살기":["Special","必殺技","必杀技"],
   "준비!":["Ready!","準備完了！","就绪！"],
   "직접 공을 받아내 필살기 게이지를 채우세요.":["Return the ball with a swing to charge your special.","自分でスイングして返球すると必殺技ゲージがたまります。","主动挥拍回球以积攒必杀技能量。"],
