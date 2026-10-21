@@ -1501,6 +1501,13 @@ function swing(power=false,buffered=false,assisted=false){
  }
  rec.special=false;rec.shotStyle=state.strokeStyle;rec.duration=rec.smash?.84:rec.shotStyle==='cut'?.78:strokeDuration;rec.contactPhase=rec.smash?.31:.38;rec.assistedTiming=assisted;rec.whoosh=false;rec.planted=false;rec.aim=[0,0,0];state.swing=1;state.hit=false;
  if(state.playing){
+  // Respond to this explicit press instead of requiring a fixed 0.29-second lead.
+  // Keep the real racket sweep and manual positioning; never create a return without a swing.
+  const relief=state.careerMatch?(opponentLevel().learningRelief||0):0;
+  if(relief>0&&!power&&!buffered&&!state.hit&&incomingEta>.055&&incomingEta<.50){
+   const originalDuration=rec.duration,targetDuration=clamp(incomingEta/rec.contactPhase,.24,1.12);
+   rec.duration=mix(originalDuration,targetDuration,relief);rec.assistedTiming=Math.abs(rec.duration-originalDuration)>.025;
+  }
   aimStroke(true);
   // A slightly late normal press can use a shorter stroke. Keep its original
   // timing error so the adjustment never grants a free perfect/critical hit.
@@ -1835,8 +1842,8 @@ function updatePracticeSwingHint(){
  updateSpecialUI();
  const assistDisabled=!!state.careerMatch||tutorial.active,assistChecked=!state.careerMatch&&(practiceAssist||tutorial.active);if(assistInput.disabled!==assistDisabled)assistInput.disabled=assistDisabled;if(assistInput.checked!==assistChecked)assistInput.checked=assistChecked;
  const eta=ball.vz>.1?(state.pz-.45-ball.z)/ball.vz:Infinity;
- const powerLesson=tutorial.active&&tutorial.step===3,available=!state.careerMatch&&state.playing&&state.pointWait<=0&&state.swing<=0&&!state.queuedSwing&&!state.celebration.active;
- const ready=available&&!powerLesson&&(state.serve?.player&&state.serve.phase==='ready'||!state.serve&&!state.hit&&eta>.08&&eta<1.05),powerReady=available&&powerLesson&&!state.serve&&!state.hit&&eta>.28&&eta<.65&&ball.y>1.0;
+ const careerHint=state.careerMatch&&(opponentLevel().learningRelief||0)>0,powerLesson=tutorial.active&&tutorial.step===3,available=(!state.careerMatch||careerHint)&&state.playing&&state.pointWait<=0&&state.swing<=0&&!state.queuedSwing&&!state.celebration.active;
+ const ready=available&&!powerLesson&&(state.serve?.player&&state.serve.phase==='ready'||!state.serve&&!state.hit&&eta>(careerHint?.10:.08)&&eta<(careerHint?.46:1.05)),powerReady=available&&powerLesson&&!state.serve&&!state.hit&&eta>.28&&eta<.65&&ball.y>1.0;
  if(ready!==swingHintReady){swingHintReady=ready;for(const id of ['swing','mobileSwing'])$(id).classList.toggle('timing-ready',ready);}
  if(powerReady!==smashHintReady){smashHintReady=powerReady;for(const id of ['smash','mobileSmash'])$(id).classList.toggle('timing-ready',powerReady);}
 }
