@@ -23,7 +23,7 @@ function markup(stats){
  else{
   if(s.out+s.net>=2)tips.push(tr('아웃과 네트 실수가 있었어요. 힘을 주기 전에 발을 멈추고 타이밍을 맞춰보세요.'));
   if(s.unstable/s.hits>.30)tips.push(tr('움직이면서 친 공이 많아요. 한 발을 딛고 허리를 돌려보세요.'));
-  if(s.opportunities>=2&&!s.smashes)tips.push(tr('상대가 높이 띄운 공을 놓쳤어요. 바운드 뒤 Shift로 마무리해보세요.'));
+  if(s.opportunities>=2&&!s.smashes)tips.push(tr('상대가 높이 띄운 공을 놓쳤어요. 바운드 뒤 E로 마무리해보세요.'));
   if(s.hits>=6&&!s.cut)tips.push(tr('짧은 커트로 상대를 앞으로 부른 뒤 깊은 드라이브를 노려보세요.'));
   if(rate>=60)tips.push(tr('라켓 중앙에 잘 맞혔어요. 다음에는 좌우 코스를 번갈아 노려보세요.'));
  }

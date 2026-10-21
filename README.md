@@ -47,7 +47,7 @@ Supabase SDK 2.118.0은 vendor/에 고정해 외부 CDN 없이 로드합니다(M
 공개 설정 키로 service_role / sb_secret_ 키를 사용하면 안 됩니다.
 
 ## 조작
-WASD/방향키 이동, SPACE 스윙/내 서브 시작, Shift+SPACE 스매시.
+WASD/방향키 이동, SPACE 스윙/내 서브 시작, E 스매시, F 필살기.
 J/K/L 코스, Z 드라이브/X 커트, C 짧은 서브/V 깊은 서브, 1~4 시점 전환.
 
 ## 현재 범위

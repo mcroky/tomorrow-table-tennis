@@ -930,7 +930,7 @@ function impact(player,contact,beforeCountdown,afterCountdown){
  if(player&&timingRisk>.25){label.querySelector('b').textContent=timingOffset>=0?'EARLY!':'LATE!';label.querySelector('span').textContent=(timingOffset>=0?tr('스윙이 빨랐어요'):tr('스윙이 늦었어요'))+' · '+tr('코스 오차 증가');message(tr('타이밍이 어긋나 공이 벗어날 수 있어요.'),tr('RALLY'));return;}
  if(special){label.classList.add('special');label.querySelector('b').textContent=tr('라이징 스매시!');label.querySelector('span').textContent=tr('온몸의 힘을 모은 필살의 한 방');announceImpact('finisher');message(tr('라이징 스매시! 빈 코스를 노리세요.'),'SPECIAL SMASH');return;}
  if(finisher){label.classList.add('finisher');label.querySelector('b').textContent=tr('FINISH SMASH!');label.querySelector('span').textContent=tr('찬스를 놓치지 않은 결정타');message(tr('찬스 볼을 강하게 마무리!'),tr('FINISH SMASH'));return;}
- if(!player&&flight.chance){label.querySelector('b').textContent='CHANCE BALL';label.querySelector('span').textContent=tr('상대 발 디딤 불안정 · 높게 뜬 리턴');announceImpact('save');message(tr('상대가 중심을 잃어 공이 높게 떴어요! 바운드 뒤 Shift!'),'SMASH CHANCE');return;}
+ if(!player&&flight.chance){label.querySelector('b').textContent='CHANCE BALL';label.querySelector('span').textContent=tr('상대 발 디딤 불안정 · 높게 뜬 리턴');announceImpact('save');message(tr('상대가 중심을 잃어 공이 높게 떴어요! 바운드 뒤 E!'),'SMASH CHANCE');return;}
  if(defending){label.querySelector('b').textContent='BLOCK!';label.querySelector('span').textContent=tr('상대가 발을 딛고 낮게 받아냈어요.');message(tr('상대가 중심을 잡고 블록했어요. 다음 코스를 노려보세요.'),tr('RALLY'));return;}
  message((shot==='backhand'?tr('백핸드'):tr('포핸드'))+(perfect?(smash?tr(' 크리티컬 스매시!'):tr(' 크리티컬!')):smash?tr(' 스매시!'):!active?tr(' 블록!'):tr(' 리턴!')),perfect?tr('PERFECT CONTACT'):smash?'SMASH':tr('RALLY'));
 }
@@ -1328,7 +1328,7 @@ function setView(view){
  document.querySelectorAll('[data-view]').forEach(b=>{b.classList.toggle('active',b.dataset.view===view);b.setAttribute('aria-pressed',b.dataset.view===view)});
  $('cameraLabel').textContent={pov:tr('라켓 시점'),follow:tr('선수 뒤'),side:tr('측면'),top:tr('전체 보기')}[view];
 }
-function message(text,phase=tr('PRACTICE RALLY')){if(document.documentElement.dataset.input==='touch'){text=text.replace(/\bShift\b/gi,tr('스매시 버튼')).replace(/\bSPACE\b/g,tr('스윙 버튼'));if(document.documentElement.lang==='ko')text=text.replaceAll('버튼로','버튼으로').replaceAll('버튼를','버튼을');if(innerWidth<=850&&innerHeight>innerWidth){const idle=document.querySelector('.feedback-idle');if(idle)idle.textContent=text;}}$('message').textContent=text;$('phase').textContent=phase;}
+function message(text,phase=tr('PRACTICE RALLY')){if(document.documentElement.dataset.input==='touch'){text=text.replace(/\bE\b/gi,tr('스매시 버튼')).replace(/\bSPACE\b/g,tr('스윙 버튼'));if(document.documentElement.lang==='ko')text=text.replaceAll('버튼로','버튼으로').replaceAll('버튼를','버튼을');if(innerWidth<=850&&innerHeight>innerWidth){const idle=document.querySelector('.feedback-idle');if(idle)idle.textContent=text;}}$('message').textContent=text;$('phase').textContent=phase;}
 
 function feed(opening=false){
  state.serve=null;
@@ -1345,7 +1345,7 @@ function feed(opening=false){
  if(opening||tutorial.active&&tutorial.step===1||state.careerMatch&&!high){prepareServe();return;}
  showIncoming(high?'lob':'flat');
  $('serveStatus').textContent=tr('연습 랠리 · 자동 투구');
- message(high?tr('높이 튀는 공에 Shift로 스매시!'):tr('공을 몸 앞까지 기다렸다가 SPACE로 스윙하세요.'));
+ message(high?tr('높이 튀는 공에 E로 스매시!'):tr('공을 몸 앞까지 기다렸다가 SPACE로 스윙하세요.'));
 }
 function prepareServe(){
  const total=state.score[0]+state.score[1],turn=total>=20?10+total-20:Math.floor(total/2),player=turn%2===0;
@@ -1430,7 +1430,7 @@ const tutorial=(()=>{
   bar.hidden=!active;if(!active)return;
   count.textContent=step===4?'✓':step+' / 3';
   title.textContent=tr(['','1. 서브로 시작하기','2. 공을 기다렸다가 스윙','3. 높은 공은 스매시!','준비 끝! 이제 자유롭게 연습하세요.'][step]);
-  detail.textContent=tr(step===1?(touch()?'스윙 버튼을 눌러 서브하세요.':'SPACE를 눌러 서브하세요.'):step===2?'버튼이 밝아지면 스윙! 공을 실제로 맞히면 다음 단계로 넘어가요.':step===3?(touch()?'스매시 버튼이 밝아지면 눌러 높은 공을 내려치세요.':'스매시 버튼이 밝아지면 Shift로 높은 공을 내려치세요.'):'서브, 스윙, 스매시를 모두 해냈어요. 놓쳐도 괜찮으니 계속 도전해보세요.');
+  detail.textContent=tr(step===1?(touch()?'스윙 버튼을 눌러 서브하세요.':'SPACE를 눌러 서브하세요.'):step===2?'버튼이 밝아지면 스윙! 공을 실제로 맞히면 다음 단계로 넘어가요.':step===3?(touch()?'스매시 버튼이 밝아지면 눌러 높은 공을 내려치세요.':'스매시 버튼이 밝아지면 E로 높은 공을 내려치세요.'):'서브, 스윙, 스매시를 모두 해냈어요. 놓쳐도 괜찮으니 계속 도전해보세요.');
   skip.textContent=tr(step===4?'계속 연습하기':'건너뛰기');$('highFeed').disabled=true;$('practiceAssist').disabled=true;$('practiceAssist').checked=true;
  }
  function reset(){fx.age=10;fx.hitstop=0;fx.slowFor=0;fx.contactClock=null;fx.announcement=null;$('impactLabel').classList.remove('visible');state.pointWait=0;state.celebration.active=false;state.enemyMotion.taunt=null;state.enemyMotion.revenge=null;state.swing=state.enemySwing=0;state.queuedSwing=null;state.keys={};state.velocity=[0,0];state.px=0;state.pz=2.05;state.playerStroke.groundFeet=state.enemyStroke.groundFeet=null;state.playerStroke.locked=state.enemyStroke.locked=null;state.score=[0,0];$('score').textContent='0 : 0';}
@@ -1799,7 +1799,7 @@ moveZone.onpointermove=e=>{if(e.pointerId===stickPointer){e.preventDefault();mov
 moveZone.onpointerup=moveZone.onpointercancel=moveZone.onlostpointercapture=e=>{if(e.pointerId===stickPointer)releaseTouch();};
 for(const [id,power] of [['mobileSwing',false],['mobileSmash',true]]){const button=$(id);button.onpointerdown=e=>{e.preventDefault();if(document.querySelector('dialog[open]')||career.isMap())return;button.setPointerCapture(e.pointerId);button.classList.add('pressed');swing(power);};button.onpointerup=button.onpointercancel=button.onlostpointercapture=()=>button.classList.remove('pressed');button.onclick=e=>{if(e.detail===0)swing(power);};}
 addEventListener('blur',releaseTouch);addEventListener('resize',releaseTouch);document.addEventListener('visibilitychange',()=>{if(document.hidden)releaseTouch();});
-addEventListener('keydown',e=>{if(career.isMap()||document.getElementById('forfeitDialog')?.open)return;if(e.target instanceof Element&&e.target.closest('input,select,textarea'))return;const shiftHeld=!!(state.keys.ShiftLeft||state.keys.ShiftRight);state.keys[e.code]=true;if(['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code))e.preventDefault();if(!e.repeat&&!e.ctrlKey&&!e.metaKey&&!e.altKey){if(e.code==='Space')swing(false);if((e.code==='ShiftLeft'||e.code==='ShiftRight')&&!shiftHeld)swing(true);}if(!e.ctrlKey&&!e.metaKey&&!e.altKey&&['KeyJ','KeyK','KeyL'].includes(e.code))setCourse({KeyJ:-1,KeyK:0,KeyL:1}[e.code]);if(!e.repeat&&!e.ctrlKey&&!e.metaKey&&!e.altKey){if(e.code==='KeyF')useSpecial();if(e.code==='KeyZ')setStrokeStyle('drive');if(e.code==='KeyX')setStrokeStyle('cut');if(e.code==='KeyC')setServeLength('short');if(e.code==='KeyV')setServeLength('deep');}const views=['pov','follow','side','top'];if(/^Digit[1-4]$/.test(e.code))setView(views[Number(e.code.slice(-1))-1]);});
+addEventListener('keydown',e=>{if(career.isMap()||document.getElementById('forfeitDialog')?.open)return;if(e.target instanceof Element&&e.target.closest('input,select,textarea'))return;state.keys[e.code]=true;if(['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code))e.preventDefault();if(!e.repeat&&!e.ctrlKey&&!e.metaKey&&!e.altKey){if(e.code==='Space')swing(false);if(e.code==='KeyE')swing(true);}if(!e.ctrlKey&&!e.metaKey&&!e.altKey&&['KeyJ','KeyK','KeyL'].includes(e.code))setCourse({KeyJ:-1,KeyK:0,KeyL:1}[e.code]);if(!e.repeat&&!e.ctrlKey&&!e.metaKey&&!e.altKey){if(e.code==='KeyF')useSpecial();if(e.code==='KeyZ')setStrokeStyle('drive');if(e.code==='KeyX')setStrokeStyle('cut');if(e.code==='KeyC')setServeLength('short');if(e.code==='KeyV')setServeLength('deep');}const views=['pov','follow','side','top'];if(/^Digit[1-4]$/.test(e.code))setView(views[Number(e.code.slice(-1))-1]);});
 addEventListener('keyup',e=>state.keys[e.code]=false);addEventListener('blur',()=>{state.queuedSwing=null;state.keys={};dragging=false;});
 
 function syncAudioUI(){

@@ -6,6 +6,7 @@ const title=text(['업데이트 내역','Updates','アップデート情報','�
 // Add new releases at the top; keep previous entries available to players.
 const releases=[
  {date:'2026-10-21',title:['직접 치는 실전 경기','Take control in career matches','自分で打つ本番の試合','亲自掌控正式比赛'],items:[
+  ['Windows 고정 키 안내를 피하도록 PC 스매시를 E키로 변경하고 튜토리얼과 조작 안내를 수정했습니다. Space는 일반 스윙, F는 필살기입니다.','Changed PC smash to E to avoid the Windows Sticky Keys prompt, and updated tutorials and controls. Space swings; F uses your special.','Windowsの固定キー案内を避けるため、PCのスマッシュをEキーに変更し、操作案内を更新しました。Spaceは通常スイング、Fは必殺技です。','电脑端扣杀改为E键，避免触发Windows粘滞键提示，并更新教程与操作说明。空格键普通挥拍，F键必杀技。'],
   ['로키 스튜디오로 돌아가기 버튼을 추가했습니다.','Added a return link to Roky Studio.','Roky Studioに戻るボタンを追加しました。','新增返回Roky Studio的按钮。'],
   ['필살기 라이징 스매시 추가: 직접 리턴으로 충전하고 높은 공에 F키 또는 필살기 버튼으로 사용하세요.','Added Rising Smash: charge it with active returns, then use F or the Special button on a high ball.','必殺技ライジングスマッシュを追加。返球で充電し、高い球にFキーまたは必殺技ボタンで使えます。','新增升龙扣杀：主动回球充能，在高球到来时按F或必杀技按钮使用。'],
   ['자동 이동과 타이밍 보정은 연습에서만 적용됩니다.','Automatic movement and timing assistance now apply only in practice.','自動移動とタイミング補助は練習でのみ適用されます。','自动移动和时机辅助仅在练习中生效。'],
@@ -13,7 +14,7 @@ const releases=[
   ['전체화면 플레이 안내와 업데이트 내역 창을 추가했습니다.','Added a fullscreen play hint and this update history.','全画面プレイの案内とアップデート情報を追加しました。','新增全屏游玩提示和更新记录。']
  ]},
  {date:'2026-10-20',title:['조작과 화면 개선','Controls and display improvements','操作と画面の改善','操作与画面优化'],items:[
-  ['PC 스매시를 Shift 단독 입력으로 변경했습니다. Space는 일반 스윙입니다.','On PC, press Shift to smash and Space for a regular swing.','PCではShiftだけでスマッシュ、Spaceで通常スイングができます。','电脑端按Shift扣杀，按空格键普通挥拍。'],
+  ['PC 스매시를 단독 키 입력으로 간소화했습니다(현재 E키).','Simplified PC smash to a single key (currently E).','PCのスマッシュを単独キー操作に変更しました（現在はEキー）。','电脑端扣杀简化为单键操作（当前为E键）。'],
   ['월드맵 기본 확대율을 65%로 설정하고 내 캐릭터를 중심으로 표시합니다.','The world map opens at 65% zoom, centered on your character.','ワールドマップは自分のキャラクターを中心に65%表示で開きます。','世界地图默认缩放为65%，以你的角色为中心。'],
   ['기본 시점을 1번 라켓 시점으로 변경했습니다.','The default camera is now view 1, the racket view.','初期視点を1番のラケット視点に変更しました。','默认视角改为1号球拍视角。'],
   ['터치 노트북의 PC 조작 판별을 개선하고 경기 화면 확대와 전체화면 버튼을 추가했습니다.','Improved desktop control detection on touch laptops, expanded the court layout, and added a fullscreen button.','タッチ対応ノートPCの操作判定を改善し、試合画面の拡大と全画面ボタンを追加しました。','优化触屏笔记本的电脑操作识别，扩大比赛画面并新增全屏按钮。'],
