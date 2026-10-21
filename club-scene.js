@@ -778,7 +778,7 @@ function strikeRig(player,countdownOverride=null,aimOverride=null){
 }
 
 function predictFlight(seconds){
- const b={...ball};let t=0;while(t<seconds){const h=Math.min(1/240,seconds-t),old=b.y;b.x+=b.vx*h;b.y+=b.vy*h;b.z+=b.vz*h;b.vy-=5.8*h;if(old>=.79&&b.y<.79&&b.vy<0&&Math.abs(b.x)<.7625&&Math.abs(b.z)<1.37){b.y=.79;const cut=b.spin==='cut',drive=b.spin==='drive';b.vy=-b.vy*(cut?.78:drive?.72:.88);b.vx*=cut?.78:drive?1.10:1;b.vz*=cut?.78:drive?1.13:1;}t+=h;}return b;
+ const b={...ball};let t=0;while(t<seconds){const h=Math.min(1/240,seconds-t),old=b.y;b.x+=b.vx*h;b.y+=b.vy*h;b.z+=b.vz*h;b.vy-=(b.gravity||5.8)*h;if(old>=.79&&b.y<.79&&b.vy<0&&Math.abs(b.x)<.7625&&Math.abs(b.z)<1.37){b.y=.79;const cut=b.spin==='cut',drive=b.spin==='drive';b.vy=-b.vy*(b.entryBounce?.65:cut?.78:drive?.72:.88);b.vx*=cut?.78:drive?1.10:1;b.vz*=cut?.78:drive?1.13:1;}t+=h;}return b;
 }
 function aimStroke(player){
  const rec=player?state.playerStroke:state.enemyStroke,phase=rec.contactPhase??.38,t=(rec.duration||strokeDuration)*phase,pred=predictFlight(t);
@@ -1368,7 +1368,7 @@ function launchServe(){
  const serve=state.serve,player=serve.player,rig=strikeRig(player),direction=player?-1:1,deep=serve.style==='deep',targetX=serve.course*.48,ownZ=-direction*.64,receiveZ=direction*(deep?1.16:.52),t=.38;
  [ball.x,ball.y,ball.z]=rig.center;ball.y=Math.max(.99,ball.y);
  ball.vx=(targetX*.35-ball.x)/t;ball.vz=(ownZ-ball.z)/t;ball.vy=(.79-ball.y+2.9*t*t)/t;
- ball.spin=deep?'drive':'cut';ball.shotStyle=ball.spin;ball.finisher=null;ball.smashChance=false;ball.opponentChance=false;ball.chanceBounced=false;
+ ball.gravity=5.8;ball.entryBounce=false;ball.spin=deep?'drive':'cut';ball.shotStyle=ball.spin;ball.finisher=null;ball.smashChance=false;ball.opponentChance=false;ball.chanceBounced=false;
  ball.rallyShot={hitter:player,landed:false,bounces:0,serveBounce:0,receiveX:targetX,receiveZ,serveStyle:serve.style};
  if(player){state.hit=true;state.enemyHit=false;state.enemyPrepared=false;}else{state.enemyHit=true;state.hit=false;}
  state.serve=null;if(!player)showIncoming(ball.spin);$('serveStatus').textContent=(player?tr('내 서브'):tr('상대 서브'))+' · '+(deep?tr('깊고 빠른 서브'):tr('짧고 낮은 서브'));playAt('serve',rig.center,.85);
@@ -1473,7 +1473,7 @@ function swing(power=false,buffered=false,assisted=false){
  if(state.serve){if(state.serve.player&&state.serve.phase==='ready')beginServeToss();return;}
  // One explicit press may wait briefly for this incoming ball. It cannot carry into another shot.
  const careerWindow=state.careerMatch?(opponentLevel().learningRelief||0):0,pressEta=ball.vz>.05?(state.pz-.45-ball.z)/ball.vz:Infinity;
- if(careerWindow>0&&!power&&!buffered&&state.playing&&!state.hit&&pressEta>.34&&pressEta<.36+.54*careerWindow){state.queuedSwing={power:false,expires:state.elapsed+Math.min(1.1,pressEta+.18),assisted:true,careerPress:true,shot:ball.rallyShot};message(tr('스윙 입력 완료 · 공이 오면 한 번 휘두릅니다.'));return;}
+ if(careerWindow>0&&(!power||ball.smashChance)&&!buffered&&state.playing&&!state.hit&&pressEta>.34&&pressEta<.36+.54*careerWindow){state.queuedSwing={power:!!power,expires:state.elapsed+Math.min(1.1,pressEta+.18),assisted:true,careerPress:true,shot:ball.rallyShot};message(tr('스윙 입력 완료 · 공이 오면 한 번 휘두릅니다.'));return;}
  if(practiceHelp()&&!buffered&&state.playing){state.queuedSwing={power:!!power,expires:state.elapsed+3,assisted:true,practice:true};message(tr(power?'스매시 준비! 높은 공을 기다려요.':'스윙 준비! 공이 가까워지면 맞춰 칩니다.'));return;}
  if(state.swing>0&&(!buffered||state.swing>.12)){
   if(!state.careerMatch&&state.swing<=(power?.34:.45))state.queuedSwing={power:!!power,expires:state.elapsed+(power?.24:.34),assisted:!power};return;
@@ -1567,10 +1567,12 @@ function returnBall(toNear,{special=false,kind='hit',sweet=0,u=0,footing=null,co
  const endX=opponentFault?(Math.sign(aimX+error)||1)*(.86+Math.random()*.16):clamp(aimX+error+sideways,toNear?(chance?-.56:-.65):-.71-mistime*1.05,toNear?(chance?.56:.65):.71+mistime*1.05);
  const endZ=(entryReturn?1.08:practiceReturn?1.10:plan?plan.endZ:chance?1.16:toNear?(cut?.52+ease*.28:drive?1.12:.92):exposed?-1.02:cut?-.50:drive?-1.12:-.95)-(early?Math.pow(mistime,1.4)*.94:mistime*.17);
  const baseTime=finishing?.40:exposed?1.15:chance?1.22+state.enemyDefense.stretch*.06:kind==='edge'?.98:weak?.88:cut?.68:drive?.64:kind==='center'?.72:smash?(critical?.43:.50):(critical?.66:.76);
- const requestedPower=(special?1.22:1)*(1-mistime*.22)*(1-(response?.popup||0)*.10)*(footing?.power??1)*(toNear?opponent.power:growth().power*(smash?growth().smashPower:1)*(kind==='block'?growth().blockPower:1)),rawTime=exposed?1.15:chance?clamp(baseTime/requestedPower,1.18,1.36):cut?clamp(baseTime/Math.sqrt(requestedPower),.60,.82+ease*.30):baseTime/requestedPower*(plan?.timeScale||1),t=practiceReturn?Math.min(rawTime,chance?(tutorial.active?1.36:1.28):(tutorial.active?1.16:1.04)):rawTime,power=baseTime/t;
+ const requestedPower=(special?1.22:1)*(1-mistime*.22)*(1-(response?.popup||0)*.10)*(footing?.power??1)*(toNear?opponent.power:growth().power*(smash?growth().smashPower:1)*(kind==='block'?growth().blockPower:1)),rawTime=exposed?1.15:chance?clamp(baseTime/requestedPower,1.18,1.36):cut?clamp(baseTime/Math.sqrt(requestedPower),.60,.82+ease*.30):baseTime/requestedPower*(plan?.timeScale||1),t=entryReturn?clamp(rawTime,.90,1.18):practiceReturn?Math.min(rawTime,chance?(tutorial.active?1.36:1.28):(tutorial.active?1.16:1.04)):rawTime,power=baseTime/t;
  ball.spin=chance||exposed?'lob':smash?'flat':cut?'cut':drive?'drive':'flat';ball.shotStyle=ball.spin;
  ball.rallyShot={hitter:!toNear,landed:false,bounces:0,timingRisk:mistime};
- ball.vx=(endX-ball.x)/t;ball.vz=(endZ-ball.z)/t;ball.vy=(.79-ball.y+2.9*t*t)/t-(chance||exposed?0:response?.netDip||0);
+ // Slow entry returns must stay within normal racket height instead of turning into unmarked lobs.
+ ball.gravity=entryReturn?3.8:5.8;ball.entryBounce=entryReturn;
+ ball.vx=(endX-ball.x)/t;ball.vz=(endZ-ball.z)/t;ball.vy=(.79-ball.y+ball.gravity*.5*t*t)/t-(chance||exposed?0:response?.netDip||0);
  if(toNear)showIncoming(ball.spin);else if(exposed)showIncoming('lob',true);
  if(!toNear)beginDefense(kind);
  return{aimX,x:endX,z:endZ,error:endX-aimX,spread,power,flightTime:t,chance,style:ball.shotStyle,exposed,netDip:response?.netDip||0,timingRisk:mistime,bossPattern:plan?.label||null};
@@ -1678,7 +1680,7 @@ function update(dt){
  else feed();
 }return;}
  const previous=[ball.x,ball.y,ball.z],oldY=ball.y,oldZ=ball.z;
- ball.x+=ball.vx*dt;ball.y+=ball.vy*dt;ball.z+=ball.vz*dt;ball.vy-=5.8*dt;
+ ball.x+=ball.vx*dt;ball.y+=ball.vy*dt;ball.z+=ball.vz*dt;ball.vy-=(ball.gravity||5.8)*dt;
  if(oldY>=.79&&ball.y<.79&&ball.vy<0){
   const fraction=clamp((oldY-.79)/Math.max(.000001,oldY-ball.y),0,1),crossX=mix(previous[0],ball.x,fraction),crossZ=mix(oldZ,ball.z,fraction);
   // Include the ball radius so a table-edge contact remains in.
@@ -1693,7 +1695,7 @@ function update(dt){
    if(!onTable||!receiverHalf){point(!shot.hitter,'out');return;}
    shot.landed=true;shot.bounces=1;if(shot.serveBounce===1&&shot.hitter)tutorial.served();if(state.careerMatch&&shot.serveBounce===1)career.recordMatchEvent({type:'serve',player:shot.hitter,length:shot.serveStyle});
   }else if(shot?.landed&&onTable){shot.bounces++;point(shot.hitter);return;}
-  if(onTable){ball.y=.79;const cut=ball.spin==='cut',drive=ball.spin==='drive';ball.vy=-ball.vy*(cut?.78:drive?.72:.88);ball.vx*=cut?.78:drive?1.10:1;ball.vz*=cut?.78:drive?1.13:1;if(ball.smashChance&&ball.z>0)ball.chanceBounced=true;if(ball.finisher&&ball.z<0)ball.finisher.landed=true;playAt('bounce',[crossX,.77,crossZ],.78);}
+  if(onTable){ball.y=.79;const cut=ball.spin==='cut',drive=ball.spin==='drive';ball.vy=-ball.vy*(ball.entryBounce?.65:cut?.78:drive?.72:.88);ball.vx*=cut?.78:drive?1.10:1;ball.vz*=cut?.78:drive?1.13:1;if(ball.smashChance&&ball.z>0)ball.chanceBounced=true;if(ball.finisher&&ball.z<0)ball.finisher.landed=true;playAt('bounce',[crossX,.77,crossZ],.78);}
  }
  if(oldZ*ball.z<0&&Math.abs(ball.x)<.805&&ball.y>.75&&ball.y<.948){if(ball.rallyShot?.serveBounce===1){prepareServe();message(tr('네트에 닿은 서브 · 다시 서브하세요.'),'LET');return;}const near=ball.vz>0;playAt('net',[ball.x,ball.y,0],.9);point(near,'net');return;}
  if(ball.vz<0&&!state.enemyPrepared){
@@ -1848,7 +1850,8 @@ function updatePracticeSwingHint(){
  const assistDisabled=!!state.careerMatch||tutorial.active,assistChecked=!state.careerMatch&&(practiceAssist||tutorial.active);if(assistInput.disabled!==assistDisabled)assistInput.disabled=assistDisabled;if(assistInput.checked!==assistChecked)assistInput.checked=assistChecked;
  const eta=ball.vz>.1?(state.pz-.45-ball.z)/ball.vz:Infinity;
  const careerHint=state.careerMatch&&(opponentLevel().learningRelief||0)>0,powerLesson=tutorial.active&&tutorial.step===3,available=(!state.careerMatch||careerHint)&&state.playing&&state.pointWait<=0&&state.swing<=0&&!state.queuedSwing&&!state.celebration.active;
- const ready=available&&!powerLesson&&(state.serve?.player&&state.serve.phase==='ready'||!state.serve&&!state.hit&&eta>(careerHint?.10:.08)&&eta<(careerHint?.84:1.05)),powerReady=available&&powerLesson&&!state.serve&&!state.hit&&eta>.28&&eta<.65&&ball.y>1.0;
+ const smashChance=careerHint&&!!ball.smashChance,powerReady=available&&(powerLesson||smashChance)&&!state.serve&&!state.hit&&eta>.18&&eta<.65&&ball.y>1.0;
+ const ready=available&&!powerLesson&&!smashChance&&(state.serve?.player&&state.serve.phase==='ready'||!state.serve&&!state.hit&&eta>(careerHint?.10:.08)&&eta<(careerHint?.84:1.05));
  if(ready!==swingHintReady){swingHintReady=ready;for(const id of ['swing','mobileSwing'])$(id).classList.toggle('timing-ready',ready);}
  if(powerReady!==smashHintReady){smashHintReady=powerReady;for(const id of ['smash','mobileSmash'])$(id).classList.toggle('timing-ready',powerReady);}
 }
