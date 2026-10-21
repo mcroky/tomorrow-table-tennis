@@ -354,11 +354,13 @@ function opponentConfig(){
  const beginner=Math.max(0,1-n.id/25),ease=rank?.25:.35+.65*beginner;
  base.speed*=1-.28*ease;base.reaction*=1+.50*ease;base.power*=1-.26*ease;base.placement*=1-.30*ease;
  base.ease=ease;base.mistakes=.035+.10*ease;
- // A small campaign-only adjustment through midgame, fading out before the final regions.
+ // Readable early and midgame rallies, fading out before the final regions.
  // Reaction is a delay multiplier: increasing it gives the player a little more room.
  const midgameRelief=rank?0:Math.max(0,Math.min(1,(25-n.id)/6));
- base.speed*=1-.05*midgameRelief;base.reaction*=1+.06*midgameRelief;
- base.power*=1-.03*midgameRelief;base.placement*=1-.04*midgameRelief;
+ base.speed*=1-.15*midgameRelief;base.reaction*=1+.20*midgameRelief;
+ base.power*=1-.12*midgameRelief;base.placement*=1-.15*midgameRelief;
+ base.mistakes+=.025*midgameRelief;base.learningRelief=midgameRelief;
+ base.simpleReturns=rank?null:n.id<5?'flat':n.id<20?'mixed':null;
  opponentCache.set(key,base);return base;
 }
 

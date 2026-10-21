@@ -836,6 +836,7 @@ function showIncoming(style,warning=false){
 function chooseEnemyStyle(){
  if(!state.careerMatch||practiceHelp())return 'flat';
  const boss=opponentLevel().boss,index=fx.rally+state.score[0]+state.score[1];
+ if(opponentLevel().simpleReturns==='flat'||opponentLevel().simpleReturns==='mixed'&&index%3!==0)return 'flat';
  if(boss?.id==='defender')return index%3===0?'drive':'cut';
  if(boss?.id==='tactician')return index%2===0?'cut':'drive';
  if(boss?.id==='striker')return index%4===0?'cut':'drive';
@@ -894,7 +895,8 @@ function impact(player,contact,beforeCountdown,afterCountdown){
  [ball.x,ball.y,ball.z]=position;
  const defending=!player&&rec.defense,footing=evaluateFooting(rig),course=player?state.course:0;
  const active=state[key]>0,p=active?1-state[key]:-1,timing=Math.abs(p-(rec.contactPhase??.38)),perfect=!defending&&(!player||!rec.assistedTiming)&&footing.score>=(player?.62:.78)&&active&&contact.sweet<=.42&&timing<.105&&(rec.inputTiming??1)<.036*(player?growth().sweetWindow:1);
- const timingOffset=active?(p-(rec.contactPhase??.38))*(rec.duration||strokeDuration):0,timingError=active?Math.max(Math.abs(timingOffset),(rec.inputTiming??0)*.65):0,timingRisk=player&&active?smooth(clamp((timingError-(state.careerMatch?.085:.15)*growth().sweetWindow)/(state.careerMatch?.18:.24),0,1)):0;
+ const learningRelief=state.careerMatch?(opponentLevel().learningRelief||0):0;
+ const timingOffset=active?(p-(rec.contactPhase??.38))*(rec.duration||strokeDuration):0,timingError=active?Math.max(Math.abs(timingOffset),(rec.inputTiming??0)*.65):0,timingRisk=player&&active?smooth(clamp((timingError-(state.careerMatch?.085+.055*learningRelief:.15)*growth().sweetWindow)/(state.careerMatch?.18+.06*learningRelief:.24),0,1)):0;
  const edge=contact.sweet>.82,centered=contact.sweet<=.42,smash=!!rec.smash&&active&&ball.y>1.16&&!edge,finisher=player&&smash&&!edge&&!!ball.smashChance&&!!ball.chanceBounced&&footing.score>=.72&&timingRisk<.20,unstableReturn=!player&&(footing.score<.62||footing.planted<2&&footing.speed>.85||footing.score<.76&&state.enemyDefense.stretch>.55),kind=unstableReturn?'unstable-block':finisher?(perfect?'critical-finish-smash':'finish-smash'):defending?(state.enemyDefense.stretch>.5?'desperate-block':'pressure-block'):perfect?(smash?'critical-smash':'critical'):(smash?'smash':(!active?'block':edge?'edge':centered?'center':'hit'));
  if(player){state.hit=true;if((rec.approachStrike||rec.advanceShot)&&!finisher){const a=rec.approachStrike||rec.advanceShot;rec.rallyRecovery={mode:'retreat',phase:'follow',phaseAge:0,age:0,supportSide:a.leadSide,direction:0,retreatZ:0,readDirection:0,release:0,amount:0,shift:0,roll:0,backLoad:0,headingYaw:rec.turnShot?.headingYaw||0,diagonalLoad:rec.turnShot?.diagonalLoad||0,freeStepped:false};}else if(rec.turnShot&&!finisher)rec.rallyRecovery={phase:'follow',phaseAge:0,age:0,supportSide:rec.turnShot.side,direction:0,shotDirection:rec.turnShot.direction,targetX:state.px,readDirection:0,release:0,amount:0,shift:0,roll:0,freeStepped:false};}else state.enemyHit=true;
  const incoming=ball.spin||'flat',style=active&&!smash?(rec.shotStyle||'drive'):'flat',response=readSpin(incoming,style,footing,timingRisk,contact.sweet,smash,player);
