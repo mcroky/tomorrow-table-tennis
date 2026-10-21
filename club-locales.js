@@ -1,5 +1,6 @@
 'use strict';
 window.ClubLocales={
+  "전체화면으로 플레이하면 더 실감나요! 전체화면을 눌러 시작해보세요.":["Play fullscreen for a more immersive match! Press Fullscreen to get started.","全画面ならもっと臨場感アップ！全画面表示を押してプレイしてみましょう。","全屏对战更有临场感！点击全屏开始体验吧。"],
   "전체화면 해제":["Exit fullscreen","全画面表示を終了","退出全屏"],
   "전체화면":["Fullscreen","全画面表示","全屏"],
   "전체화면을 열지 못했습니다. 브라우저의 전체화면 기능을 이용해주세요.":["Could not enter fullscreen. Please use your browser’s fullscreen option.","全画面表示にできませんでした。ブラウザの全画面表示機能をご利用ください。","无法进入全屏。请使用浏览器的全屏功能。"],

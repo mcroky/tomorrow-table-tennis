@@ -713,3 +713,7 @@ html[data-input=touch] body[data-surface=court] .feedback-strip .impact-label sp
 }
 #courtFullscreen{border:1px solid #b8c9b1;border-radius:7px;background:#e2ebd8;color:#304c3c;white-space:nowrap}
 :fullscreen{background:#ebece3}
+
+.fullscreen-hint{flex:1 0 100%;order:3;margin:0;font-size:11px;line-height:1.5;color:#547148;padding:2px 4px}
+.fullscreen-hint[hidden]{display:none}
+body[data-surface=court] .toolbar:has(.fullscreen-hint:not([hidden])){flex-wrap:wrap!important}
