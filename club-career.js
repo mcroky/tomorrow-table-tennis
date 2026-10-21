@@ -357,10 +357,10 @@ function opponentConfig(){
  // Readable early and midgame rallies, fading out before the final regions.
  // Reaction is a delay multiplier: increasing it gives the player a little more room.
  const midgameRelief=rank?0:Math.max(0,Math.min(1,(25-n.id)/6));
- base.speed*=1-.15*midgameRelief;base.reaction*=1+.20*midgameRelief;
- base.power*=1-.12*midgameRelief;base.placement*=1-.15*midgameRelief;
- base.mistakes+=.025*midgameRelief;base.learningRelief=midgameRelief;
- base.simpleReturns=rank?null:n.id<5?'flat':n.id<20?'mixed':null;
+ base.speed*=1-.30*midgameRelief;base.reaction*=1+.40*midgameRelief;
+ base.power*=1-.22*midgameRelief;base.placement*=1-.25*midgameRelief;
+ base.mistakes+=.07*midgameRelief;base.learningRelief=midgameRelief;base.entryGame=!rank&&n.id<20;
+ base.simpleReturns=rank?null:n.id<10?'flat':n.id<20?'mixed':null;
  opponentCache.set(key,base);return base;
 }
 

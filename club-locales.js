@@ -1,5 +1,6 @@
 'use strict';
 window.ClubLocales={
+  "스윙 입력 완료 · 공이 오면 한 번 휘두릅니다.":["Swing input received · One swing when this ball arrives.","スイング入力受付 · この球が来たら一度振ります。","挥拍输入已接收 · 来球到达时挥拍一次。"],
   "로키 스튜디오로 돌아가기":["Return to Roky Studio","Roky Studioに戻る","返回Roky Studio"],
   "← 로키 스튜디오":["← Roky Studio","← Roky Studio","← Roky Studio"],
   "필살기":["Special","必殺技","必杀技"],

@@ -646,7 +646,7 @@ function poseTransition(pose,receiver){
 }
 function processQueuedSwing(){
  const q=state.queuedSwing;if(!q)return;
- if(state.careerMatch||state.elapsed>q.expires||state.celebration.active||state.pointWait>0){state.queuedSwing=null;return;}
+ if(state.careerMatch&&!q.careerPress||q.careerPress&&(!state.careerMatch||!state.playing||state.hit||q.shot!==ball.rallyShot)||state.elapsed>q.expires||state.celebration.active||state.pointWait>0){state.queuedSwing=null;return;}
  const eta=ball.vz>.05?(state.pz-.45-ball.z)/ball.vz:Infinity;
  if(q.practice&&(!state.playing||state.hit||state.serve))return;
  const power=q.power&&(!q.practice||predictFlight(.26).y>1.16);
@@ -1360,7 +1360,7 @@ function prepareServe(){
 function beginServeToss(){
  const serve=state.serve;if(!serve||serve.phase!=='ready')return;
  const player=serve.player,rec=player?state.playerStroke:state.enemyStroke,key=player?'swing':'enemySwing';
- serve.phase='toss';serve.age=0;serve.style=player?state.serveLength:practiceHelp()?'deep':(state.score[0]+state.score[1])%3===0?'deep':'short';serve.course=player?state.course:practiceHelp()?0:(Math.random()<.5?-1:1);
+ serve.phase='toss';serve.age=0;serve.style=player?state.serveLength:(practiceHelp()||state.careerMatch&&opponentLevel().entryGame)?'deep':(state.score[0]+state.score[1])%3===0?'deep':'short';serve.course=player?state.course:(practiceHelp()||state.careerMatch&&opponentLevel().entryGame)?0:(Math.random()<.5?-1:1);
  rec.locked=null;lockStroke(rec,player?state.px:state.enemyX,player?state.pz:state.enemyZ,player?-1:1);
  rec.transition=null;rec.turnShot=null;rec.approachStrike=null;rec.advanceShot=null;rec.rallyRecovery=null;rec.smash=false;rec.defense=false;rec.shotStyle='cut';rec.duration=.80;rec.contactPhase=.38;rec.aim=[0,0,0];rec.whoosh=false;rec.planted=false;state[key]=1;
 }
@@ -1471,6 +1471,9 @@ career.bindPractice(()=>{
 function swing(power=false,buffered=false,assisted=false){
  sound.unlock();if(state.careerMatch&&!state.playing||state.celebration.active||state.pointWait>0)return;
  if(state.serve){if(state.serve.player&&state.serve.phase==='ready')beginServeToss();return;}
+ // One explicit press may wait briefly for this incoming ball. It cannot carry into another shot.
+ const careerWindow=state.careerMatch?(opponentLevel().learningRelief||0):0,pressEta=ball.vz>.05?(state.pz-.45-ball.z)/ball.vz:Infinity;
+ if(careerWindow>0&&!power&&!buffered&&state.playing&&!state.hit&&pressEta>.34&&pressEta<.36+.54*careerWindow){state.queuedSwing={power:false,expires:state.elapsed+Math.min(1.1,pressEta+.18),assisted:true,careerPress:true,shot:ball.rallyShot};message(tr('스윙 입력 완료 · 공이 오면 한 번 휘두릅니다.'));return;}
  if(practiceHelp()&&!buffered&&state.playing){state.queuedSwing={power:!!power,expires:state.elapsed+3,assisted:true,practice:true};message(tr(power?'스매시 준비! 높은 공을 기다려요.':'스윙 준비! 공이 가까워지면 맞춰 칩니다.'));return;}
  if(state.swing>0&&(!buffered||state.swing>.12)){
   if(!state.careerMatch&&state.swing<=(power?.34:.45))state.queuedSwing={power:!!power,expires:state.elapsed+(power?.24:.34),assisted:!power};return;
@@ -1504,7 +1507,7 @@ function swing(power=false,buffered=false,assisted=false){
   // Respond to this explicit press instead of requiring a fixed 0.29-second lead.
   // Keep the real racket sweep and manual positioning; never create a return without a swing.
   const relief=state.careerMatch?(opponentLevel().learningRelief||0):0;
-  if(relief>0&&!power&&!buffered&&!state.hit&&incomingEta>.055&&incomingEta<.50){
+  if(relief>0&&!power&&!state.hit&&incomingEta>.055&&incomingEta<.50){
    const originalDuration=rec.duration,targetDuration=clamp(incomingEta/rec.contactPhase,.24,1.12);
    rec.duration=mix(originalDuration,targetDuration,relief);rec.assistedTiming=Math.abs(rec.duration-originalDuration)>.025;
   }
@@ -1550,9 +1553,11 @@ function returnBall(toNear,{special=false,kind='hit',sweet=0,u=0,footing=null,co
  ball.finisher=finishing?{landed:false,missAt:null}:null;ball.chanceBounced=false;
  ball.smashChance=chance;ball.opponentChance=exposed;
  const opponent=opponentLevel(),ease=toNear?(opponent.ease||0):0,plan=toNear?planBossReturn(kind,chance):null;
+ if(plan&&opponent.entryGame){plan.aimX=state.px*.35+plan.aimX*.25+.05;plan.endZ=1.08;}
  if(plan){plan.aimX*=1-ease*.25;plan.timeScale*=1+ease*.12;plan.endZ=Math.max(.78,plan.endZ);}
  const practiceReturn=toNear&&!state.careerMatch;
- const aimX=practiceReturn?clamp(state.px*(tutorial.active?.75:.55)+.08+(Math.random()-.5)*(tutorial.active?.06:.26),-.55,.55):plan?plan.aimX:toNear?(chance?clamp(state.px*.65+(Math.random()-.5)*.14,-.48,.48):(Math.random()-.5)*.8*opponentLevel().placement):course*.52,spread=(footing?(footing.spread+clamp(sweet-.42,0,1)*.065):0)*(plan?.spreadScale||1)*(practiceReturn?.35:1);
+ const entryReturn=toNear&&!!opponent.entryGame&&!chance;
+ const aimX=entryReturn?clamp(state.px*.35+.08+(Math.random()-.5)*.18,-.42,.42):practiceReturn?clamp(state.px*(tutorial.active?.75:.55)+.08+(Math.random()-.5)*(tutorial.active?.06:.26),-.55,.55):plan?plan.aimX:toNear?(chance?clamp(state.px*.65+(Math.random()-.5)*.14,-.48,.48):(Math.random()-.5)*.8*opponentLevel().placement):course*.52,spread=(footing?(footing.spread+clamp(sweet-.42,0,1)*.065):0)*(plan?.spreadScale||1)*(practiceReturn?.35:1);
  const error=(Math.random()+Math.random()-1)*spread;
  const mistime=!toNear?timingRisk:0,early=timingOffset>=0,missSide=Math.sign(course)||Math.sign(u)||1;
  // Timing errors alter the flight itself. A good contact keeps the existing safe landing range.
@@ -1560,7 +1565,7 @@ function returnBall(toNear,{special=false,kind='hit',sweet=0,u=0,footing=null,co
  // Inexperience and poor footing can produce a real wide ball, never a gifted point.
  const opponentFault=toNear&&fx.rally>=(practiceReturn&&!tutorial.active?5:3)&&Math.random()<(opponent.mistakes||0)*(.65+(1-(footing?.score??1))*.85+state.enemyDefense.stretch*.25);
  const endX=opponentFault?(Math.sign(aimX+error)||1)*(.86+Math.random()*.16):clamp(aimX+error+sideways,toNear?(chance?-.56:-.65):-.71-mistime*1.05,toNear?(chance?.56:.65):.71+mistime*1.05);
- const endZ=(practiceReturn?1.10:plan?plan.endZ:chance?1.16:toNear?(cut?.52+ease*.28:drive?1.12:.92):exposed?-1.02:cut?-.50:drive?-1.12:-.95)-(early?Math.pow(mistime,1.4)*.94:mistime*.17);
+ const endZ=(entryReturn?1.08:practiceReturn?1.10:plan?plan.endZ:chance?1.16:toNear?(cut?.52+ease*.28:drive?1.12:.92):exposed?-1.02:cut?-.50:drive?-1.12:-.95)-(early?Math.pow(mistime,1.4)*.94:mistime*.17);
  const baseTime=finishing?.40:exposed?1.15:chance?1.22+state.enemyDefense.stretch*.06:kind==='edge'?.98:weak?.88:cut?.68:drive?.64:kind==='center'?.72:smash?(critical?.43:.50):(critical?.66:.76);
  const requestedPower=(special?1.22:1)*(1-mistime*.22)*(1-(response?.popup||0)*.10)*(footing?.power??1)*(toNear?opponent.power:growth().power*(smash?growth().smashPower:1)*(kind==='block'?growth().blockPower:1)),rawTime=exposed?1.15:chance?clamp(baseTime/requestedPower,1.18,1.36):cut?clamp(baseTime/Math.sqrt(requestedPower),.60,.82+ease*.30):baseTime/requestedPower*(plan?.timeScale||1),t=practiceReturn?Math.min(rawTime,chance?(tutorial.active?1.36:1.28):(tutorial.active?1.16:1.04)):rawTime,power=baseTime/t;
  ball.spin=chance||exposed?'lob':smash?'flat':cut?'cut':drive?'drive':'flat';ball.shotStyle=ball.spin;
@@ -1843,7 +1848,7 @@ function updatePracticeSwingHint(){
  const assistDisabled=!!state.careerMatch||tutorial.active,assistChecked=!state.careerMatch&&(practiceAssist||tutorial.active);if(assistInput.disabled!==assistDisabled)assistInput.disabled=assistDisabled;if(assistInput.checked!==assistChecked)assistInput.checked=assistChecked;
  const eta=ball.vz>.1?(state.pz-.45-ball.z)/ball.vz:Infinity;
  const careerHint=state.careerMatch&&(opponentLevel().learningRelief||0)>0,powerLesson=tutorial.active&&tutorial.step===3,available=(!state.careerMatch||careerHint)&&state.playing&&state.pointWait<=0&&state.swing<=0&&!state.queuedSwing&&!state.celebration.active;
- const ready=available&&!powerLesson&&(state.serve?.player&&state.serve.phase==='ready'||!state.serve&&!state.hit&&eta>(careerHint?.10:.08)&&eta<(careerHint?.46:1.05)),powerReady=available&&powerLesson&&!state.serve&&!state.hit&&eta>.28&&eta<.65&&ball.y>1.0;
+ const ready=available&&!powerLesson&&(state.serve?.player&&state.serve.phase==='ready'||!state.serve&&!state.hit&&eta>(careerHint?.10:.08)&&eta<(careerHint?.84:1.05)),powerReady=available&&powerLesson&&!state.serve&&!state.hit&&eta>.28&&eta<.65&&ball.y>1.0;
  if(ready!==swingHintReady){swingHintReady=ready;for(const id of ['swing','mobileSwing'])$(id).classList.toggle('timing-ready',ready);}
  if(powerReady!==smashHintReady){smashHintReady=powerReady;for(const id of ['smash','mobileSmash'])$(id).classList.toggle('timing-ready',powerReady);}
 }
