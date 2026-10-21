@@ -1,5 +1,13 @@
 'use strict';
 window.ClubLocales={
+  "필살기":["Special","必殺技","必杀技"],
+  "준비!":["Ready!","準備完了！","就绪！"],
+  "직접 공을 받아내 필살기 게이지를 채우세요.":["Return the ball with a swing to charge your special.","自分でスイングして返球すると必殺技ゲージがたまります。","主动挥拍回球以积攒必杀技能量。"],
+  "높게 오는 공에 맞춰 필살기를 사용하세요.":["Time your special for a high incoming ball.","高い返球に合わせて必殺技を使いましょう。","瞄准来球中的高球使用必杀技。"],
+  "라이징 스매시!":["RISING SMASH!","ライジングスマッシュ！","升龙扣杀！"],
+  "온몸의 힘을 모은 필살의 한 방":["A full-body burst of power","全身の力を込めた必殺の一打","凝聚全身力量的必杀一击"],
+  "라이징 스매시! 빈 코스를 노리세요.":["Rising Smash! Aim for the open court.","ライジングスマッシュ！空いたコースを狙おう。","升龙扣杀！瞄准空当。"],
+  "라이징 스매시 · 직접 리턴으로 충전 · 높은 공에 사용 · 헛스윙하면 소모":["Rising Smash · Charge with active returns · Use on a high ball · A missed swing spends the charge","ライジングスマッシュ · 返球で充電 · 高い球に使用 · 空振りでも消費","升龙扣杀 · 主动回球充能 · 对高球使用 · 挥空也会消耗"],
   "전체화면으로 플레이하면 더 실감나요! 전체화면을 눌러 시작해보세요.":["Play fullscreen for a more immersive match! Press Fullscreen to get started.","全画面ならもっと臨場感アップ！全画面表示を押してプレイしてみましょう。","全屏对战更有临场感！点击全屏开始体验吧。"],
   "전체화면 해제":["Exit fullscreen","全画面表示を終了","退出全屏"],
   "전체화면":["Fullscreen","全画面表示","全屏"],

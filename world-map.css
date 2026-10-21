@@ -734,3 +734,12 @@ body[data-surface=court] .toolbar:has(.fullscreen-hint:not([hidden])){flex-wrap:
 .updates-history ul{padding-left:20px;margin:0}
 .updates-history li{font-size:13px;line-height:1.8;margin-bottom:8px;word-break:keep-all;overflow-wrap:anywhere}
 @media(max-width:760px){.updates-dialog{padding:18px;border-radius:14px}.updates-heading h2{font-size:21px}.updates-history li{font-size:12px}}
+
+/* A compact charge meter becomes the special-shot button when full. */
+button.special-shot{background:linear-gradient(90deg,#e5c68b var(--charge,0%),#eeeada var(--charge,0%));border:1px solid #c4ac7e;color:#6c4c29;font-size:11px;font-weight:700;white-space:nowrap}
+button.special-shot:disabled{opacity:.7;cursor:default}
+button.special-shot[data-ready=true]:not(:disabled){background:linear-gradient(120deg,#f7df94,#e99a49);border-color:#a57331;color:#5a351d;box-shadow:0 0 0 2px #f5d78377}
+html[data-input=touch] .toolbar #specialShot{display:none}
+.touch-hit-buttons{position:relative}
+html[data-input=touch] body[data-surface=court] .touch-hit-buttons #mobileSpecial{position:absolute;right:0;bottom:calc(100% + 8px);width:100%;height:32px;min-height:32px;border-radius:9px;padding:3px 8px;font-size:11px;pointer-events:auto}
+.feedback-strip .impact-label.special b{color:#ffe098;text-shadow:0 2px 0 #864c28,0 0 18px #f8ce6877;font-size:clamp(24px,3vw,34px)}

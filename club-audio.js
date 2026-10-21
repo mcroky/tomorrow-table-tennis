@@ -1,7 +1,7 @@
 (() => {
 'use strict';
 function buildSample(kind,rate,variation=0){
- const durations={cut:.16,drive:.19,serve:.15,hit:.17,center:.21,edge:.12,bounce:.14,smash:.27,critical:.43,criticalSmash:.46,swing:.22,powerSwing:.30,net:.16,point:.64,concede:.40,shoe:.15,finish:.40,winner:.92};
+ const durations={special:.60,cut:.16,drive:.19,serve:.15,hit:.17,center:.21,edge:.12,bounce:.14,smash:.27,critical:.43,criticalSmash:.46,swing:.22,powerSwing:.30,net:.16,point:.64,concede:.40,shoe:.15,finish:.40,winner:.92};
  const duration=durations[kind]||.18,data=new Float32Array(Math.ceil(rate*duration));let seed=17431+variation*7919,previous=0,low=0;
  const random=()=>{seed=(1664525*seed+1013904223)>>>0;return seed/2147483648-1;};
  const musical=['point','concede','winner'].includes(kind),pitch=musical?1:1+(variation-1.5)*.012;
@@ -22,9 +22,10 @@ function buildSample(kind,rate,variation=0){
    sample=high*Math.exp(-t*900)*.19+tone(1080,78,.27)+tone(2160,110,.11)+drop(340,210,.010,65,.12)+low*Math.exp(-t*200)*.11;
   }else if(kind==='edge'){
    sample=high*Math.exp(-t*600)*.20+(n-low)*Math.exp(-t*165)*.060+tone(3050,105,.105)+tone(870,160,.055);
-  }else if(kind==='smash'||kind==='finish'||kind==='criticalSmash'){
+  }else if(kind==='special'||kind==='smash'||kind==='finish'||kind==='criticalSmash'){
    // Dry crack plus a fast downward body resonance: weight without a long boom.
    sample=high*Math.exp(-t*720)*.25+low*Math.exp(-t*160)*.17+drop(265,108,.011,52,.29)+tone(1050,105,.18)+tone(2070,160,.095);
+   if(kind==='special')sample+=drop(230,65,.025,20,.18)+note(880,.015,.10,18)+note(1320,.045,.08,20)+note(1760,.075,.065,22);
    if(kind==='finish')sample+=drop(190,85,.016,36,.14)+tone(620,70,.11)+high*Math.exp(-t*260)*.065;
    if(kind==='criticalSmash')sample+=tone(1661,36,.11)+tone(3322,42,.055)+tone(4435,65,.018);
   }else if(kind==='critical'){
@@ -63,7 +64,7 @@ class ClubAudio {
     this.room=c.createConvolver();const length=Math.floor(c.sampleRate*.28),ir=c.createBuffer(2,length,c.sampleRate);let seed=311;
     for(let ch=0;ch<2;ch++){const d=ir.getChannelData(ch);for(let i=0;i<length;i++){seed=(1664525*seed+1013904223)>>>0;const t=i/c.sampleRate;d[i]=t<.012?0:(seed/2147483648-1)*Math.exp(-t*28)*.12;}}
     this.room.buffer=ir;const wet=c.createGain();wet.gain.value=.16;this.room.connect(wet);wet.connect(this.master);
-    for(const kind of ['cut','drive','serve','hit','center','edge','bounce','smash','critical','swing','powerSwing','net','point','shoe','finish','winner','criticalSmash','concede']){this.buffers[kind]=[];for(let v=0;v<4;v++){const data=buildSample(kind,c.sampleRate,v),b=c.createBuffer(1,data.length,c.sampleRate);b.copyToChannel(data,0);this.buffers[kind].push(b);}}
+    for(const kind of ['special','cut','drive','serve','hit','center','edge','bounce','smash','critical','swing','powerSwing','net','point','shoe','finish','winner','criticalSmash','concede']){this.buffers[kind]=[];for(let v=0;v<4;v++){const data=buildSample(kind,c.sampleRate,v),b=c.createBuffer(1,data.length,c.sampleRate);b.copyToChannel(data,0);this.buffers[kind].push(b);}}
    }
    if(this.ctx.state!=='running')await this.ctx.resume();
   }catch{this.failed=true;}

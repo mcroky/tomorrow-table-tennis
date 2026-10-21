@@ -6,6 +6,7 @@ const title=text(['업데이트 내역','Updates','アップデート情報','�
 // Add new releases at the top; keep previous entries available to players.
 const releases=[
  {date:'2026-10-21',title:['직접 치는 실전 경기','Take control in career matches','自分で打つ本番の試合','亲自掌控正式比赛'],items:[
+  ['필살기 라이징 스매시 추가: 직접 리턴으로 충전하고 높은 공에 F키 또는 필살기 버튼으로 사용하세요.','Added Rising Smash: charge it with active returns, then use F or the Special button on a high ball.','必殺技ライジングスマッシュを追加。返球で充電し、高い球にFキーまたは必殺技ボタンで使えます。','新增升龙扣杀：主动回球充能，在高球到来时按F或必杀技按钮使用。'],
   ['자동 이동과 타이밍 보정은 연습에서만 적용됩니다.','Automatic movement and timing assistance now apply only in practice.','自動移動とタイミング補助は練習でのみ適用されます。','自动移动和时机辅助仅在练习中生效。'],
   ['본게임에서는 직접 스윙해야 공을 받아낼 수 있습니다.','Career matches require a swing to return the ball.','本番の試合では自分でスイングして返球します。','正式比赛需要主动挥拍才能回球。'],
   ['전체화면 플레이 안내와 업데이트 내역 창을 추가했습니다.','Added a fullscreen play hint and this update history.','全画面プレイの案内とアップデート情報を追加しました。','新增全屏游玩提示和更新记录。']

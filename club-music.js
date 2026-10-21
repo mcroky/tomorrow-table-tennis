@@ -82,7 +82,7 @@ async function update(){
  }catch{/* Music support must never block signing in or playing. */}
 }
 sound.duckMusic=kind=>{
- if(!duckBus||!['hit','drive','cut','center','edge','smash','critical','criticalSmash','finish','winner','point','concede'].includes(kind))return;
+ if(!duckBus||!['special','hit','drive','cut','center','edge','smash','critical','criticalSmash','finish','winner','point','concede'].includes(kind))return;
  const now=sound.ctx.currentTime;duckBus.gain.cancelScheduledValues(now);duckBus.gain.setTargetAtTime(kind==='edge'?.12:.18,now,.004);duckBus.gain.setTargetAtTime(1,now+.16,.10);
 };
 async function unlock(){
