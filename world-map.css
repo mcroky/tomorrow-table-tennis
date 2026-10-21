@@ -717,3 +717,20 @@ html[data-input=touch] body[data-surface=court] .feedback-strip .impact-label sp
 .fullscreen-hint{flex:1 0 100%;order:3;margin:0;font-size:11px;line-height:1.5;color:#547148;padding:2px 4px}
 .fullscreen-hint[hidden]{display:none}
 body[data-surface=court] .toolbar:has(.fullscreen-hint:not([hidden])){flex-wrap:wrap!important}
+
+/* Release history is available before login and from the world map. */
+.updates-open{border:1px solid #bdccb1;border-radius:8px;background:#f7f7e9;color:#3c604b;padding:8px 12px;min-height:40px;font-size:12px;white-space:nowrap}
+.shell>header{flex-wrap:wrap}
+.account-intro>.updates-open{margin-top:8px}
+.updates-dialog{width:min(660px,calc(100vw - 24px));max-height:85dvh;overflow:auto;overscroll-behavior:contain;padding:24px;border:1px solid #b9c9b0;border-radius:20px;background:#f8f8ec;color:#294537;box-shadow:0 24px 80px #152d3150}
+.updates-dialog::backdrop{background:#152d3180;backdrop-filter:blur(3px)}
+.updates-heading{display:flex;align-items:center;justify-content:space-between;gap:16px}
+.updates-heading h2{margin:0;font-size:24px}
+.updates-heading button{flex-shrink:0;min-height:40px;padding:7px 14px;border:1px solid #bccdad;border-radius:8px;background:#e7efdd;color:#365540}
+.updates-intro{font-size:12px;color:#708168;margin:10px 0 22px}
+.updates-history article{border-top:1px solid #d4ddc9;padding:20px 0 10px}
+.updates-history time{font-size:12px;color:#a26b38;font-variant-numeric:tabular-nums}
+.updates-history h3{font-size:17px;margin:5px 0 12px}
+.updates-history ul{padding-left:20px;margin:0}
+.updates-history li{font-size:13px;line-height:1.8;margin-bottom:8px;word-break:keep-all;overflow-wrap:anywhere}
+@media(max-width:760px){.updates-dialog{padding:18px;border-radius:14px}.updates-heading h2{font-size:21px}.updates-history li{font-size:12px}}
