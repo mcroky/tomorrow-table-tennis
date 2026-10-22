@@ -523,7 +523,7 @@ function beginDefense(kind){
  d.bodyTarget=clamp(d.targetX-(d.finisher?d.direction*.48:d.direction*.12),-1.18,1.18);
  d.coverX=clamp(d.targetX*.48,-.40,.40);
  if(continuing){d.delay=Math.min(d.delay,.045+d.scramble*.020);recovery.phase='handoff';recovery.phaseAge=0;}
- d.delay*=opponentLevel().reaction;if(opponentLevel().boss?.id==='striker'&&state.elapsed-(state.enemyAI?.lastSmash??-100)<1.20)d.delay+=.09;
+ d.delay*=opponentLevel().receiveReaction??opponentLevel().reaction;if(opponentLevel().boss?.id==='striker'&&state.elapsed-(state.enemyAI?.lastSmash??-100)<1.20)d.delay+=.09;
  if(movingWrong||switched&&d.gap>.48||continuing&&d.gap>.20){
   const oldWorld=Math.sign(d.vx||0)||Math.sign(oldTarget-state.enemyX)||-d.direction;
   const old=state.enemyMotion.turn,feet=state.enemyStroke.groundFeet?.feet||[];
@@ -553,7 +553,7 @@ function updateDefense(dt){
  d.lean=mix(d.lean,active?leanDirection*(.055+d.stretch*.16+d.recoil*.13)*(urgent?Math.max(.25,d.amount):.55):0,1-Math.exp(-dt*12));
  const target=recovering||d.phase==='ready'?(state.pointWait>0?0:d.coverX||0):pursuing?d.bodyTarget:d.phase==='stumble'?state.enemyX+d.direction*.10:state.enemyX;
  const transfer=state.enemyMotion.turn,baseSpeed=recovering||d.phase==='ready'?1.05:urgent?2.75:1.70;
- const maxSpeed=(transfer?.phase==='push'?Math.min(baseSpeed,2.0):baseSpeed)*opponentLevel().speed;
+ const maxSpeed=(transfer?.phase==='push'?Math.min(baseSpeed,2.0):baseSpeed)*(opponentLevel().receiveSpeed??opponentLevel().speed);
  if(state.enemyStroke.recovery?.phase==='land')d.vx=(d.vx||0)*Math.exp(-dt*18);
  else if(d.phase==='read'||d.phase==='brake')d.vx=(d.vx||0)*Math.exp(-dt*(d.phase==='brake'?28:9));
  else{const acceleration=clamp((target-state.enemyX)*(pursuing?38:21)-(d.vx||0)*(d.phase==='recoil'?5:8),urgent?-12:-8,urgent?12:8);d.vx=clamp((d.vx||0)+acceleration*dt,-maxSpeed,maxSpeed);}
@@ -729,7 +729,7 @@ function strikeRig(player,countdownOverride=null,aimOverride=null){
  if(countdown>0&&!receiver.defense)pose=weightTransfer(pose,receiver);
  if(countdown>0&&!receiver.smash&&!receiver.defense&&receiver.shotStyle==='cut'){const w=Math.sin(Math.PI*clamp(pose.t,0,1));pose.bodyPitch=(pose.bodyPitch??-.075)*.80;pose.chest*=.66;if(pose.hand){pose.hand[1]+=.060*w*Math.cos(Math.PI*pose.t);pose.hand[2]-=.035*w;}pose.tilt+=.16*w;}
 
- if(countdown>0&&!receiver.smash&&!receiver.preview){const low=(receiver.lowContact||0)*smooth(clamp(pose.t/.18,0,1))*(1-smooth(clamp((pose.t-.62)/.38,0,1)));pose.dip-=low*.14;pose.bodyPitch=(pose.bodyPitch??-.075)-low*.065;}
+ if(countdown>0&&!receiver.smash&&!receiver.preview){const low=(receiver.lowContact||0)*smooth(clamp(pose.t/.18,0,1))*(1-smooth(clamp((pose.t-.62)/.38,0,1)));pose.dip-=low*(player?.14:.23);pose.bodyPitch=(pose.bodyPitch??-.075)-low*.065;}
  if(player&&countdown>0&&receiver.approachStrike)pose=approachSmashPose(pose,receiver);
  if(player&&state.celebration.active)pose=celebrationPose(pose);
  if(!player&&receiver.defense&&state.enemyDefense.phase!=="ready")pose=defensivePose(pose,countdown,receiver.mix);
@@ -761,7 +761,6 @@ function strikeRig(player,countdownOverride=null,aimOverride=null){
  const leftShoulder=add(torsoOrigin,eulerVector([-.182,.445-lift*.008,.018-follow*.010],...torsoRotation));
  const weight=countdown>0?smooth(clamp(pose.t/(receiver.smash?.25:.30),0,1))*(1-smooth(clamp((pose.t-.60)/.40,0,1))):0;
  let hand=add(pose.hand,[pose.shift,pose.dip+breath,pose.forward]),aim=aimOverride||receiver.aim||[0,0,0];
- if(!player&&countdown>0&&aimOverride===null&&receiver.aimBodyX!==undefined)aim=[aim[0]+facing*(x-receiver.aimBodyX),aim[1],aim[2]-facing*(z-receiver.aimBodyZ)];
  hand=add(hand,mul(aim,weight));
  if(countdownOverride===null&&receiver.transition&&!state.celebration.active){const tr=receiver.transition,u=clamp((state.elapsed-tr.started)/tr.duration,0,1),w=smooth(u),carry=u*(1-u)*(1-u)*tr.duration;hand=tr.hand.map((n,i)=>mix(n,hand[i],w)+carry*(tr.handVelocity?.[i]||0));}
  const pole=eulerVector([mix(1,.45,pose.backhand),mix(-.60,-.80,pose.backhand)+lift*.85,mix(-.10,.55,pose.backhand)-lift*.25],...torsoRotation);
@@ -1657,9 +1656,14 @@ function update(dt){
  if(state.enemySwing>0)state.enemySwing=Math.max(0,state.enemySwing-dt/(state.enemyStroke.duration||strokeDuration));
  updateReceiver(state.playerStroke,state.px,state.pz,-1,state.swing,dt);
  updateReceiver(state.enemyStroke,state.enemyX,state.enemyZ,1,state.enemySwing,dt);
- // Re-aim within the existing arm reach as the player steps toward a side ball.
- // Keep the original input-timing grade and stop tracking before follow-through.
- if(state.playing&&!state.serve&&!state.hit&&state.pointWait<=0&&state.swing>0&&ball.vz>.05){const rec=state.playerStroke,phase=1-state.swing,cp=rec.contactPhase??.38;if(phase<cp-.015)aimStroke(true,Math.max(.015,(cp-phase)*(rec.duration||strokeDuration)+dt),dt);}
+ // Keep both players' racket targets aligned with their moving bodies, within normal arm reach.
+ // Preserve the original timing grade and the intentional finisher miss reaction.
+ if(state.playing&&!state.serve&&state.pointWait<=0)for(const player of [true,false]){
+  const count=player?state.swing:state.enemySwing,hit=player?state.hit:state.enemyHit,inbound=player?ball.vz>.05:ball.vz<-.05;
+  if(count<=0||hit||!inbound||!player&&ball.finisher)continue;
+  const rec=player?state.playerStroke:state.enemyStroke,phase=1-count,cp=rec.contactPhase??.38;
+  if(phase<cp-.015)aimStroke(player,Math.max(.015,(cp-phase)*(rec.duration||strokeDuration)+dt),dt);
+ }
  for(const player of [true,false]){
   const rec=player?state.playerStroke:state.enemyStroke,z=player?state.pz:state.enemyZ,facing=player?-1:1;
   const inbound=state.playing&&state.pointWait<=0&&ball.vz*facing<-.05,eta=inbound?(z+facing*.45-ball.z)/ball.vz:Infinity;
@@ -1714,7 +1718,10 @@ function update(dt){
   if(canSmash&&eta<.46){state.enemyAI=state.enemyAI||{shots:0,lastCorner:0,lastSmash:-100};if(!state.enemyAI.telegraph){state.enemyAI.telegraph=true;const status=$('enemyReturnStatus');status.textContent=tr('상대가 높은 공을 노립니다 · 스매시 준비!');if(opponentLevel().boss)$('bossTactic').textContent=opponentLevel().boss.name+' · '+tr('높은 공 포착 · 스매시 준비!');}}
   if(eta<(ball.finisher?.10:canSmash?.235:defending?.24:.32)&&eta>-.08&&!['read','brake'].includes(state.enemyDefense.phase)){
    const previousEnemy=strikeRig(false);state.enemyStroke.transition={started:state.elapsed,duration:.095,pose:JSON.parse(JSON.stringify(previousEnemy.pose)),hand:[...previousEnemy.localHand],velocity:{...state.enemyStroke.poseVelocity},handVelocity:[...(state.enemyStroke.handVelocity||[0,0,0])]};
-   state.enemyPrepared=true;state.enemyStroke.locked=null;lockStroke(state.enemyStroke,state.enemyX,state.enemyZ,1);state.enemyStroke.smash=canSmash;state.enemyStroke.shotStyle=canSmash||defending?'flat':chooseEnemyStyle();state.enemyStroke.duration=canSmash?.72:defending?.48:state.enemyStroke.shotStyle==='cut'?.78:strokeDuration;state.enemyStroke.contactPhase=canSmash?.31:defending?.42:.38;state.enemyStroke.whoosh=false;state.enemyStroke.planted=false;state.enemyStroke.aim=[0,0,0];state.enemySwing=1;state.enemyHit=false;if(defending)defensePhase("block");if(!ball.finisher)aimStroke(false);else{state.enemyStroke.aimBodyX=state.enemyX;state.enemyStroke.aimBodyZ=state.enemyZ;}
+   state.enemyPrepared=true;state.enemyStroke.locked=null;lockStroke(state.enemyStroke,state.enemyX,state.enemyZ,1);state.enemyStroke.smash=canSmash;state.enemyStroke.shotStyle=canSmash||defending?'flat':chooseEnemyStyle();state.enemyStroke.duration=canSmash?.72:defending?.48:state.enemyStroke.shotStyle==='cut'?.78:strokeDuration;state.enemyStroke.contactPhase=canSmash?.31:defending?.42:.38;
+   // Match the stroke's contact phase to arrival instead of using a fixed windup.
+   if(!ball.finisher)state.enemyStroke.duration=clamp(Math.max(.07,eta-.025)/state.enemyStroke.contactPhase,.26,.92);
+   state.enemyStroke.whoosh=false;state.enemyStroke.planted=false;state.enemyStroke.aim=[0,0,0];state.enemySwing=1;state.enemyHit=false;if(defending)defensePhase("block");if(!ball.finisher)aimStroke(false);else{state.enemyStroke.aimBodyX=state.enemyX;state.enemyStroke.aimBodyZ=state.enemyZ;}
   }
  }
  const current=[ball.x,ball.y,ball.z];

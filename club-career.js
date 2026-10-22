@@ -30,8 +30,19 @@ const skills=[
  {id:'placement',name:tr('핀포인트'),branch:tr('컨트롤'),level:2,description:tr('단계마다 코스 오차 5% 감소'),effect:tr('코스 정확도'),icon:'◎'},
  {id:'sweetspot',name:tr('정타 감각'),branch:tr('컨트롤'),level:4,requires:'placement',description:tr('핀포인트 2단계 필요 · 단계마다 크리티컬 타이밍 여유 +10%'),effect:tr('정타 타이밍'),icon:'✦'},
  {id:'powersmash',name:tr('파워 스매시'),branch:tr('파워'),level:2,description:tr('단계마다 스매시 위력 +5%'),effect:tr('스매시 위력'),icon:'ϟ'},
- {id:'fullswing',name:tr('전신 임팩트'),branch:tr('파워'),level:5,requires:'powersmash',description:tr('파워 스매시 2단계 필요 · 단계마다 모든 타구 위력 +3%'),effect:tr('타구 위력'),icon:'★'}
+ {id:'fullswing',name:tr('전신 임팩트'),branch:tr('파워'),level:5,requires:'powersmash',description:tr('파워 스매시 2단계 필요 · 단계마다 모든 타구 위력 +3%'),effect:tr('타구 위력'),icon:'★'},
+ {id:'chase',name:tr('사이드 커버'),branch:tr('풋워크'),level:12,requires:'splitstep',max:8,step:2,description:tr('단계마다 이동 속도 +1%'),icon:'↔'},
+ {id:'balance',name:tr('밸런스 훈련'),branch:tr('풋워크'),level:18,requires:'chase',max:8,step:2,description:tr('단계마다 자세 회복 +2%'),icon:'◇'},
+ {id:'reading',name:tr('코스 설계'),branch:tr('컨트롤'),level:12,requires:'sweetspot',max:8,step:2,description:tr('단계마다 코스 오차 1.5% 감소'),icon:'⌖'},
+ {id:'touch',name:tr('섬세한 터치'),branch:tr('컨트롤'),level:18,requires:'reading',max:8,step:2,description:tr('단계마다 정타 타이밍 여유 +2%'),icon:'◉'},
+ {id:'driveforce',name:tr('드라이브 단련'),branch:tr('파워'),level:12,requires:'fullswing',max:8,step:2,description:tr('단계마다 모든 타구 위력 +1%'),icon:'➚'},
+ {id:'decisive',name:tr('결정타 단련'),branch:tr('파워'),level:18,requires:'driveforce',max:8,step:2,description:tr('단계마다 스매시 위력 +1.5%'),icon:'ϟ'},
+ {id:'footmaster',name:tr('풋워크 마스터'),branch:tr('풋워크'),level:30,requires:'balance',max:12,step:5,description:tr('단계마다 이동 속도 +0.5% · 자세 회복 +1%'),icon:'♜'},
+ {id:'controlmaster',name:tr('컨트롤 마스터'),branch:tr('컨트롤'),level:30,requires:'touch',max:12,step:5,description:tr('단계마다 코스 오차 1% 감소 · 정타 타이밍 여유 +1%'),icon:'✧'},
+ {id:'powermaster',name:tr('임팩트 마스터'),branch:tr('파워'),level:30,requires:'decisive',max:12,step:5,description:tr('단계마다 모든 타구 위력 +0.5% · 스매시 위력 +1%'),icon:'★'}
 ];
+const skillMax=s=>s.max||3,skillLevel=(s,rank)=>s.level+rank*(s.step||0);
+function availableSkillRanks(s,level){return Math.max(0,Math.min(skillMax(s),s.step?Math.floor((level-s.level)/s.step)+1:level>=s.level?skillMax(s):0));}
 const trainingGoals=[
  {id:'sweet',name:tr('정타 5회'),target:5,xp:60,coins:200},
  {id:'placement',name:tr('좌우 코스 번갈아 6회 타격'),target:6,xp:90,coins:300},
@@ -49,7 +60,7 @@ function normalize(raw){
  if(!raw||![1,2,3].includes(raw.version))return fresh();
  const d=fresh();d.level=int(raw.level,1,99);d.xp=int(raw.xp,0,need(d.level)-1);let budget=(d.level-1)*3,sp=d.level-1;
  for(const k of Object.keys(labels)){const previous=k==='speed'&&raw.version<3?raw.stats?.footwork:raw.stats?.[k];d.stats[k]=int(previous,0,budget);budget-=d.stats[k];}
- for(const skill of skills){const can=d.level>=skill.level&&(!skill.requires||d.skills[skill.requires]>=2);d.skills[skill.id]=can?int(raw.skills?.[skill.id],0,Math.min(3,sp)):0;sp-=d.skills[skill.id];}
+ for(const skill of skills){const can=d.level>=skill.level&&(!skill.requires||d.skills[skill.requires]>=2);d.skills[skill.id]=can?int(raw.skills?.[skill.id],0,Math.min(availableSkillRanks(skill,d.level),sp)):0;sp-=d.skills[skill.id];}
  d.wins=int(raw.wins,0,1000000);d.losses=int(raw.losses,0,1000000);d.tierWins=regions.map((_,i)=>int(raw.tierWins?.[i],0,1000000));
  if(raw.version>=2){for(let i=0;i<40;i++){if(Array.isArray(raw.cleared)&&raw.cleared.includes(i)&&(i===0||d.cleared.includes(i-1)))d.cleared.push(i);}}
  else {
@@ -93,7 +104,7 @@ hub.innerHTML=[
  tr('<button type="button" class="drawer-backdrop" id="drawerBackdrop" aria-label="정보창 닫기" tabindex="-1" aria-hidden="true"></button><aside id="campaignDrawer" class="campaign-aside" role="dialog" aria-modal="true" aria-labelledby="drawerTitle" aria-hidden="true" inert><div class="drawer-header"><b id="drawerTitle">선수 정보</b><button id="drawerClose" type="button" aria-label="정보창 닫기">닫기 ×</button></div><div class="campaign-tabs" role="tablist" aria-label="캠페인 메뉴"><button id="tab-stage" role="tab" aria-controls="panel-stage" data-tab="stage">스테이지</button><button id="tab-stats" role="tab" aria-controls="panel-stats" data-tab="stats">능력치</button><button id="tab-skills" role="tab" aria-controls="panel-skills" data-tab="skills">스킬 트리</button><button id="tab-shop" role="tab" aria-controls="panel-shop" data-tab="shop">상점</button></div>'),
  tr('<section id="panel-stage" role="tabpanel" aria-labelledby="tab-stage"><span id="nodeCode" class="node-code"></span><h3 id="nodeTitle"></h3><p id="nodeRegion"></p><div id="nodeOpponent" class="node-opponent"></div><p id="nodeRule"></p><div class="node-reward" id="nodeReward"></div><p id="nodeGate"></p><button id="careerStart" class="node-start" type="button"></button><p class="world-caption">승리하면 다음 거점 개방 · 11점, 2점 차 승리<br>첫 클리어 보너스 · 패배해도 경험치 획득</p></section>'),
  tr('<section id="panel-stats" role="tabpanel" aria-labelledby="tab-stats" hidden><h3>나의 선수</h3><p id="careerPoints"></p><div id="careerStats" class="career-stats"></div><p class="world-caption">레벨업마다 능력치 포인트 3개. 경기 종료 후 배분할 수 있어요.</p></section>'),
- tr('<section id="panel-skills" role="tabpanel" aria-labelledby="tab-skills" hidden><h3>나만의 플레이 스타일</h3><p id="skillPoints"></p><div id="skillTree"></div><p class="world-caption">레벨업마다 스킬 포인트 1개. 모든 스킬은 패시브이며 최대 3단계입니다.</p></section>'),
+ tr('<section id="panel-skills" role="tabpanel" aria-labelledby="tab-skills" hidden><h3>나만의 플레이 스타일</h3><p id="skillPoints"></p><div id="skillTree"></div><p class="world-caption">레벨업마다 스킬 포인트 1개. 기초 3단계 · 심화 8단계 · 마스터 12단계. 다음 단계는 레벨에 따라 열립니다.</p></section>'),
  tr('<section id="panel-shop" role="tabpanel" aria-labelledby="tab-shop" hidden><h3>탁구 용품점</h3><p id="shopBalance"></p><div id="equippedList" class="equipped-list"></div><div id="gearBonusSummary" class="gear-bonus-summary"></div><p class="grade-guide">일반 → 고급 → 희귀 → 영웅 → 전설</p><div id="shopCategories" class="shop-categories"></div><div id="shopItems" class="shop-items"></div><p id="shopNotice" role="status" aria-live="polite"></p><p class="world-caption">구매·장착은 경기 종료 후 가능합니다. 모든 장비 슬롯에 등급과 능력치 옵션이 있으며 장착한 옵션만 합산됩니다. 선수 뒤 시점(2)에서 외형을 확인하세요.</p></section>'),
  '<div id="careerResult" class="career-result" role="status" aria-live="polite" hidden></div></aside></div>'
 ].join('');
@@ -120,7 +131,7 @@ function compareGear(item){
 function bonuses(loadout=null){
  if(!loadout&&cachedBonuses)return cachedBonuses;
  const boost=n=>1-Math.exp(-n/12),s=data.skills,g=gearBonuses(loadout||appearance());
- const result={speed:1+.40*boost(data.stats.speed)+s.quickstep*.03+g.speed,recovery:1+.20*boost(data.stats.speed)+.40*boost(data.stats.defense)+s.splitstep*.08+g.recovery,accuracy:(1-.50*boost(data.stats.control))*(1-s.placement*.05)*(1-g.accuracy),power:1+.35*boost(data.stats.power)+s.fullswing*.03+g.power,smashPower:1+.30*boost(data.stats.attack)+s.powersmash*.05,sweetWindow:1+.30*boost(data.stats.attack)+s.sweetspot*.10,guard:.35*boost(data.stats.defense)+g.guard,blockPower:1+.30*boost(data.stats.defense)};
+ const result={speed:1+.40*boost(data.stats.speed)+s.quickstep*.03+s.chase*.01+s.footmaster*.005+g.speed,recovery:1+.20*boost(data.stats.speed)+.40*boost(data.stats.defense)+s.splitstep*.08+s.balance*.02+s.footmaster*.01+g.recovery,accuracy:(1-.50*boost(data.stats.control))*(1-s.placement*.05)*(1-s.reading*.015)*(1-s.controlmaster*.01)*(1-g.accuracy),power:1+.35*boost(data.stats.power)+s.fullswing*.03+s.driveforce*.01+s.powermaster*.005+g.power,smashPower:1+.30*boost(data.stats.attack)+s.powersmash*.05+s.decisive*.015+s.powermaster*.01,sweetWindow:1+.30*boost(data.stats.attack)+s.sweetspot*.10+s.touch*.02+s.controlmaster*.01,guard:.35*boost(data.stats.defense)+g.guard,blockPower:1+.30*boost(data.stats.defense)};
  if(!loadout)cachedBonuses=result;return result;
 }
 function renderShop(){
@@ -269,7 +280,7 @@ function render(){
  const help={speed:tr('이동 +')+Math.round((b.speed-1)*100)+tr('% · 회복 +')+Math.round((b.recovery-1)*100)+'%',defense:tr('자세 회복 +')+Math.round((b.recovery-1)*100)+tr('% · 수비 리턴 +')+Math.round((b.blockPower-1)*100)+'%',attack:tr('스매시 +')+Math.round((b.smashPower-1)*100)+tr('% · 정타 여유 +')+Math.round((b.sweetWindow-1)*100)+'%',control:tr('코스 오차 −')+Math.round((1-b.accuracy)*100)+'%',power:tr('타구 위력 +')+Math.round((b.power-1)*100)+'%'};
  for(const k of Object.keys(labels)){el('statValue-'+k).textContent=1+data.stats[k];el('statHelp-'+k).textContent=help[k];rootButton('[data-stat="'+k+'"]').disabled=p<=0||!!m;}
  el('skillPoints').textContent=tr('남은 스킬 ')+sp+'SP'+(m?tr(' · 경기 종료 후 습득'):tr(' · 한 단계에 1SP'));
- for(const s of skills){const rank=data.skills[s.id],allowed=data.level>=s.level&&(!s.requires||data.skills[s.requires]>=2);el('rank-'+s.id).textContent=rank+' / 3';el('gate-'+s.id).textContent=rank===3?tr('최대 단계'):data.level<s.level?'Lv. '+s.level+tr(' 필요'):s.requires&&data.skills[s.requires]<2?tr('선행 스킬 2단계 필요'):m?tr('경기 종료 후 습득'):tr('습득 가능 · 1SP');el('skill-'+s.id).dataset.learned=String(rank>0);rootButton('[data-skill="'+s.id+'"]').disabled=!!m||sp<=0||!allowed||rank>=3;}
+ for(const s of skills){const rank=data.skills[s.id],level=skillLevel(s,rank),allowed=data.level>=level&&(!s.requires||data.skills[s.requires]>=2);el('rank-'+s.id).textContent=rank+' / '+skillMax(s);el('gate-'+s.id).textContent=rank===skillMax(s)?tr('최대 단계'):data.level<level?'Lv. '+level+tr(' 필요'):s.requires&&data.skills[s.requires]<2?tr('선행 스킬 2단계 필요'):m?tr('경기 종료 후 습득'):tr('습득 가능 · 1SP');el('skill-'+s.id).dataset.learned=String(rank>0);rootButton('[data-skill="'+s.id+'"]').disabled=!!m||sp<=0||!allowed||rank>=skillMax(s);}
  for(const node of nodes){const button=el('worldBoard').querySelector('[data-node="'+node.id+'"]'),clear=data.cleared.includes(node.id),open=unlocked(node.id);button.dataset.state=clear?'cleared':open?'open':'locked';button.dataset.mastered=String(data.stageMedals[node.id]===7);button.querySelector('.node-stars').textContent=open?starText(data.stageMedals[node.id]):'';button.setAttribute('aria-pressed',String(selected===node.id));button.setAttribute('aria-label',node.code+' '+node.name+' · '+(clear?tr('클리어'):open?tr('도전 가능'):tr('잠김'))+' · '+countStars(data.stageMedals[node.id])+' / 3');button.querySelector('.node-medal').textContent=clear?'✓':!open?'·':node.boss?'★':'🏓';if(node.id<39)el('route-'+node.id).setAttribute('stroke',clear?'#56876b':'#b1bba0');}
  for(let i=0;i<regions.length;i++){const region=el('region-'+i);region.dataset.locked=String(i>Math.floor(frontier()/5));region.dataset.current=String(i===Math.floor(frontier()/5));}
  document.querySelector('.scoreboard>div>span').textContent=data.profile.name;
@@ -361,6 +372,10 @@ function opponentConfig(){
  base.power*=1-.22*midgameRelief;base.placement*=1-.25*midgameRelief;
  base.mistakes+=.07*midgameRelief;base.learningRelief=midgameRelief;base.entryGame=!rank&&n.id<20;
  base.simpleReturns=rank?null:n.id<10?'flat':n.id<20?'mixed':null;
+ // Defensive coverage grows separately from the deliberately gentle return power.
+ const coverage=Math.min(1,n.id/18);
+ base.receiveSpeed=Math.max(base.speed,.42+coverage*.95);
+ base.receiveReaction=Math.min(base.reaction,2.6-coverage*1.45);
  opponentCache.set(key,base);return base;
 }
 
@@ -456,7 +471,7 @@ new ResizeObserver(()=>{cancelAnimationFrame(mapLayoutFrame);mapLayoutFrame=requ
 drawMap();setTab('stage');hub.querySelectorAll('[data-region]').forEach(button=>button.onclick=()=>{finishMapJourney();focusRegion(Number(button.dataset.region));});
 hub.querySelectorAll('[data-tab]').forEach(button=>{button.onclick=()=>setTab(button.dataset.tab);button.onkeydown=e=>{if(!['ArrowLeft','ArrowRight'].includes(e.key))return;e.preventDefault();const tabs=['stage','stats','skills','shop'],next=tabs[(tabs.indexOf(tab)+(e.key==='ArrowRight'?1:3))%4];setTab(next);el('tab-'+next).focus();};});
 hub.querySelectorAll('[data-stat]').forEach(button=>button.onclick=()=>{if(data.activeMatch||points()<=0)return;data.stats[button.dataset.stat]++;save();});
-hub.querySelectorAll('[data-skill]').forEach(button=>button.onclick=()=>{const s=skills.find(s=>s.id===button.dataset.skill);if(data.activeMatch||skillPoints()<=0||data.level<s.level||data.skills[s.id]>=3||s.requires&&data.skills[s.requires]<2)return;data.skills[s.id]++;save();});
+hub.querySelectorAll('[data-skill]').forEach(button=>button.onclick=()=>{const s=skills.find(s=>s.id===button.dataset.skill);if(data.activeMatch||skillPoints()<=0||data.level<skillLevel(s,data.skills[s.id])||data.skills[s.id]>=skillMax(s)||s.requires&&data.skills[s.requires]<2)return;data.skills[s.id]++;save();});
 el('careerStart').onclick=()=>launch();el('campaignContinue').onclick=()=>launch(true);el('worldHome').onclick=showMap;
 el('lastMatchReview').onclick=()=>{if(data.activeMatch||!data.lastResult?.analysis)return;showMap();openDrawer('stage');requestAnimationFrame(()=>el('matchReport').scrollIntoView({block:'start',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'}));};
 el('shopHome').onclick=()=>{if(guest){window.ClubAccount.requestLogin();return;}if(data.activeMatch)return;showMap();openDrawer('shop');};

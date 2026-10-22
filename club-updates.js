@@ -5,6 +5,10 @@ const text=words=>words[Math.max(0,language)];
 const title=text(['업데이트 내역','Updates','アップデート情報','更新记录']);
 // Add new releases at the top; keep previous entries available to players.
 const releases=[
+ {date:'2026-10-22',title:['중반 수비와 후반 스킬 성장','Midgame defense and late-game skills','中盤の守備と終盤のスキル成長','中期防守与后期技能成长'],items:[
+  ['상대의 모서리 수비 이동과 스윙 타이밍을 개선했습니다. 지역이 올라갈수록 수비 범위가 넓어지며 리턴 위력과는 별도로 성장합니다.','Improved opponent coverage and swing timing on corner shots. Defensive coverage grows by region, separately from return power.','相手のコーナー守備とスイングタイミングを改善。地域が進むほど守備範囲が広がり、返球威力とは別に成長します。','改善对手角落防守与挥拍时机。防守覆盖随地区推进提升，与回球威力分开成长。'],
+  ['심화 스킬 6개와 마스터 스킬 3개를 추가했습니다. 총 102SP를 투자할 수 있으며 레벨 12·18·30부터 새 스킬이 열리고 상위 단계도 순차 해금됩니다. 기존 투자와 남은 SP는 유지됩니다.','Added six advanced and three mastery skills, for 102 SP of total capacity. New skills unlock at levels 12, 18, and 30, with higher ranks unlocked gradually. Existing ranks and unspent SP are preserved.','応用6種とマスター3種を追加し、合計102SPまで投資可能に。レベル12・18・30で新スキルが解放され、上位段階も順次解放。既存の投資と残りSPは維持されます。','新增6个进阶和3个精通技能，总计可投入102SP。新技能在12、18、30级解锁，更高等级逐步开放。保留已有技能和剩余SP。']
+ ]},
  {date:'2026-10-22',title:['사이드 공 리턴 개선','Better returns on wide shots','サイドへの返球を改善','改善边路来球回击'],items:[
   ['좌우로 따라가며 스윙할 때 라켓이 이동 전 위치에 남아 공을 놓치던 문제를 수정했습니다.','Fixed the racket lagging behind your movement when swinging at a wide ball.','左右へ追いかけながら振るとラケットが移動前の位置に残って空振りする問題を修正しました。','修复追向左右边路并挥拍时，球拍滞留在移动前位置而漏球的问题。'],
   ['사이드 공을 쫓는 도중에는 이동이 과하게 멈추지 않고, 공에 가까워지면 발을 디디며 타격하도록 개선했습니다.','Reduced excessive stopping during a lateral chase, while retaining the plant as you reach the ball.','サイドの球を追う途中で急に止まりすぎないようにし、球に近づくと踏み込んで打てるよう改善しました。','改善追边路球时过度急停的问题，接近来球后仍会踩稳击球。'],
