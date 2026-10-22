@@ -1755,6 +1755,11 @@ const fullscreenButton=document.createElement('button');fullscreenButton.type='b
 const fullscreenHint=document.createElement('p');fullscreenHint.id='fullscreenHint';fullscreenHint.className='fullscreen-hint';fullscreenHint.textContent=tr('전체화면으로 플레이하면 더 실감나요! 전체화면을 눌러 시작해보세요.');document.querySelector('.toolbar').append(fullscreenHint);fullscreenButton.setAttribute('aria-describedby','fullscreenHint');
 function updateFullscreenButton(){const active=!!document.fullscreenElement;fullscreenButton.textContent=tr(active?'전체화면 해제':'전체화면');fullscreenButton.setAttribute('aria-pressed',String(active));fullscreenHint.hidden=active||!document.fullscreenEnabled;}
 fullscreenButton.onclick=async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await document.documentElement.requestFullscreen();}catch{message(tr('전체화면을 열지 못했습니다. 브라우저의 전체화면 기능을 이용해주세요.'));}};
+function positionFullscreenButton(){
+ const nav=document.querySelector('.career-nav'),touch=document.documentElement.dataset.input==='touch';
+ if(touch&&nav)nav.insertBefore(fullscreenButton,$('lastMatchReview'));
+ else document.querySelector('.camera-group').append(fullscreenButton);
+}
 document.querySelector('.camera-group').append(fullscreenButton);document.addEventListener('fullscreenchange',updateFullscreenButton);updateFullscreenButton();
 $('play').onclick=start;$('swing').onclick=()=>swing(false);$('mobileSwing').onclick=()=>swing(false);$('smash').onclick=$('mobileSmash').onclick=()=>swing(true);$('reset').onclick=()=>setView(state.view);
 const touchBallMarker=document.createElement('span');touchBallMarker.className='touch-ball-marker';touchBallMarker.hidden=true;touchBallMarker.setAttribute('aria-hidden','true');touchBallMarker.innerHTML='<i></i>';$('stage').append(touchBallMarker);
@@ -1769,7 +1774,7 @@ function updateTouchBallGuide(vp){
 }
 const touchMedia=matchMedia('(pointer: coarse)'),desktopPointerMedia=matchMedia('(any-hover: hover) and (any-pointer: fine)');
 // Touch capability alone also describes laptops with touch screens.
-function detectTouch(){document.documentElement.dataset.input=touchMedia.matches&&!desktopPointerMedia.matches?'touch':'keyboard';}
+function detectTouch(){document.documentElement.dataset.input=touchMedia.matches&&!desktopPointerMedia.matches?'touch':'keyboard';positionFullscreenButton();}
 detectTouch();touchMedia.addEventListener('change',detectTouch);desktopPointerMedia.addEventListener('change',detectTouch);
 const stick=$('touchStick'),knob=$('touchStickKnob');let stickPointer=null;
 let stickOrigin=null,stickSensitivity=100,stickAxis=null,stickFreeMove=false,stickCandidate=null,stickAxisTimer=null,stickLastPoint=null;
