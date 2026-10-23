@@ -5,6 +5,7 @@ const text=words=>words[Math.max(0,language)];
 const title=text(['업데이트 내역','Updates','アップデート情報','更新记录']);
 // Add new releases at the top; keep previous entries available to players.
 const releases=[
+ {date:'2026-10-23',title:['Roky Studio 소셜 바로가기','Roky Studio social links','Roky Studioのソーシャルリンク','Roky Studio 社交链接'],items:[['상단 메뉴에서 운영자의 X와 Threads 계정을 새 탭으로 열 수 있습니다.','Open the creator’s X and Threads profiles in a new tab from the header.','上部メニューから運営者のXとThreadsを新しいタブで開けます。','可从顶部菜单在新标签页打开作者的 X 和 Threads 账号。']]},
  {date:'2026-10-22',title:['모바일 경기 화면 확대','Larger mobile court','モバイルの試合画面を拡大','扩大手机比赛画面'],items:[
   ['모바일 전체화면 버튼을 상단 경기 메뉴로 옮겼습니다. 시점 선택 아래의 버튼 줄을 줄이고 확보한 높이를 기본 게임 화면에 사용합니다.','Moved the mobile fullscreen button into the upper match menu. Removing its toolbar row gives the default court more height.','モバイルの全画面ボタンを上部の試合メニューへ移動。視点選択の下の行を減らし、その分だけ通常の試合画面を広げました。','将手机全屏按钮移至顶部比赛菜单，减少视角选择下方的一行，将腾出的高度用于默认比赛画面。']
  ]},
@@ -58,7 +59,7 @@ close.onclick=()=>dialog.close();
 dialog.addEventListener('close',()=>{if(opener?.isConnected)opener.focus({preventScroll:true});});
 // Keep keyboard gameplay shortcuts from firing while browsing release notes.
 dialog.addEventListener('keydown',event=>event.stopPropagation());
-function mount(parent){if(!parent||parent.querySelector('.updates-open'))return;const button=make('button',title);button.type='button';button.className='updates-open';button.setAttribute('aria-haspopup','dialog');button.onclick=open;const studio=make('a',text(['← 로키 스튜디오','← Roky Studio','← Roky Studio','← Roky Studio']));studio.className='studio-return';studio.href='https://mcroky.github.io/roky-studio/';studio.setAttribute('aria-label',text(['로키 스튜디오로 돌아가기','Return to Roky Studio','Roky Studioに戻る','返回Roky Studio']));parent.append(button,studio);}
+function mount(parent){if(!parent||parent.querySelector('.updates-open'))return;const button=make('button',title);button.type='button';button.className='updates-open';button.setAttribute('aria-haspopup','dialog');button.onclick=open;const studio=make('a',text(['← 로키 스튜디오','← Roky Studio','← Roky Studio','← Roky Studio']));studio.className='studio-return';studio.href='https://mcroky.github.io/roky-studio/';studio.setAttribute('aria-label',text(['로키 스튜디오로 돌아가기','Return to Roky Studio','Roky Studioに戻る','返回Roky Studio']));const socials=make('nav');socials.className='roky-social';socials.setAttribute('aria-label','Roky Studio social profiles');for(const [label,url] of [['X','https://x.com/loki60542'],['Threads','https://www.threads.com/@loki60542']]){const link=make('a',label+' ↗');link.className='roky-social-link';link.href=url;link.target='_blank';link.rel='me noopener noreferrer';link.setAttribute('aria-label',label+' @loki60542 (opens in a new tab)');socials.append(link);}parent.append(button,studio,socials);}
 mount(document.querySelector('.shell>header'));
 // Career exits must go through the existing forfeit flow first.
 document.addEventListener('click',event=>{const link=event.target instanceof Element?event.target.closest('a.studio-return'):null;if(link&&window.ClubCareer?.hasActiveMatch()){event.preventDefault();document.getElementById('forfeitMatch')?.click();}});
