@@ -1,6 +1,9 @@
 (() => {
 'use strict';
 const tr=window.ClubI18n.t;
+if(window.ClubAccount?.local){
+ const link=document.createElement('a');link.id='feedbackOpen';link.className='local-feedback-link';link.textContent='✉ '+tr('의견 보내기');link.href='https://mcroky.github.io/roky-studio/#feedback';link.target='_blank';link.rel='noopener noreferrer';document.getElementById('mapPanel').after(link);return;
+}
 const opener=document.createElement('button');opener.id='feedbackOpen';opener.type='button';opener.textContent='✉ '+tr('의견 보내기');opener.setAttribute('aria-haspopup','dialog');opener.setAttribute('aria-controls','feedbackDialog');document.getElementById('rankingOpen').after(opener);
 const dialog=document.createElement('dialog');dialog.id='feedbackDialog';dialog.className='feedback-dialog';dialog.setAttribute('aria-labelledby','feedbackTitle');
 const node=(tag,text)=>{const n=document.createElement(tag);if(text)n.textContent=tr(text);return n;};

@@ -11,7 +11,5 @@ for(const name of names){const source=fs.readFileSync(path.join(root,name),'utf8
 const assets={};
 for(const name of names.filter(name=>/\.(js|css|svg)$/.test(name))){const data=fs.readFileSync(path.join(root,name)),hash=crypto.createHash('sha256').update(data).digest('hex').slice(0,12),ext=path.extname(name),versioned=name.slice(0,-ext.length)+'.'+hash+ext;assets[name]='./'+versioned;fs.writeFileSync(path.join(out,versioned),data);}
 for(const name of ['index.html','camera-study.html']){let html=fs.readFileSync(path.join(root,name),'utf8');html=html.replace(/(src|href)="\.\/([^"?]+)"/g,(match,attr,file)=>assets[file]?attr+'="'+assets[file]+'"':match);html=html.replace('</head>','<script>window.ClubAssetMap='+JSON.stringify(assets)+';</script></head>');fs.writeFileSync(path.join(out,name),html);}
-fs.mkdirSync(path.join(out,'vendor'),{recursive:true});
-for(const name of ['supabase-2.118.0.js','supabase-LICENSE'])fs.copyFileSync(path.join(root,'vendor',name),path.join(out,'vendor',name));
 fs.writeFileSync(path.join(out,'.nojekyll'),'');
-console.log('Pages build ready: '+names.length+' application files, vendored Supabase SDK');
+console.log('Pages build ready: '+names.length+' application files, local saves');

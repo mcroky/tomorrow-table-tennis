@@ -1,5 +1,16 @@
 'use strict';
 window.ClubLocales={
+"기기 자동 저장":["Device autosave","端末に自動保存","设备自动保存"],
+"이 브라우저에 저장됩니다. 데이터 삭제 전 저장 파일을 보관하세요.":["Saved in this browser. Export your save before clearing browser data.","このブラウザに保存されます。データ削除前にセーブファイルを保存してください。","存储在此浏览器中。清除浏览器数据前请导出存档。"],
+"저장 파일 내려받기":["Export save","セーブを保存","导出存档"],
+"저장 파일 가져오기":["Import save","セーブを読み込む","导入存档"],
+"이 기기의 이전 선수 기록":["Previous player saves on this device","この端末の以前の選手記録","此设备上的旧球员存档"],
+"이전 기록 가져오기":["Import previous save","以前の記録を読み込む","导入旧存档"],
+"이 기기의 이전 기록을 로컬 저장으로 이어받았습니다.":["Continued your previous save from this device.","この端末の以前の記録を引き継ぎました。","已继承此设备上的旧存档。"],
+"현재 진행 상황을 보관한 뒤 선택한 저장 파일로 바꿀까요?":["Back up your current progress and switch to the selected save?","現在の進行状況を保管し、選んだセーブに切り替えますか？","备份当前进度并切换至所选存档？"],
+"저장 파일을 내려받았습니다.":["Save exported.","セーブファイルを保存しました。","已导出存档。"],
+"저장 파일을 보관하지 못했습니다. 저장 공간과 브라우저 설정을 확인해주세요.":["Could not export the save. Check storage space and browser settings.","セーブを保存できませんでした。空き容量とブラウザ設定を確認してください。","无法导出存档。请检查存储空间和浏览器设置。"],
+"가져오지 못했습니다. 정상 저장 파일인지와 저장 공간을 확인해주세요. 기존 기록은 유지됩니다.":["Could not import. Check that the save is valid and storage is available. Existing progress is unchanged.","読み込めませんでした。正常なセーブと空き容量を確認してください。既存の記録は維持されます。","无法导入。请检查存档是否有效及存储空间。原有进度保持不变。"],
  "저장 기록 확인이 필요합니다. 원본은 보관됩니다.":["Your saved progress needs checking. The original is preserved.","セーブ記録の確認が必要です。原本は保持されています。","需要检查存档。原始记录已保留。"],
  "화면을 벗어나 경기를 멈췄어요. 준비되면 재개해주세요.":["The match was paused when you left the screen. Resume when ready.","画面を離れたため試合を停止しました。準備ができたら再開してください。","离开画面时已暂停比赛。准备好后请继续。"],
   "사이드 커버":["Side Coverage","サイドカバー","边路覆盖"],

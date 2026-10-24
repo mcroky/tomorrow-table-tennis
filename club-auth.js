@@ -1,202 +1,93 @@
 (() => {
 'use strict';
-const tr=window.ClubI18n.t,legacyKey='tomorrow-table-tennis-career-v1',config=window.ClubConfig||{};
-const byId=id=>document.getElementById(id);
-const serialize=value=>JSON.stringify(value,(_key,item)=>item&&typeof item==='object'&&!Array.isArray(item)?Object.fromEntries(Object.keys(item).sort().map(key=>[key,item[key]])):item);
-const canonical=raw=>{if(raw==null)return null;try{return serialize(JSON.parse(raw));}catch{return raw;}};
-let saveAttempt=null;
-let client=null,user=null,revision=0,pending=null,timer=0,retry=0,inflight=null,blocked=false,booted=false,locked=false,intentionalLogout=false,continueBoot=null;
-const account={storageKey:legacyKey,ready:false,guest:false};
-const gate=document.createElement('section');gate.id='authGate';gate.className='auth-gate';gate.hidden=true;document.getElementById('career').before(gate);
-const bar=document.createElement('section');bar.className='account-bar';bar.hidden=true;bar.innerHTML='<span id="accountName"></span><span id="cloudStatus" role="status"></span><button type="button" id="cloudSync">'+tr('지금 동기화')+'</button><button type="button" id="accountLogout">'+tr('로그아웃')+'</button>';document.getElementById('career').before(bar);
-function status(text){byId('cloudStatus').textContent=text;}
-function localRead(key){try{return localStorage.getItem(key);}catch{return null;}}
-function localWrite(key,value){localStorage.setItem(key,value);}
-const metaKey=()=>account.storageKey+':sync';
-function meta(){try{return JSON.parse(localRead(metaKey())||'{}');}catch{return {};}}
-function valid(raw){try{window.ClubSaveSafety.assert(raw);return true;}catch{return false;}}
-function parse(raw){try{const value=JSON.parse(raw);return valid(value)?value:null;}catch{return null;}}
-function lockGate(){document.body.dataset.auth='locked';gate.hidden=false;bar.hidden=true;}
-function showError(message){const output=byId('accountError');if(output)output.textContent=message;}
-function safeError(error){
- if(error?.code==='email_not_confirmed')return tr('서버의 아이디 가입 설정이 완료되지 않았습니다. 관리자에게 알려주세요.');
- if(error?.code==='user_already_exists'||error?.code==='email_exists')return tr('이미 사용 중인 아이디입니다.');
- if(error?.code==='weak_password')return tr('비밀번호는 10자 이상으로 정해주세요.');
- if(error?.status===429||/rate|over_/.test(error?.code||''))return tr('요청이 많습니다. 잠시 뒤 다시 시도해주세요.');
- if(error?.code==='invalid_credentials')return tr('아이디 또는 비밀번호가 올바르지 않습니다.');
- return tr('연결하지 못했습니다. 입력 내용과 인터넷 연결을 확인해주세요.');
-}
-function sdk(){
- return new Promise((resolve,reject)=>{if(window.supabase)return resolve();const script=document.createElement('script');script.src='./vendor/supabase-2.118.0.js';script.onload=resolve;script.onerror=()=>reject(Error('SDK_LOAD'));document.head.append(script);});
-}
-function form(mode='login'){
- lockGate();const signup=mode==='signup';
- gate.innerHTML='<div class="account-intro"><small>ROAD TO OLYMPICS</small><h2>'+tr('내일은 탁구왕')+'</h2><p>'+tr('나만의 선수와 함께, 동네에서 세계 무대까지.')+'</p><div class="account-art" aria-hidden="true">🏓<span>01 → 40</span></div></div><div class="account-panel"><nav><button type="button" data-auth-mode="login" aria-pressed="'+!signup+'">'+tr('로그인')+'</button><button type="button" data-auth-mode="signup" aria-pressed="'+signup+'">'+tr('회원가입')+'</button></nav><h3>'+(signup?tr('새 선수 계정 만들기'):tr('나의 선수로 돌아오기'))+'</h3><p>'+tr('이메일 없이 아이디와 비밀번호로 시작하세요.')+'</p><form id="accountForm"><label>'+tr('아이디')+'<input id="accountUsername" name="username" autocomplete="username" minlength="3" maxlength="20" spellcheck="false" autocapitalize="none" required></label><small>'+tr('영문으로 시작하는 3~20자 · 영문, 숫자, 밑줄 · 대소문자 구분 없음')+'</small><label>'+tr('비밀번호')+'<input id="accountPassword" name="password" type="password" autocomplete="'+(signup?'new-password':'current-password')+'" '+(signup?'minlength="10"':'')+' maxlength="128" required></label>'+(signup?'<label>'+tr('비밀번호 확인')+'<input id="accountPasswordAgain" type="password" autocomplete="new-password" minlength="10" maxlength="128" required></label><small>'+tr('비밀번호는 10자 이상입니다. 이메일을 사용하지 않아 분실 시 자동 복구할 수 없습니다.')+'</small>':'')+'<p id="accountError" class="account-error" role="alert"></p><button type="submit" id="accountSubmit">'+(signup?tr('계정 만들고 시작'):tr('로그인'))+'</button></form><small>'+tr('계정마다 선수 성장과 장비를 클라우드에 저장합니다.')+'</small></div>';
- const intro=gate.querySelector('.account-intro'),story=document.createElement('section');story.className='account-story';
- const storyTitle=document.createElement('h3');storyTitle.textContent=tr('시작은, 동네의 낡은 탁구대 하나.');story.append(storyTitle);
- for(const line of ['처음 쥔 라켓은 손에 어색했고, 공은 자꾸 탁구대 밖으로 날아갔습니다. 그래도 한 번 제대로 맞았을 때의 그 소리는 잊을 수 없었죠.','동네 고수에게 지고, 얄미운 라이벌에게 또 져도, 다음 날이면 다시 라켓을 잡았습니다. 어제 못 받던 공을 오늘은 받아내기 위해.','이제 작은 꿈 하나가 생겼습니다. 동네 탁구장을 넘어, 언젠가 올림픽 무대에서 나만의 스매시를 날리는 것.']){const p=document.createElement('p');p.textContent=tr(line);story.append(p);}
- const promise=document.createElement('strong');promise.textContent=tr('오늘은 동네 초보. 내일은 탁구왕.');story.append(promise);intro.querySelector('.account-art').replaceWith(story);
- const summary=document.createElement('p');summary.className='account-game-summary';summary.textContent=tr('직접 움직이고 스윙하는 탁구 성장 게임 · 경기로 레벨을 올리고, 능력치와 장비를 키워 40개 거점에 도전하세요.');intro.append(summary);
- const practice=document.createElement('button');practice.type='button';practice.className='guest-start';practice.textContent=tr('바로 연습하기');practice.onclick=enterGuest;intro.append(practice);const note=document.createElement('p');note.textContent=tr('가입 없이 탁구를 즐겨보세요. 성장과 장비는 로그인 후 저장됩니다.');intro.append(note);
- gate.querySelectorAll('[data-auth-mode]').forEach(b=>b.onclick=()=>form(b.dataset.authMode));
- byId('accountForm').onsubmit=async event=>{
-  event.preventDefault();const username=byId('accountUsername').value.trim().toLowerCase(),password=byId('accountPassword').value;
-  if(!/^[a-z][a-z0-9_]{2,19}$/.test(username))return showError(tr('아이디 형식을 확인해주세요.'));
-  if(signup&&(password.length<10||password.length>128))return showError(tr('비밀번호는 10자 이상으로 정해주세요.'));
-  if(signup&&password!==byId('accountPasswordAgain').value)return showError(tr('두 비밀번호가 일치하지 않습니다.'));
-  const button=byId('accountSubmit'),navigation=[...gate.querySelectorAll('[data-auth-mode]')];button.disabled=true;navigation.forEach(b=>b.disabled=true);showError('');
-  try{
-   const email=username+'@'+config.usernameDomain;
-   const result=signup?await client.auth.signUp({email,password,options:{data:{username}}}):await client.auth.signInWithPassword({email,password});
-   byId('accountPassword').value='';if(signup)byId('accountPasswordAgain').value='';
-   if(result.error)throw result.error;
-   if(!result.data?.session)throw {code:'email_not_confirmed'};
-   const verified=await client.auth.getUser();if(verified.error||!verified.data?.user)throw verified.error||Error('AUTH');
-   await enter(verified.data.user);
-  }catch(error){showError(safeError(error));button.disabled=false;navigation.forEach(b=>b.disabled=false);}
- };
-}
-function enterGuest(){
- if(account.guest)return;account.guest=true;account.ready=true;account.storageKey=null;booted=true;
- gate.hidden=true;delete document.body.dataset.auth;document.body.dataset.guest='true';bar.hidden=false;
- byId('accountName').textContent=tr('비회원 연습');status(tr('연습 기록은 저장되지 않습니다.'));
- byId('cloudSync').hidden=true;byId('accountLogout').textContent=tr('내 선수로 도전하기');
- if(continueBoot){continueBoot();continueBoot=null;}
-}
-account.requestLogin=()=>{if(account.guest)location.reload();};
-function summary(raw){
- const d=parse(raw);return d?'Lv. '+(Number(d.level)||1)+' · '+tr('클리어')+' '+(Array.isArray(d.cleared)?d.cleared.length:0)+' · '+tr('상금 ')+(Number(d.money)||0).toLocaleString():'—';
-}
-function choice(title,detail,options){
- lockGate();gate.replaceChildren();const panel=document.createElement('div');panel.className='account-choice';const h=document.createElement('h2');h.textContent=title;const p=document.createElement('p');p.textContent=detail;panel.append(h,p);gate.append(panel);
- return new Promise(resolve=>options.forEach(option=>{const b=document.createElement('button');b.type='button';const name=document.createElement('b');name.textContent=option.label;const small=document.createElement('small');small.textContent=option.detail||'';b.append(name,small);b.onclick=()=>{for(const x of panel.querySelectorAll('button'))x.disabled=true;resolve(option.value);};panel.append(b);}));
-}
-async function remoteSave(){const result=await client.from('ttk_game_saves').select('payload,revision,updated_at').eq('user_id',user.id).maybeSingle();if(result.error)throw result.error;return result.data;}
-async function reconcile(){
- const raw=canonical(localRead(account.storageKey)),info=meta();if(info.syncedRaw)info.syncedRaw=canonical(info.syncedRaw);let remote;
- try{remote=await remoteSave();}
- catch(error){
-  if(raw&&!parse(raw))return window.ClubSaveSafety.block(raw,account.storageKey);
-  if(!parse(raw))throw error;
-  const selected=await choice(tr('클라우드에 연결하지 못했어요'),tr('이 기기에 저장된 기록은 보관되어 있습니다.'),[
-   {label:tr('다시 연결'),value:'retry'},{label:tr('기기 기록으로 이어하기'),detail:summary(raw),value:'local'}]);
-  if(selected==='retry')return reconcile();
-  revision=Number.isSafeInteger(info.revision)?info.revision:0;status(tr('오프라인 · 기기에 저장 중'));return;
+const tr=window.ClubI18n.t,legacyKey='tomorrow-table-tennis-career-v1',key='tomorrow-table-tennis-local-v1';
+const account={storageKey:key,ready:false,guest:false,local:true};
+const gate=document.createElement('section');gate.id='authGate';gate.className='auth-gate';gate.hidden=true;
+const bar=document.createElement('section');bar.className='account-bar local-save-bar';bar.hidden=true;
+const label=document.createElement('strong');label.textContent=tr('기기 자동 저장');
+const note=document.createElement('span');note.textContent=tr('이 브라우저에 저장됩니다. 데이터 삭제 전 저장 파일을 보관하세요.');
+const status=document.createElement('span');status.id='localSaveStatus';status.setAttribute('role','status');
+const button=text=>{const b=document.createElement('button');b.type='button';b.textContent=tr(text);return b;};
+const download=button('저장 파일 내려받기'),upload=button('저장 파일 가져오기');
+const picker=document.createElement('input');picker.type='file';picker.accept='.json,application/json';picker.hidden=true;
+const oldSaves=document.createElement('select');oldSaves.hidden=true;oldSaves.setAttribute('aria-label',tr('이 기기의 이전 선수 기록'));
+const importOld=button('이전 기록 가져오기');importOld.hidden=true;
+bar.append(label,note,download,upload,oldSaves,importOld,picker,status);
+document.getElementById('career').before(gate,bar);
+let locked=false;
+const read=name=>localStorage.getItem(name);
+const currentKey=()=>account.storageKey;
+function validate(raw){const data=JSON.parse(raw);window.ClubSaveSafety.assert(data);return data;}
+function cachedSaves(){
+ const result=[];
+ for(let i=0;i<localStorage.length;i++){
+  const name=localStorage.key(i);
+  if(name.startsWith(key+':backup:')){const raw=read(name);if(raw)result.push({key:name,raw});continue;}
+  if(name!==legacyKey&&!new RegExp('^'+legacyKey+':user:[a-f0-9-]+$','i').test(name))continue;
+  const raw=read(name);if(raw)result.push({key:name,raw});
  }
- revision=remote?.revision||0;
- if(remote){
-  const remoteRaw=serialize(remote.payload);if(!valid(remote.payload))return window.ClubSaveSafety.block(remoteRaw,account.storageKey+':cloud-original');
-  if(raw&&!parse(raw)){
-   return window.ClubSaveSafety.block(raw,account.storageKey,()=>{localWrite(account.storageKey,remoteRaw);localWrite(metaKey(),JSON.stringify({revision,syncedRaw:remoteRaw}));location.reload();});
-  }
-  const dirty=!!parse(raw)&&info.syncedRaw!==raw;
-  if(dirty&&raw!==remoteRaw&&info.revision!==revision){
-   const selected=await choice(tr('서로 다른 저장 기록이 있어요'),tr('이어갈 기록을 골라주세요. 선택하지 않은 기기 기록은 백업합니다.'),[
-    {label:tr('클라우드 기록'),detail:summary(remoteRaw),value:'cloud'},{label:tr('이 기기 기록'),detail:summary(raw),value:'local'}]);
-   if(selected==='local'){localWrite(metaKey(),JSON.stringify({...info,revision}));return;}
-  }else if(dirty&&info.revision===revision){return;}
-  if(raw&&raw!==remoteRaw)localWrite(account.storageKey+':backup:'+Date.now(),raw);
-  localWrite(account.storageKey,remoteRaw);localWrite(metaKey(),JSON.stringify({revision,syncedRaw:remoteRaw}));return;
+ return result;
+}
+function lastAccountSave(candidates){
+ const owners=new Set();
+ for(let i=0;i<localStorage.length;i++){
+  const name=localStorage.key(i);if(!name.startsWith('ttk-auth-'))continue;
+  try{const id=JSON.parse(read(name))?.user?.id;if(typeof id==='string')owners.add(id);}catch{/* Preserve expired or unrelated session data. */}
  }
- if(raw&&!parse(raw))return window.ClubSaveSafety.block(raw,account.storageKey);
- if(!parse(raw)){
-  const legacy=localRead(legacyKey);
-  if(legacy&&!parse(legacy))return window.ClubSaveSafety.block(legacy,legacyKey);
-  if(parse(legacy)){
-   const selected=await choice(tr('이 기기의 기존 선수를 가져올까요?'),tr('기존 기록을 계정에 가져오거나 새 선수로 시작할 수 있어요.'),[
-    {label:tr('기존 선수 가져오기'),detail:summary(legacy),value:'import'},{label:tr('새 선수로 시작'),value:'new'}]);
-   if(selected==='import')localWrite(account.storageKey,legacy);
-  }
- }
- localWrite(metaKey(),JSON.stringify({revision:0}));
-}
-async function enter(nextUser){
- user=nextUser;account.storageKey=legacyKey+':user:'+user.id;
- await reconcile();account.ready=true;booted=true;gate.hidden=true;delete document.body.dataset.auth;bar.hidden=false;
- byId('accountName').textContent=(user.email||'').split('@')[0]+' · '+tr('선수 계정');status(tr('클라우드 연결됨'));if(continueBoot){continueBoot();continueBoot=null;}
-}
-function queueSave(data){
- if(!client||!user||!booted||blocked)return;
- try{window.ClubSaveSafety.assert(data);}catch{blocked=true;status(tr('저장 기록 확인이 필요합니다. 원본은 보관됩니다.'));return;}
- const raw=serialize(data);if(canonical(meta().syncedRaw)===raw&&!pending)return;
- pending=raw;status(tr('클라우드 저장 대기'));clearTimeout(timer);timer=setTimeout(flush,500);
-}
-async function flush(){
- if(!client||!user||!pending||blocked)return false;if(inflight)return inflight;
- inflight=(async()=>{
-  while(pending&&!blocked){
-   const raw=saveAttempt?.raw??pending,owner=user.id;
-   const expected=saveAttempt?.revision??revision;saveAttempt={raw,revision:expected};
-   try{
-    const current=await client.auth.getSession();if(current.data?.session?.user.id!==owner){blocked=true;status(tr('로그인이 만료됐어요 · 새로고침 후 로그인'));return false;}
-    const result=await client.rpc('ttk_save_progress',{p_payload:JSON.parse(raw),p_expected_revision:expected});
-    let row=Array.isArray(result.data)?result.data[0]:result.data;
-    if(result.error){
-     // A previous attempt can commit while its response is lost. A matching
-     // remote payload acknowledges that write; a different payload still conflicts.
-     if(['40001','PT409'].includes(result.error.code)||/SAVE_CONFLICT/.test(result.error.message||'')){
-      const remote=await remoteSave();
-      if(remote&&Number.isSafeInteger(remote.revision)&&remote.revision>expected&&serialize(remote.payload)===raw)row=remote;
-      else throw result.error;
-     }else throw result.error;
-    }
-    if(!Number.isSafeInteger(row?.revision)||row.revision<=0)throw Error('INVALID_RESPONSE');
-    revision=row.revision;try{localWrite(metaKey(),JSON.stringify({revision,syncedRaw:raw}));}catch{/* The server acknowledgement remains valid even when the local cache is full. */}
-    saveAttempt=null;if(pending===raw)pending=null;retry=0;status(pending?tr('클라우드 저장 대기'):tr('클라우드 저장됨'));
-   }catch(error){
-    if(['40001','PT409'].includes(error?.code)||/SAVE_CONFLICT/.test(error?.message||'')){blocked=true;status(tr('다른 기기의 새 기록이 있어요 · 동기화를 눌러 선택'));}
-    else{status(tr('연결 지연 · 기기 기록 보관 중'));clearTimeout(timer);timer=setTimeout(flush,Math.min(60000,2000*2**Math.min(retry++,5)));}
-    return false;
-   }
-  }return true;
- })();
- try{return await inflight;}finally{inflight=null;}
+ const matches=candidates.filter(s=>s.key.startsWith(legacyKey+':user:')&&owners.has(s.key.slice((legacyKey+':user:').length)));
+ return matches.length===1?matches[0]:null;
 }
 account.prepare=async()=>{
- const url=String(config.supabaseUrl||''),key=String(config.supabasePublishableKey||'');
- const local=['localhost','127.0.0.1','[::1]'].includes(location.hostname)||location.protocol==='file:';
- if(!url||!key){
-  if(local||config.requireLogin===false){const raw=localRead(account.storageKey);if(raw&&!parse(raw))return window.ClubSaveSafety.block(raw,account.storageKey);account.ready=true;return;}
-  lockGate();gate.innerHTML='<div class="account-choice"><h2>'+tr('로그인 서버 연결 준비 중')+'</h2><p>'+tr('관리자가 Supabase 설정을 완료하면 시작할 수 있습니다.')+'</p></div>';return new Promise(()=>{});
+ let candidates=[];
+ try{
+  candidates=cachedSaves();let raw=read(key);
+  if(!raw){
+   // Prefer the previously signed-in player, without merging different players.
+   const source=lastAccountSave(candidates)||candidates.find(s=>s.key===legacyKey)||(candidates.filter(s=>!s.key.startsWith(key+':backup:')).length===1?candidates.find(s=>!s.key.startsWith(key+':backup:')):null);
+   if(source){
+    try{validate(source.raw);}catch{return window.ClubSaveSafety.block(source.raw,source.key);}
+    account.storageKey=source.key;localStorage.setItem(key,source.raw);account.storageKey=key;raw=source.raw;
+    status.textContent=tr('이 기기의 이전 기록을 로컬 저장으로 이어받았습니다.');
+   }
+  }
+  if(raw){try{validate(raw);}catch{return window.ClubSaveSafety.block(raw,key);}}
+ }catch{status.textContent=tr('자동 저장 불가 · 현재 실행에서만 유지');}
+ for(const save of candidates){
+  let data;try{data=validate(save.raw);}catch{continue;}
+  const option=document.createElement('option');option.value=save.key;
+  option.textContent=(save.key.startsWith(key+':backup:')?tr('이전 기록 가져오기')+' · ':'')+(data.profile?.name||tr('나의 선수'))+' · Lv. '+data.level+' · '+(data.cleared?.length||0)+'/40';oldSaves.append(option);
  }
- if(!/^https:\/\/[a-z0-9-]+\.supabase\.co\/?$/.test(url)||key.startsWith('sb_secret_')||!/^[a-z0-9.-]+$/.test(config.usernameDomain||'')){throw Error('INVALID_PUBLIC_AUTH_CONFIG');}
- lockGate();gate.innerHTML='<div class="account-choice"><h2>'+tr('선수 계정 확인 중')+'</h2></div>';
- await sdk();client=window.supabase.createClient(url,key,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false,storageKey:'ttk-auth-'+new URL(url).hostname}});
- client.auth.onAuthStateChange((_event,session)=>{if(booted&&!intentionalLogout&&session?.user?.id!==user?.id){blocked=true;setTimeout(()=>{status(tr('계정이 변경됐어요 · 새로고침해주세요.'));if(window.ClubCareer?.hasActiveMatch())window.dispatchEvent(new Event('club-account-changed'));else location.reload();},0);}});
- return new Promise(resolve=>{
-  continueBoot=resolve;
-  client.auth.getSession().then(async result=>{
-   if(account.guest)return;
-   if(result.error)throw result.error;
-   if(result.data?.session?.user)await enter(result.data.session.user);else form();
-  }).catch(()=>{if(account.guest)return;form();showError(tr('저장된 계정에 연결하지 못했어요. 다시 로그인해주세요.'));});
- });
+ oldSaves.hidden=importOld.hidden=!oldSaves.options.length;
+ account.ready=true;delete document.body.dataset.auth;delete document.body.dataset.guest;bar.hidden=false;
 };
-account.getLeaderboard=async()=>{
- if(!client||!user||!booted)throw Error('LOGIN_REQUIRED');
- const result=await client.rpc('ttk_get_leaderboard').abortSignal(AbortSignal.timeout(12000));
- if(result.error)throw result.error;return {...result.data,savePending:!!pending||blocked};
+function importSave(raw){
+ if(locked)return;
+ validate(raw);
+ if(!confirm(tr('현재 진행 상황을 보관한 뒤 선택한 저장 파일로 바꿀까요?')))return;
+ const previous=read(currentKey());
+ if(previous)localStorage.setItem(key+':backup:'+Date.now(),previous);
+ localStorage.setItem(currentKey(),raw);location.reload();
+}
+download.onclick=()=>{
+ try{
+  const raw=read(currentKey())||JSON.stringify(window.ClubCareer.inspect());validate(raw);
+  const url=URL.createObjectURL(new Blob([raw],{type:'application/json'})),a=document.createElement('a');
+  a.href=url;a.download='tomorrow-table-tennis-save-'+new Date().toISOString().slice(0,10)+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+  status.textContent=tr('저장 파일을 내려받았습니다.');
+ }catch{status.textContent=tr('저장 파일을 보관하지 못했습니다. 저장 공간과 브라우저 설정을 확인해주세요.');}
 };
-account.queueSave=queueSave;
-account.presenceHeartbeat=async(activity)=>{
- if(!client||!user||!booted||blocked||intentionalLogout)throw Error('LOGIN_REQUIRED');
- const result=await client.rpc('ttk_presence_heartbeat',{p_activity:activity}).abortSignal(AbortSignal.timeout(10000));
- if(result.error)throw result.error;return result.data;
+upload.onclick=()=>{if(!locked)picker.click();};
+picker.onchange=async()=>{
+ const file=picker.files?.[0];if(!file)return;
+ try{if(file.size>512*1024)throw Error('SAVE_TOO_LARGE');importSave(await file.text());}
+ catch{status.textContent=tr('가져오지 못했습니다. 정상 저장 파일인지와 저장 공간을 확인해주세요. 기존 기록은 유지됩니다.');}
+ finally{picker.value='';}
 };
-account.getOperatorDashboard=async()=>{
- if(!client||!user||!booted||blocked||intentionalLogout)throw Error('LOGIN_REQUIRED');
- const result=await client.rpc('ttk_operator_dashboard').abortSignal(AbortSignal.timeout(12000));
- if(result.error)throw result.error;return result.data;
+importOld.onclick=()=>{
+ try{const raw=read(oldSaves.value);if(!raw)throw Error('SAVE_MISSING');importSave(raw);}
+ catch{status.textContent=tr('가져오지 못했습니다. 정상 저장 파일인지와 저장 공간을 확인해주세요. 기존 기록은 유지됩니다.');}
 };
-account.submitFeedback=async({id,category,message,language})=>{
- if(!client||!user||!booted||blocked)throw Error('LOGIN_REQUIRED');
- const result=await client.rpc('ttk_submit_feedback',{p_id:id,p_category:category,p_message:message,p_language:language}).abortSignal(AbortSignal.timeout(15000));
- if(result.error)throw result.error;if(!result.data?.received)throw Error('INVALID_RESPONSE');return result.data;
-};
-account.updateLock=value=>{if(locked===!!value)return;locked=!!value;byId('accountLogout').disabled=locked;byId('cloudSync').disabled=locked;};
-byId('cloudSync').onclick=async()=>{if(locked)return;if(blocked){location.reload();return;}await flush();};
-byId('accountLogout').onclick=async()=>{if(account.guest){account.requestLogin();return;}if(locked||!client)return;byId('accountLogout').disabled=true;await flush();intentionalLogout=true;const result=await client.auth.signOut({scope:'local'});if(result.error){intentionalLogout=false;byId('accountLogout').disabled=false;status(tr('로그아웃하지 못했어요. 다시 시도해주세요.'));return;}location.reload();};
-window.addEventListener('online',()=>{if(pending&&!blocked)flush();});
-document.addEventListener('visibilitychange',()=>{if(document.hidden&&pending)flush();});
+account.updateLock=value=>{locked=!!value;upload.disabled=importOld.disabled=oldSaves.disabled=locked;};
+account.queueSave=()=>{}; // Career saves synchronously to the device, without a network queue.
 window.ClubAccount=account;
 })();

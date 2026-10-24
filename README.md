@@ -1,138 +1,31 @@
 # 내일은 탁구왕
-3D 탁구 경기와 40개 거점 육성 캠페인. GitHub Pages 정적 사이트 + Supabase Auth / PostgreSQL 계정 저장.
+자체 WebGL / JavaScript 기반 3D 탁구 경기와 40개 거점 육성 캠페인입니다. GitHub Pages 정적 사이트로 제공하며 로그인 없이 월드맵에서 시작합니다.
 
 ## 공개 게임
 - 사이트: https://mcroky.github.io/tomorrow-table-tennis/
 - 소스: https://github.com/mcroky/tomorrow-table-tennis
-- 메인 페이지: index.html (camera-study.html과 같은 게임)
-- 로그인: 이메일 입력 없이 아이디 + 비밀번호. 아이디는 영문으로 시작하는 3~20자의 영문/숫자/밑줄, 대소문자 구분 없음.
+- 진입점: index.html, camera-study.html
 
-## 개발 실행
-Node.js로 정적 서버를 실행하거나 로컬 HTML을 열어 개발합니다. Supabase 설정이 존재하면 로그인 후 시작합니다.
-설정이 비어 있는 localhost / file 개발 환경에서만 기존 로컬 모드를 사용할 수 있습니다.
-GitHub Pages 환경은 로그인 설정이 없으면 게임을 시작하지 않습니다.
+## 저장 (2026-10-24 변경)
+- 성장, 스킬, 장비·강화, 상금, 거점·별, 진행 중 경기와 분석을 현재 브라우저의 localStorage에 자동 저장합니다.
+- 저장 키는 tomorrow-table-tennis-local-v1이며 기존 version 1~3 저장 검증·변환과 손상 원문 보호를 유지합니다.
+- 이 브라우저의 이전 계정 캐시와 기존 로컬 기록을 보존하고, 이전 로그인 사용자 기록이 확인되면 우선 이어받습니다. 여러 선수 중 누구의 기록인지 확정할 수 없으면 자동으로 합치지 않고 상단에서 선택해 가져올 수 있습니다.
+- 저장 파일 내려받기 / 가져오기를 제공합니다. 가져오기는 검증과 확인을 거치며 현재 기록을 별도 백업합니다. 경기 중에는 가져오기를 잠급니다.
+- 브라우저 데이터 삭제, 시크릿 모드 종료, 다른 브라우저·기기로 이동 시 기록이 자동 이전되지 않습니다. 저장 파일을 미리 내려받으세요.
+- 서버에만 있는 기록은 자동 조회하지 않습니다. 기존 서버 계정·DB를 삭제하는 작업은 수행하지 않았습니다.
 
-## 계정 구성
-club-config.js에는 프로젝트 URL과 **공개용 publishable 키만** 들어갑니다.
-비밀번호는 Supabase Auth가 검증하며 게임 DB나 소스에 저장하지 않습니다.
-아이디는 내부적으로 `아이디@players.ttk.invalid` 형태의 Auth 식별자로 매핑됩니다. 실제 이메일을 요구하거나 발송하지 않습니다.
-**출시 후 usernameDomain은 변경하지 마세요.** 변경하면 기존 아이디가 다른 Auth 식별자가 됩니다.
-Supabase Auth의 Email provider는 사용하고, Confirm email은 꺼야 합니다.
-프로젝트의 Allow new users to sign up을 켜고, 비밀번호 최소 길이는 10자 이상을 권장합니다.
-Auth의 기본 가입·로그인 요청 제한을 사용합니다. 공개 운영량이 늘면 Supabase CAPTCHA를 추가할 수 있습니다.
-이메일이 없으므로 이메일 기반 비밀번호 자동 복구는 제공하지 않습니다. 비밀번호 분실 시 운영자 지원이 필요합니다.
+## 서버 의존 기능
+로그인·가입, 클라우드 저장, 유저 랭킹과 접속 현황은 현재 실행 경로에서 사용하지 않습니다. 인증 SDK도 빌드에 포함하지 않습니다. 의견 보내기는 https://mcroky.github.io/roky-studio/#feedback 로 연결합니다. supabase/와 vendor/는 과거 운영 이력이며 현재 게임은 해당 서버에 연결하지 않습니다.
 
-## 저장 DB
-`supabase/migrations/`의 SQL을 파일명 순서대로 적용합니다.
-- ttk_game_saves: 본인 UUID의 저장 데이터만 SELECT 가능(RLS).
-- 직접 INSERT/UPDATE 권한은 제공하지 않습니다.
-- ttk_save_progress RPC가 auth.uid()로 소유자를 결정하고 revision을 비교해 저장합니다.
-- 다른 기기가 먼저 저장했다면 HTTP 409 충돌을 반환하고 이어갈 기록 선택을 요청합니다.
-- 네트워크 오류 시 계정별 기기 기록을 보관하고 재접속 때 다시 저장합니다.
-- 장비·강화·경험치·상금·별·진행 중 경기·분석을 한 저장 데이터로 관리합니다.
-인증된 사용자가 실행하는 SECURITY DEFINER RPC는 의도된 쓰기 경로입니다. 고정 search_path, auth.uid(), 직접 쓰기 권한 차단으로 범위를 제한합니다. Supabase Advisor의 [해당 RPC 경고](https://supabase.com/docs/guides/database/database-linter?lint=0029_authenticated_security_definer_function_executable)는 이 설계를 표시합니다.
-현재는 클라이언트에서 경기·보상을 계산하므로 온라인 경쟁용 부정행위 방지 서버는 구현하지 않았습니다.
-
-## 기존 로컬 선수 이전
-기존 기록이 있는 원래 브라우저의 camera-study.html에서 로그인한 다음 '기존 선수 가져오기'를 선택합니다.
-'클라우드 저장됨' 표시를 확인한 후 Pages 사이트에서 같은 아이디로 로그인하면 이어서 플레이할 수 있습니다.
-계정별 기록을 분리하며, 기존 로컬 기록은 자동 삭제하지 않습니다.
-
-## GitHub Pages 배포
-`node scripts/build-pages.cjs`로 dist/를 생성합니다.
-배포 파일은 명시적 허용 목록으로 복사합니다. .artifacts, SQL, 예전 프로토타입, 개발 기록은 배포하지 않습니다.
-GitHub 저장소 Settings → Pages에서 Source를 GitHub Actions로 설정합니다.
-main 브랜치에 push하면 .github/workflows/pages.yml이 dist/만 배포합니다.
-Supabase SDK 2.118.0은 vendor/에 고정해 외부 CDN 없이 로드합니다(MIT 라이선스 동봉).
-공개 설정 키로 service_role / sb_secret_ 키를 사용하면 안 됩니다.
+## 개발 및 배포
+Node.js 정적 서버 또는 로컬 HTML로 실행합니다. node scripts/build-pages.cjs 로 dist/를 생성합니다. main에 push하면 기존 GitHub Actions가 정적 파일만 GitHub Pages에 배포합니다. 해시 에셋·명시적 배포 허용 목록과 비밀 키 검사를 유지합니다.
 
 ## 조작
 WASD/방향키 이동, SPACE 스윙/내 서브 시작, E 스매시, F 필살기.
-J/K/L 코스, Z 드라이브/X 커트, C 짧은 서브/V 깊은 서브, 1~4 시점 전환.
+J/K/L 코스, Z 드라이브/X 커트, C 짧은 서브/V 깊은 서브, 1~4 시점 전환. 모바일은 화면 조작을 사용합니다.
 
 ## 현재 범위
-1인 캠페인, AI 라이벌 재대결, 훈련 보상, 3성 도전, 상점·착장·장비 강화, 캐릭터 설정, 경기 분석.
-온라인 PvP는 미구현입니다.
+1인 캠페인, AI 라이벌 재대결, 훈련 보상, 3성 도전, 상점·착장·장비 강화, 캐릭터 설정, 경기 분석. 온라인 PvP는 미구현입니다.
 
-## 유저 랭킹
-월드맵의 랭킹 버튼에서 상위 50명과 내 순위를 확인합니다.
-클리어 거점 → 별 → 레벨 → 승리 수 순서이며 동일한 기록은 공동 순위입니다.
-공개되는 정보는 선수 이름, 진행도, 별, 레벨과 승패 요약입니다. 이메일·로그인 아이디·장비·전체 저장 데이터는 랭킹 API에 포함하지 않습니다.
-저장 트리거가 ttk_leaderboard 요약을 갱신하며, 클라이언트의 직접 랭킹 쓰기는 차단합니다.
-기존 개발 확인 계정은 별도 제외 표시로 숨겼으며 실제 사용자 기록은 유지합니다.
-현재 캠페인 기록은 클라이언트에서 계산하므로 이 랭킹은 캐주얼 진행도 비교용입니다. 공정한 경쟁용 보상/온라인 PvP에는 서버 경기 판정이 추가로 필요합니다.
-DB 접근 정책은 [Supabase RLS](https://supabase.com/docs/guides/database/postgres/row-level-security), 자동 갱신은 [트리거](https://supabase.com/docs/guides/database/postgres/triggers)를 사용합니다.
-운영 권고: Advisor의 [유출 비밀번호 차단](https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection)은 현재 비활성 상태입니다.
-
-## 전설 장비와 등급별 외형
-일반 → 고급 → 희귀 → 영웅 → 전설 순으로 배색 패널, 금속 테두리, 문장과 보석 장식이 늘어납니다.
-전설 라인은 유니폼 12,500원, 밴드 8,500원, 신발 14,500원, 라켓 18,500원, 공 6,500원입니다.
-전설 오라는 약 4.2초 주기로 부드럽게 맥동하며 경기와 구매 전 착장 미리보기에도 표시됩니다.
-오라는 별도 소규모 렌더 패스로 표시하고, 미리보기의 고정 모델은 GPU 버퍼를 재사용합니다. 동작 줄이기 설정에서는 맥동을 멈춥니다.
-
-## 터치 조작
-스마트폰/태블릿에서는 왼쪽 가상 조이스틱으로 앞뒤·좌우·대각선 이동, 오른쪽 큰 버튼으로 스윙·스매시를 조작합니다. 내 서브도 스윙 버튼으로 시작합니다.
-코스·구질·서브 길이·시점과 경기 시작/재개는 화면 버튼으로 선택합니다. 손가락을 떼거나 입력이 취소되면 이동을 해제합니다.
-휴대폰 세로는 코트가 남은 세로 공간을 사용하고, 가로는 코스 설정과 터치 조작을 오른쪽에 배치합니다.
-Chrome 터치 에뮬레이션에서 360×640, 390×844, 840×360, 844×390, 태블릿 768×1024, 1024×768 레이아웃과 동시 터치 입력을 확인했습니다. 실제 iOS/Android 기기 점검은 별도입니다.
-
-## 모바일 시야·조작 보정
-
-모바일 라켓 시점은 좌우 이동에 맞춰 시선을 탁구대 중심 쪽으로 보정하고, 시점 높이를 조금 올렸습니다. 팔 두께도 줄여 시야 가림을 완화합니다.
-조이스틱 중심에는 방사형 데드존과 점진적인 속도 구간을 적용했습니다. 득점 대기·세리머니·경기 일시정지 중에는 타격 버튼을 비활성화합니다.
-모바일 공 위치 강조는 실제 공 좌표에 얇은 테두리와 짧은 이동 잔상을 표시하며, 공의 물리 크기·충돌·타격 판정을 바꾸지 않습니다. 음량·조작 안내에서 끌 수 있습니다.
-
-## 개선사항 접수와 메일 알림
-월드맵의 **의견 보내기**에서 개선 제안·버그·기타 의견을 보냅니다. 선수 이름, 언어, 내용(10~2,000자)만 전달합니다. 실패하면 내용을 유지하며, 같은 제출의 재시도는 접수 UUID로 중복을 방지합니다.
-인증한 계정만 접수할 수 있고 10분에 3건/24시간에 5건, 전체 24시간에 80건으로 제한합니다. 본문 및 발송 기록은 비공개 `ttk_private.feedback`에 저장하며 플레이어가 조회하거나 직접 수정할 수 없습니다.
-수신 주소·Resend 발송 키·발신 주소는 Supabase Vault의 `ttk_feedback_to`, `ttk_feedback_resend_key`, `ttk_feedback_from`에만 저장합니다. 실제 값은 저장소, 정적 배포, 클라이언트 API 응답에 넣지 않습니다. Vault 설정은 운영자가 대시보드에서 관리합니다.
-DB Cron이 1분마다 서버의 `feedback-delivery` Edge Function을 깨워 접수함을 처리합니다. 메일 키와 수신 주소는 Edge Function에서만 읽으며 pg_net 대기열에는 넣지 않습니다. `ttk_feedback_worker`는 서버 작업 트리거 전용으로만 사용합니다. 설정·큐 읽기·결과 갱신 RPC는 service_role 전용입니다. 실패 시 최대 5회, 23시간 안에 동일한 Resend idempotency key로 재시도합니다. `accepted`는 발송 API 접수 성공이며 수신함 도착을 의미하지 않습니다. 영구 실패는 `failed`로 남겨 운영자가 확인할 수 있습니다. 수신자가 Resend 계정 소유자일 때 기본 발신 주소를 사용할 수 있고, 그 외에는 인증한 발신 도메인이 필요합니다.
-전달 방식: [Supabase pg_net](https://supabase.com/docs/guides/database/extensions/pg_net), [Resend 중복 방지](https://resend.com/docs/dashboard/emails/idempotency-keys).
-
-## 운영자 현황
-기존 `roky` 로그인 계정의 UUID를 비공개 `ttk_private.operators`에 등록합니다. 이름·클라이언트 설정·user_metadata로 권한을 부여하지 않으며, 대시보드 RPC는 매 요청 서버의 운영자 목록과 `auth.uid()`를 대조합니다. 일반 계정은 운영 지표와 접속자 목록을 조회할 수 없습니다.
-운영자는 월드맵의 **운영자** 버튼에서 접속/경기 인원, 최근 24시간 활동 계정, 전체/신규 가입자, 의견 발송 대기/실패 건수와 접속 선수 최대 50명을 확인합니다. 등록된 개발 확인 계정은 인원 지표에서 제외합니다. 이메일·로그인 아이디·IP·메일 발송 설정은 반환하지 않습니다.
-화면이 보이는 로그인 계정이 30초마다 서버에 연결 신호를 보냅니다. 서버가 기록한 최근 90초 내 활동을 접속으로 계산하며 여러 탭/기기에서 같은 계정은 한 명으로 셉니다. 종료·로그아웃·통신 단절은 최대 90초 뒤 반영됩니다. 경기 여부는 클라이언트가 신고하는 참고 정보이며, 활동 통계는 이 기능을 배포한 시점부터 집계합니다. 지표 창을 닫거나 화면이 숨겨지면 조회를 중단합니다.
-
-## 공통 랠리 난이도
-PC·모바일 모두 일반 스윙의 이른 입력을 짧게 예약하고 약간 늦은 입력에는 짧은 스윙 동작을 적용합니다. 공과 실제 라켓 면의 충돌이 있어야 리턴하며, 타이밍 보정을 받은 스윙은 정타/크리티컬이 되지 않습니다. 스매시 입력에는 이 보정을 적용하지 않습니다. 첫 10개 거점은 상대 타구 파워를 최대 14% 낮추고 점차 원래 속도로 돌아갑니다. 라이벌 재대결은 기존 난이도를 유지하며, 자유 연습 상대의 타구 파워는 10% 낮춥니다.
-
-## 모바일 화면과 선수 뒤 시점
-
-이동 조작은 넓은 왼쪽 터치 영역에서 손가락을 댄 위치를 중심으로 시작하는 플로팅 조이스틱입니다. 누른 순간에는 이동하지 않고 드래그 거리에 따라 속도가 올라갑니다. 기본 방향 보정은 좌우·앞뒤의 작은 흔들림을 무시하면서 명확한 사선 입력은 대각선 이동으로 처리합니다. 다른 방향으로 확실하게 기울인 상태가 90ms 유지되면 손을 떼지 않고도 방향을 전환합니다. 음량·조작 안내에서 방향 보정을 끄거나 감도(70~140%)를 조절하며 선택은 이 기기에 저장합니다.
-휴대폰/터치 태블릿은 월드맵 진입 시 현재 지역을 확대합니다. 지역 탭으로 이동하며 전체 지도는 전체 보기로 전환합니다. 지역 화면의 거점 원형 버튼은 최소 약 44px로 표시합니다.
-휴대폰 세로 경기에서는 조이스틱과 타격 버튼을 코트 하단 양쪽에 배치하고, 안내 문구는 코트 위 피드백 줄로 표시합니다. 코트에 더 많은 높이를 주며, 메뉴가 늘어나면 가로로 스크롤합니다.
-선수 뒤 카메라는 후진 시 발끝이 잘리지 않도록 거리를 맞추고 상대 머리가 점수판 아래에 들어오도록 조정합니다. 공과 내 몸이 겹치는 순간만 내 캐릭터를 부드럽게 반투명 처리하며, 가장 가까운 표면만 표시해 얼굴이나 팔 안쪽이 비치지 않게 합니다. 공 위치 강조는 선수 뒤 시점에서도 작동하며 음량·조작 안내에서 끌 수 있습니다.
-
-## 비회원 연습
-- 로그인 화면의 '바로 연습하기'로 가입 없이 자유 연습을 시작할 수 있습니다.
-- 비회원은 기본 선수와 기본 장비로 플레이하며 성장 기록을 읽거나 저장하지 않습니다.
-- '내 선수로 도전하기'로 로그인 화면에 돌아갑니다. 월드맵, 육성, 장비, 랭킹은 기존 계정 기능입니다.
-- 비회원 접속은 현재 계정 기반 운영자 접속 인원 집계에 포함되지 않습니다.
-
-## Background music
-- Original synthesized lobby (92 BPM) and match (144 BPM) arrangements, rendered once to cached loop buffers outside the game frame loop.
-- Shared audio context, crossfades between surfaces, independent saved music volume/mute, and brief ducking for hits and point sounds.
-- Playback begins after a user gesture. Music stops in hidden tabs and resumes on return.
-
-## Gentler rally balance
-- Practice and early career opponents move slower, react later, hit slower returns and leave more space. The reduction tapers across the career; boss patterns and rematch scaling remain.
-- Ordinary swings accept earlier input and recover slightly late input; severe timing mistakes can still go out, and assisted timing cannot award critical hits.
-- Opponents can hit real wide returns after a rally develops, with a higher error rate when their footing is poor. Points still use ball landing rules.
-
-## Beginner practice and default camera
-- Practice uses slow, mostly body-directed flat returns, generous normal-swing input timing, and a visible swing-button cue. Career opponents retain spin and course patterns.
-- The default is a closer follow view, with viewport fitting and ball-occlusion transparency. The hidden-canvas initialization path uses a finite fallback aspect ratio.
-- The shared audio output gain was raised by 9.54 dB before dynamics processing, with a final soft ceiling. Hit-time music ducking is stronger for quiet edge contacts. Existing mute and user volume preferences remain supported.
-
-## First-play tutorial and beginner assistance
-- First practice visit teaches a legal serve, an actual normal-shot contact, then a high-ball smash. Misses retry the same lesson without points or penalties.
-- Skip and completion are remembered on this browser; the tutorial can be replayed from the court settings.
-- Default beginner assistance follows incoming balls through normal footwork unless the player is moving manually. Button presses can be buffered for up to three seconds; low-ball smash requests become normal returns.
-- Assistance is available in practice and the first five career stages, excluding ranked rival rematches. It can be disabled in court settings; it never grants automatic critical hits.
-- Desktop Chrome and touch-emulated phone checks completed all three lessons with three inputs each, and verified replay/skip/no-repeat behavior.
-- With beginner assistance enabled, first-region opponents use simpler returns and central serves; manual movement always overrides automatic following.
-
-## 2026-10-24 저장·경기 안정성 수정
-
-손상 기록 자동 덮어쓰기 차단, 원본 다운로드·정상 클라우드 기록 선택 복구, 창 전환 시 수동 재개, 저장 응답 유실 후 재확인, 움직임 줄이기 적용 범위를 개선했습니다. `node --test tests/save-safety.test.cjs`로 관련 회귀 검증을 실행합니다. 서버 스키마·권한 변경은 없습니다. 상세 기록: [저장·경기 안정성](docs/SAVE_SAFETY_RELEASE_2026-10-24.md).
+## 향후 Android / Google Play
+기존 WebGL 게임을 유지하는 웹 패키징 경로를 검토하며 현재 Android 빌드·Play 출시는 완료하지 않았습니다. 웹과 앱의 저장 영역은 자동 공유되지 않으므로 JSON 저장 파일을 이관 경계로 사용합니다. Android에서는 파일 선택·내보내기, 뒤로가기, 앱 종료·복귀, 업데이트 후 저장 복원을 실기기로 확인해야 합니다. 앱 식별자·서명·target API·배포 채널 정책은 Android 작업에서 확정합니다. 외부 이체 링크는 Play판에 자동 포함하지 않습니다.

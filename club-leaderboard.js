@@ -1,5 +1,6 @@
 (() => {
 'use strict';
+if(window.ClubAccount?.local)return;
 const tr=window.ClubI18n.t,el=id=>document.getElementById(id);
 let request=0;
 const opener=document.createElement('button');opener.id='rankingOpen';opener.type='button';opener.textContent='🏆 '+tr('랭킹');opener.setAttribute('aria-haspopup','dialog');opener.setAttribute('aria-controls','rankingDialog');el('mapPanel').after(opener);
