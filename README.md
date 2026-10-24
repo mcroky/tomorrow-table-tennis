@@ -132,3 +132,7 @@ PC·모바일 모두 일반 스윙의 이른 입력을 짧게 예약하고 약�
 - Assistance is available in practice and the first five career stages, excluding ranked rival rematches. It can be disabled in court settings; it never grants automatic critical hits.
 - Desktop Chrome and touch-emulated phone checks completed all three lessons with three inputs each, and verified replay/skip/no-repeat behavior.
 - With beginner assistance enabled, first-region opponents use simpler returns and central serves; manual movement always overrides automatic following.
+
+## 2026-10-24 저장·경기 안정성 수정
+
+손상 기록 자동 덮어쓰기 차단, 원본 다운로드·정상 클라우드 기록 선택 복구, 창 전환 시 수동 재개, 저장 응답 유실 후 재확인, 움직임 줄이기 적용 범위를 개선했습니다. `node --test tests/save-safety.test.cjs`로 관련 회귀 검증을 실행합니다. 서버 스키마·권한 변경은 없습니다. 상세 기록: [저장·경기 안정성](docs/SAVE_SAFETY_RELEASE_2026-10-24.md).

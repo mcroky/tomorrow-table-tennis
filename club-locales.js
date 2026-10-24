@@ -1,5 +1,7 @@
 'use strict';
 window.ClubLocales={
+ "저장 기록 확인이 필요합니다. 원본은 보관됩니다.":["Your saved progress needs checking. The original is preserved.","セーブ記録の確認が必要です。原本は保持されています。","需要检查存档。原始记录已保留。"],
+ "화면을 벗어나 경기를 멈췄어요. 준비되면 재개해주세요.":["The match was paused when you left the screen. Resume when ready.","画面を離れたため試合を停止しました。準備ができたら再開してください。","离开画面时已暂停比赛。准备好后请继续。"],
   "사이드 커버":["Side Coverage","サイドカバー","边路覆盖"],
   "밸런스 훈련":["Balance Training","バランス訓練","平衡训练"],
   "코스 설계":["Placement Planning","コース設計","落点规划"],

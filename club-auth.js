@@ -3,7 +3,8 @@
 const tr=window.ClubI18n.t,legacyKey='tomorrow-table-tennis-career-v1',config=window.ClubConfig||{};
 const byId=id=>document.getElementById(id);
 const serialize=value=>JSON.stringify(value,(_key,item)=>item&&typeof item==='object'&&!Array.isArray(item)?Object.fromEntries(Object.keys(item).sort().map(key=>[key,item[key]])):item);
-const canonical=raw=>{try{return serialize(JSON.parse(raw));}catch{return raw;}};
+const canonical=raw=>{if(raw==null)return null;try{return serialize(JSON.parse(raw));}catch{return raw;}};
+let saveAttempt=null;
 let client=null,user=null,revision=0,pending=null,timer=0,retry=0,inflight=null,blocked=false,booted=false,locked=false,intentionalLogout=false,continueBoot=null;
 const account={storageKey:legacyKey,ready:false,guest:false};
 const gate=document.createElement('section');gate.id='authGate';gate.className='auth-gate';gate.hidden=true;document.getElementById('career').before(gate);
@@ -13,7 +14,7 @@ function localRead(key){try{return localStorage.getItem(key);}catch{return null;
 function localWrite(key,value){localStorage.setItem(key,value);}
 const metaKey=()=>account.storageKey+':sync';
 function meta(){try{return JSON.parse(localRead(metaKey())||'{}');}catch{return {};}}
-function valid(raw){return raw&&[1,2,3].includes(raw.version)&&typeof raw==='object';}
+function valid(raw){try{window.ClubSaveSafety.assert(raw);return true;}catch{return false;}}
 function parse(raw){try{const value=JSON.parse(raw);return valid(value)?value:null;}catch{return null;}}
 function lockGate(){document.body.dataset.auth='locked';gate.hidden=false;bar.hidden=true;}
 function showError(message){const output=byId('accountError');if(output)output.textContent=message;}
@@ -75,6 +76,7 @@ async function reconcile(){
  const raw=canonical(localRead(account.storageKey)),info=meta();if(info.syncedRaw)info.syncedRaw=canonical(info.syncedRaw);let remote;
  try{remote=await remoteSave();}
  catch(error){
+  if(raw&&!parse(raw))return window.ClubSaveSafety.block(raw,account.storageKey);
   if(!parse(raw))throw error;
   const selected=await choice(tr('클라우드에 연결하지 못했어요'),tr('이 기기에 저장된 기록은 보관되어 있습니다.'),[
    {label:tr('다시 연결'),value:'retry'},{label:tr('기기 기록으로 이어하기'),detail:summary(raw),value:'local'}]);
@@ -83,7 +85,10 @@ async function reconcile(){
  }
  revision=remote?.revision||0;
  if(remote){
-  const remoteRaw=serialize(remote.payload);if(!valid(remote.payload))throw Error('INVALID_REMOTE_SAVE');
+  const remoteRaw=serialize(remote.payload);if(!valid(remote.payload))return window.ClubSaveSafety.block(remoteRaw,account.storageKey+':cloud-original');
+  if(raw&&!parse(raw)){
+   return window.ClubSaveSafety.block(raw,account.storageKey,()=>{localWrite(account.storageKey,remoteRaw);localWrite(metaKey(),JSON.stringify({revision,syncedRaw:remoteRaw}));location.reload();});
+  }
   const dirty=!!parse(raw)&&info.syncedRaw!==raw;
   if(dirty&&raw!==remoteRaw&&info.revision!==revision){
    const selected=await choice(tr('서로 다른 저장 기록이 있어요'),tr('이어갈 기록을 골라주세요. 선택하지 않은 기기 기록은 백업합니다.'),[
@@ -93,8 +98,10 @@ async function reconcile(){
   if(raw&&raw!==remoteRaw)localWrite(account.storageKey+':backup:'+Date.now(),raw);
   localWrite(account.storageKey,remoteRaw);localWrite(metaKey(),JSON.stringify({revision,syncedRaw:remoteRaw}));return;
  }
+ if(raw&&!parse(raw))return window.ClubSaveSafety.block(raw,account.storageKey);
  if(!parse(raw)){
   const legacy=localRead(legacyKey);
+  if(legacy&&!parse(legacy))return window.ClubSaveSafety.block(legacy,legacyKey);
   if(parse(legacy)){
    const selected=await choice(tr('이 기기의 기존 선수를 가져올까요?'),tr('기존 기록을 계정에 가져오거나 새 선수로 시작할 수 있어요.'),[
     {label:tr('기존 선수 가져오기'),detail:summary(legacy),value:'import'},{label:tr('새 선수로 시작'),value:'new'}]);
@@ -110,6 +117,7 @@ async function enter(nextUser){
 }
 function queueSave(data){
  if(!client||!user||!booted||blocked)return;
+ try{window.ClubSaveSafety.assert(data);}catch{blocked=true;status(tr('저장 기록 확인이 필요합니다. 원본은 보관됩니다.'));return;}
  const raw=serialize(data);if(canonical(meta().syncedRaw)===raw&&!pending)return;
  pending=raw;status(tr('클라우드 저장 대기'));clearTimeout(timer);timer=setTimeout(flush,500);
 }
@@ -117,14 +125,24 @@ async function flush(){
  if(!client||!user||!pending||blocked)return false;if(inflight)return inflight;
  inflight=(async()=>{
   while(pending&&!blocked){
-   const raw=pending,owner=user.id;
+   const raw=saveAttempt?.raw??pending,owner=user.id;
+   const expected=saveAttempt?.revision??revision;saveAttempt={raw,revision:expected};
    try{
     const current=await client.auth.getSession();if(current.data?.session?.user.id!==owner){blocked=true;status(tr('로그인이 만료됐어요 · 새로고침 후 로그인'));return false;}
-    const result=await client.rpc('ttk_save_progress',{p_payload:JSON.parse(raw),p_expected_revision:revision});
-    if(result.error)throw result.error;
-    const row=Array.isArray(result.data)?result.data[0]:result.data;if(!row?.revision)throw Error('INVALID_RESPONSE');
-    revision=row.revision;localWrite(metaKey(),JSON.stringify({revision,syncedRaw:raw}));
-    if(pending===raw)pending=null;retry=0;status(pending?tr('클라우드 저장 대기'):tr('클라우드 저장됨'));
+    const result=await client.rpc('ttk_save_progress',{p_payload:JSON.parse(raw),p_expected_revision:expected});
+    let row=Array.isArray(result.data)?result.data[0]:result.data;
+    if(result.error){
+     // A previous attempt can commit while its response is lost. A matching
+     // remote payload acknowledges that write; a different payload still conflicts.
+     if(['40001','PT409'].includes(result.error.code)||/SAVE_CONFLICT/.test(result.error.message||'')){
+      const remote=await remoteSave();
+      if(remote&&Number.isSafeInteger(remote.revision)&&remote.revision>expected&&serialize(remote.payload)===raw)row=remote;
+      else throw result.error;
+     }else throw result.error;
+    }
+    if(!Number.isSafeInteger(row?.revision)||row.revision<=0)throw Error('INVALID_RESPONSE');
+    revision=row.revision;try{localWrite(metaKey(),JSON.stringify({revision,syncedRaw:raw}));}catch{/* The server acknowledgement remains valid even when the local cache is full. */}
+    saveAttempt=null;if(pending===raw)pending=null;retry=0;status(pending?tr('클라우드 저장 대기'):tr('클라우드 저장됨'));
    }catch(error){
     if(['40001','PT409'].includes(error?.code)||/SAVE_CONFLICT/.test(error?.message||'')){blocked=true;status(tr('다른 기기의 새 기록이 있어요 · 동기화를 눌러 선택'));}
     else{status(tr('연결 지연 · 기기 기록 보관 중'));clearTimeout(timer);timer=setTimeout(flush,Math.min(60000,2000*2**Math.min(retry++,5)));}
@@ -138,7 +156,7 @@ account.prepare=async()=>{
  const url=String(config.supabaseUrl||''),key=String(config.supabasePublishableKey||'');
  const local=['localhost','127.0.0.1','[::1]'].includes(location.hostname)||location.protocol==='file:';
  if(!url||!key){
-  if(local||config.requireLogin===false){account.ready=true;return;}
+  if(local||config.requireLogin===false){const raw=localRead(account.storageKey);if(raw&&!parse(raw))return window.ClubSaveSafety.block(raw,account.storageKey);account.ready=true;return;}
   lockGate();gate.innerHTML='<div class="account-choice"><h2>'+tr('로그인 서버 연결 준비 중')+'</h2><p>'+tr('관리자가 Supabase 설정을 완료하면 시작할 수 있습니다.')+'</p></div>';return new Promise(()=>{});
  }
  if(!/^https:\/\/[a-z0-9-]+\.supabase\.co\/?$/.test(url)||key.startsWith('sb_secret_')||!/^[a-z0-9.-]+$/.test(config.usernameDomain||'')){throw Error('INVALID_PUBLIC_AUTH_CONFIG');}

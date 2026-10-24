@@ -57,7 +57,7 @@ let data=fresh(),storageOK=true,saveMessage=tr('자동 저장 준비'),startHand
 function frontier(d=data){let i=0;while(i<nodes.length&&d.cleared.includes(i))i++;return Math.min(i,39);}
 function unlocked(id,d=data){return id===0||d.cleared.includes(id-1);}
 function normalize(raw){
- if(!raw||![1,2,3].includes(raw.version))return fresh();
+ window.ClubSaveSafety.assert(raw);
  const d=fresh();d.level=int(raw.level,1,99);d.xp=int(raw.xp,0,need(d.level)-1);let budget=(d.level-1)*3,sp=d.level-1;
  for(const k of Object.keys(labels)){const previous=k==='speed'&&raw.version<3?raw.stats?.footwork:raw.stats?.[k];d.stats[k]=int(previous,0,budget);budget-=d.stats[k];}
  for(const skill of skills){const can=d.level>=skill.level&&(!skill.requires||d.skills[skill.requires]>=2);d.skills[skill.id]=can?int(raw.skills?.[skill.id],0,Math.min(availableSkillRanks(skill,d.level),sp)):0;sp-=d.skills[skill.id];}
@@ -91,7 +91,7 @@ function normalize(raw){
  return d;
 }
 try{const text=guest?null:localStorage.getItem(KEY);if(text){const raw=JSON.parse(text);data=normalize(raw);if(raw.version<3){try{localStorage.setItem(KEY+'-v'+raw.version+'-backup',text);}catch(error){}saveMessage=tr('기존 성장·능력치 이관 완료 · 이전 경기 상금 정산');}}}
-catch(error){storageOK=false;saveMessage=tr('저장 내용을 읽지 못했어요 · 현재 실행에서 유지');}
+catch(error){let original='';try{original=localStorage.getItem(KEY)||'';}catch{}window.ClubSaveSafety.block(original,KEY);throw Object.assign(error,{saveBlocked:true});}
 selected=data.activeMatch?.node??frontier();
 const root=document.getElementById('career'),hub=document.getElementById('worldHub'),arena=document.getElementById('arena'),el=id=>document.getElementById(id);
 root.innerHTML=tr('<div class="career-head"><div><small>ROAD TO OLYMPICS</small><strong id="careerLevel"></strong><span id="careerRank"></span></div><div class="career-xp"><label id="careerXpText" for="careerXp"></label><progress id="careerXp" max="80" value="0"></progress></div><span id="careerWallet" class="career-wallet"></span><nav class="career-nav"><a class="studio-return" href="https://mcroky.github.io/roky-studio/" aria-label="로키 스튜디오로 돌아가기">← 로키 스튜디오</a><button id="worldHome" type="button">월드맵</button><button id="practiceHome" type="button">연습장</button><button id="shopHome" type="button">상점</button><button id="campaignContinue" type="button">다음 도전</button><button id="forfeitMatch" type="button" hidden>기권하고 나가기</button></nav></div><small id="careerSave" role="status"></small>');
@@ -380,7 +380,7 @@ function opponentConfig(){
 }
 
 function rootButton(selector){return hub.querySelector(selector);}
-function save(){cachedLoadout=null;cachedBonuses=null;if(guest){render();return;}try{localStorage.setItem(KEY,JSON.stringify(data));storageOK=true;saveMessage=tr('자동 저장됨 · 같은 브라우저에서 이어하기');}catch(error){storageOK=false;saveMessage=tr('자동 저장 불가 · 현재 실행에서만 유지');}render();window.ClubAccount?.queueSave(data);}
+function save(){try{window.ClubSaveSafety.assert(data);}catch{let original='';try{original=localStorage.getItem(KEY)||'';}catch{}window.ClubSaveSafety.block(original,KEY);return;}cachedLoadout=null;cachedBonuses=null;if(guest){render();return;}try{localStorage.setItem(KEY,JSON.stringify(data));storageOK=true;saveMessage=tr('자동 저장됨 · 같은 브라우저에서 이어하기');}catch(error){storageOK=false;saveMessage=tr('자동 저장 불가 · 현재 실행에서만 유지');}render();window.ClubAccount?.queueSave(data);}
 function reward(id,won,first,score){const n=nodes[id];return won?Math.round((110+n.tier*35+n.step*8+(n.boss?60:0))*(first?1.6:.70)):45+n.tier*15+Math.min(score,10)*3;}
 function prize(id,win,first,score){const n=nodes[id];return win?Math.round((300+n.tier*180+n.step*50+(n.boss?350:0))*(first?1.5:.65)):90+n.tier*50+Math.min(score,10)*8;}
 function beginMatch(){

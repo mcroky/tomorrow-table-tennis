@@ -5,6 +5,7 @@ const text=words=>words[Math.max(0,language)];
 const title=text(['업데이트 내역','Updates','アップデート情報','更新记录']);
 // Add new releases at the top; keep previous entries available to players.
 const releases=[
+ {"date":"2026-10-24","title":["저장 보호와 경기 일시정지","Save protection and match pausing","セーブ保護と試合の一時停止","存档保护与比赛暂停"],"items":[["손상되거나 지원하지 않는 저장 기록을 자동으로 덮어쓰지 않습니다. 원본 다운로드와 정상 클라우드 기록 선택 복구를 안내합니다.","Unreadable or unsupported saves are not overwritten automatically. Download the original or choose valid cloud progress when available.","破損・未対応の記録は自動上書きせず、原本の保存と正常なクラウド記録の選択復元を案内します。","不会自动覆盖损坏或不支持的存档。可下载原始文件，并在有正常云端记录时选择恢复。"],["다른 창·탭으로 이동하거나 업데이트 창을 열면 경기를 멈춥니다. 돌아온 뒤 직접 재개할 수 있습니다.","Matches pause when you leave the window or tab, or open Updates. Resume explicitly when ready.","別のウィンドウ・タブへの移動や更新情報を開くと試合を停止し、戻ってから手動で再開できます。","切换窗口、标签页或打开更新记录时暂停比赛，返回后可手动继续。"],["서버 저장 성공 후 응답이 끊겨도 기록을 다시 확인해 잘못된 기기 간 충돌 안내를 줄였습니다. 실제 다른 기록은 선택 절차를 유지합니다.","After a lost save response, remote progress is checked to recover acknowledged writes. Genuinely different progress still requires your choice.","保存成功後に応答が途切れても記録を再確認し、誤った競合を防ぎます。実際に異なる記録は選択して解決します。","保存成功但响应丢失后会重新检查云端记录，避免误判冲突。真正不同的记录仍需选择。"],["시스템의 움직임 줄이기 설정을 켜면 타격 시 카메라 흔들림·순간 시야각 변화·화면 섬광을 끕니다.","Reduced motion disables impact camera shake, FOV kicks, and screen flashes.","動きを減らす設定では打撃時のカメラ揺れ・瞬間的な画角変化・画面フラッシュを無効にします。","减少动态效果设置会关闭击球时的镜头抖动、瞬间视野变化和画面闪光。"]]},
  {date:'2026-10-23',title:['Roky Studio 소셜 바로가기','Roky Studio social links','Roky Studioのソーシャルリンク','Roky Studio 社交链接'],items:[['상단 메뉴에서 운영자의 X와 Threads 계정을 새 탭으로 열 수 있습니다.','Open the creator’s X and Threads profiles in a new tab from the header.','上部メニューから運営者のXとThreadsを新しいタブで開けます。','可从顶部菜单在新标签页打开作者的 X 和 Threads 账号。']]},
  {date:'2026-10-22',title:['모바일 경기 화면 확대','Larger mobile court','モバイルの試合画面を拡大','扩大手机比赛画面'],items:[
   ['모바일 전체화면 버튼을 상단 경기 메뉴로 옮겼습니다. 시점 선택 아래의 버튼 줄을 줄이고 확보한 높이를 기본 게임 화면에 사용합니다.','Moved the mobile fullscreen button into the upper match menu. Removing its toolbar row gives the default court more height.','モバイルの全画面ボタンを上部の試合メニューへ移動。視点選択の下の行を減らし、その分だけ通常の試合画面を広げました。','将手机全屏按钮移至顶部比赛菜单，减少视角选择下方的一行，将腾出的高度用于默认比赛画面。']
@@ -54,7 +55,7 @@ for(const release of releases){
 }
 dialog.append(heading,intro,history);document.body.append(dialog);
 let opener=null;
-function open(event){opener=event.currentTarget;if(dialog.open)return;dialog.showModal();dialog.scrollTop=0;close.focus();}
+function open(event){opener=event.currentTarget;if(dialog.open)return;window.dispatchEvent(new Event('club-game-interrupt'));dialog.showModal();dialog.scrollTop=0;close.focus();}
 close.onclick=()=>dialog.close();
 dialog.addEventListener('close',()=>{if(opener?.isConnected)opener.focus({preventScroll:true});});
 // Keep keyboard gameplay shortcuts from firing while browsing release notes.

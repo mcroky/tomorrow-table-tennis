@@ -1384,6 +1384,7 @@ function updateServe(dt){
  return true;
 }
 function start(){
+ if(document.hidden||document.querySelector('dialog[open]'))return;
  if(tutorial.active&&tutorial.step===4){tutorial.finish();return;}
  if(tutorial.active){tutorial.togglePlay();return;}
  sound.unlock();
@@ -1456,6 +1457,16 @@ const tutorial=(()=>{
 })();
 career.bindStart(startCareerMatch);
 window.addEventListener('club-account-changed',()=>{state.playing=false;state.keys={};state.queuedSwing=null;state.velocity=[0,0];message(tr('계정이 변경됐어요 · 새로고침해주세요.'),'ACCOUNT');});
+function pauseForInterruption(){
+ state.keys={};state.queuedSwing=null;state.velocity=[0,0];dragging=false;releaseTouch();
+ if(!state.playing||career.isMap())return;
+ state.playing=false;
+ $('play').textContent=state.careerMatch?tr('경기 재개'):tr('자유 연습 시작');
+ message(tr('화면을 벗어나 경기를 멈췄어요. 준비되면 재개해주세요.'),tr('PAUSED'));
+}
+addEventListener('blur',pauseForInterruption);
+document.addEventListener('visibilitychange',()=>{if(document.hidden)pauseForInterruption();});
+addEventListener('club-game-interrupt',pauseForInterruption);
 career.bindSuspend(()=>{const wasPlaying=state.playing;state.playing=false;state.keys={};state.queuedSwing=null;state.velocity=[0,0];return()=>{if(state.careerMatch&&!state.matchFinished)state.playing=wasPlaying;};});
 career.bindMap(()=>{
  tutorial.cancel();
@@ -1833,7 +1844,7 @@ moveZone.onpointermove=e=>{if(e.pointerId===stickPointer){e.preventDefault();mov
 moveZone.onpointerup=moveZone.onpointercancel=moveZone.onlostpointercapture=e=>{if(e.pointerId===stickPointer)releaseTouch();};
 for(const [id,power] of [['mobileSwing',false],['mobileSmash',true]]){const button=$(id);button.onpointerdown=e=>{e.preventDefault();if(document.querySelector('dialog[open]')||career.isMap())return;button.setPointerCapture(e.pointerId);button.classList.add('pressed');swing(power);};button.onpointerup=button.onpointercancel=button.onlostpointercapture=()=>button.classList.remove('pressed');button.onclick=e=>{if(e.detail===0)swing(power);};}
 addEventListener('blur',releaseTouch);addEventListener('resize',releaseTouch);document.addEventListener('visibilitychange',()=>{if(document.hidden)releaseTouch();});
-addEventListener('keydown',e=>{if(career.isMap()||document.getElementById('forfeitDialog')?.open)return;if(e.target instanceof Element&&e.target.closest('input,select,textarea'))return;state.keys[e.code]=true;if(['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code))e.preventDefault();if(!e.repeat&&!e.ctrlKey&&!e.metaKey&&!e.altKey){if(e.code==='Space')swing(false);if(e.code==='KeyE')swing(true);}if(!e.ctrlKey&&!e.metaKey&&!e.altKey&&['KeyJ','KeyK','KeyL'].includes(e.code))setCourse({KeyJ:-1,KeyK:0,KeyL:1}[e.code]);if(!e.repeat&&!e.ctrlKey&&!e.metaKey&&!e.altKey){if(e.code==='KeyF')useSpecial();if(e.code==='KeyZ')setStrokeStyle('drive');if(e.code==='KeyX')setStrokeStyle('cut');if(e.code==='KeyC')setServeLength('short');if(e.code==='KeyV')setServeLength('deep');}const views=['pov','follow','side','top'];if(/^Digit[1-4]$/.test(e.code))setView(views[Number(e.code.slice(-1))-1]);});
+addEventListener('keydown',e=>{if(career.isMap()||document.querySelector('dialog[open]'))return;if(e.target instanceof Element&&e.target.closest('input,select,textarea'))return;state.keys[e.code]=true;if(['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code))e.preventDefault();if(!e.repeat&&!e.ctrlKey&&!e.metaKey&&!e.altKey){if(e.code==='Space')swing(false);if(e.code==='KeyE')swing(true);}if(!e.ctrlKey&&!e.metaKey&&!e.altKey&&['KeyJ','KeyK','KeyL'].includes(e.code))setCourse({KeyJ:-1,KeyK:0,KeyL:1}[e.code]);if(!e.repeat&&!e.ctrlKey&&!e.metaKey&&!e.altKey){if(e.code==='KeyF')useSpecial();if(e.code==='KeyZ')setStrokeStyle('drive');if(e.code==='KeyX')setStrokeStyle('cut');if(e.code==='KeyC')setServeLength('short');if(e.code==='KeyV')setServeLength('deep');}const views=['pov','follow','side','top'];if(/^Digit[1-4]$/.test(e.code))setView(views[Number(e.code.slice(-1))-1]);});
 addEventListener('keyup',e=>state.keys[e.code]=false);addEventListener('blur',()=>{state.queuedSwing=null;state.keys={};dragging=false;});
 
 function syncAudioUI(){
@@ -1893,12 +1904,13 @@ function frame(time){
  gl.viewport(0,0,w,h);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
  const [goalEye,goalTarget]=cameraGoal(),lerp=fx.hitstop>0?0:1-Math.exp(-9*dt);eye=eye.map((v,i)=>mix(v,goalEye[i],lerp));target=target.map((v,i)=>mix(v,goalTarget[i],lerp));
  syncContactFeedback(performance.now()+fx.renderLead);
- $('impactFlash').style.opacity=String(fx.flash);
+ const motionScale=auraMotion.matches?0:1;
+ $('impactFlash').style.opacity=String(fx.flash*motionScale);
  // Every contact starts at the peak of a short kick, rather than a random sine phase.
- const vibration=fx.shake,age=fx.age,side=fx.lastContact?.shot==='backhand'?-1:1;
+ const vibration=fx.shake*motionScale,age=fx.age,side=fx.lastContact?.shot==='backhand'?-1:1;
  const rattle=!!fx.contactClock?.rattle;
  const shake=[Math.cos(age*(rattle?190:93))*vibration*side,Math.cos(age*(rattle?225:117))*vibration*(rattle?.35:.65),0];
- const frameVP=mm(perspective(((state.view==='pov'?state.povFov:49)-fx.shake*22)*Math.PI/180,w/h),lookAt(add(eye,shake),add(target,mul(shake,.15))));gl.uniformMatrix4fv(uVP,false,frameVP);updateTouchBallGuide(frameVP);updateFollowPlayerOpacity(frameVP,dt);
+ const frameVP=mm(perspective(((state.view==='pov'?state.povFov:49)-fx.shake*22*motionScale)*Math.PI/180,w/h),lookAt(add(eye,shake),add(target,mul(shake,.15))));gl.uniformMatrix4fv(uVP,false,frameVP);updateTouchBallGuide(frameVP);updateFollowPlayerOpacity(frameVP,dt);
  drawMesh(venueMesh);drawMesh(staticMesh);geo=[];auraGeo=[];
  avatar(state.enemyX,state.enemyZ,1,opponentLevel().shirt||'#528f85',state.enemySwing,false);
  const playerFirst=geo.length/10;
